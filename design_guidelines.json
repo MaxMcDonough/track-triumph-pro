@@ -1,0 +1,134 @@
+{
+  "identity": {
+    "name": "E1",
+    "role": "Creative Designer",
+    "principles": [
+      "Fusion over Imitation",
+      "Emotion First",
+      "Content is King",
+      "Zoom In",
+      "Negative Space",
+      "Contrast"
+    ]
+  },
+  "typography": {
+    "primary_font": "Manrope",
+    "secondary_font": "Chivo",
+    "mono_font": "JetBrains Mono",
+    "import_url": "https://fonts.googleapis.com/css2?family=Chivo:wght@300;400;700;900&family=JetBrains+Mono:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap",
+    "usage": {
+      "headings": "font-family: 'Chivo', sans-serif; font-weight: 700; letter-spacing: -0.02em;",
+      "body": "font-family: 'Manrope', sans-serif;",
+      "data_display": "font-family: 'JetBrains Mono', monospace; letter-spacing: -0.05em;"
+    }
+  },
+  "colors": {
+    "theme": "dark",
+    "palette": {
+      "background": "#09090B",
+      "card_background": "#18181B",
+      "primary": "#22C55E",
+      "secondary": "#3B82F6",
+      "destructive": "#EF4444",
+      "accent": "#EAB308",
+      "text_primary": "#FAFAFA",
+      "text_secondary": "#A1A1AA",
+      "border": "#27272A"
+    },
+    "usage_rules": {
+      "profit_win": "Use Primary (#22C55E) for positive P/L and Win recommendations.",
+      "loss_danger": "Use Destructive (#EF4444) for negative P/L, Stop-Loss alerts, and High Risk.",
+      "neutral_info": "Use Secondary (#3B82F6) for general stats and info.",
+      "warning_hot": "Use Accent (#EAB308) for 'Hot Stats' and Warnings."
+    }
+  },
+  "layout": {
+    "grid_system": "Bento Grid Mode B (High Density)",
+    "spacing": {
+      "container_padding": "p-6 md:p-8",
+      "gap": "gap-4 md:gap-6",
+      "internal_card_padding": "p-5"
+    },
+    "structure": {
+      "dashboard": "grid grid-cols-1 md:grid-cols-12 gap-4",
+      "sidebar": "w-64 hidden md:block fixed h-full border-r border-border bg-card/50 backdrop-blur-xl",
+      "main_content": "md:pl-64 min-h-screen"
+    }
+  },
+  "components": {
+    "shadcn_customization": {
+      "card": "rounded-xl border-border/50 bg-card/50 backdrop-blur-sm shadow-none hover:border-primary/20 transition-colors",
+      "button": "rounded-lg font-semibold tracking-wide shadow-lg shadow-primary/10",
+      "badge": "rounded-md px-2 py-0.5 font-mono text-xs uppercase tracking-wider"
+    },
+    "custom_components": [
+      {
+        "name": "RaceCard",
+        "description": "Compact card showing race time, track, and top 3 horse recommendations with confidence bars.",
+        "style": "Border-l-4 border-primary for high confidence."
+      },
+      {
+        "name": "BankrollWidget",
+        "description": "Sticky or prominent widget showing Current Balance, Daily P/L, and Stop-Loss progress.",
+        "style": "Use progress bars to visualize distance to Stop-Loss."
+      },
+      {
+        "name": "ConfidenceBar",
+        "description": "Visual indicator of algorithm confidence (0-100%).",
+        "style": "Gradient fill from Red (low) to Green (high)."
+      }
+    ]
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-black/40 border border-white/10",
+    "gradients": "Subtle radial gradients (opacity 10%) behind key metrics to create depth.",
+    "textures": "Use a very subtle noise texture overlay on the main background to reduce digital flatness.",
+    "borders": "1px solid border-white/5 for all cards."
+  },
+  "media": {
+    "image_urls": {
+      "login_hero": "https://images.unsplash.com/photo-1691388205947-15659f1a4820?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "dashboard_banner": "https://images.unsplash.com/photo-1609510038916-9328a3c86966?crop=entropy&cs=srgb&fm=jpg&q=85",
+      "horse_detail_placeholder": "https://images.unsplash.com/photo-1608496076350-606e0ba1b6d6?crop=entropy&cs=srgb&fm=jpg&q=85"
+    },
+    "icons": "Use 'lucide-react' for all UI icons. Use 'Trophy', 'TrendingUp', 'AlertTriangle', 'Wallet' heavily."
+  },
+  "universal_guidelines": {
+    "general": [
+      "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients",
+      "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
+      "Create depth through layered design elements with z-index hierarchy",
+      "Use glass-morphism effects with backdrop filters (12-24px blur)",
+      "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms",
+      "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text",
+      "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style",
+      "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
+      "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
+      "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
+      "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
+      "Main agent relies on these image URLs. Missing categories (especially sponsor logos) = main agent will use placeholder text which is FORBIDDEN"
+    ],
+    "component_reuse": [
+      "Prioritize using pre-existing components from src/components/ui when applicable",
+      "Create new components that match the style and conventions of existing components when needed",
+      "Examine existing components to understand the project's component patterns before creating new ones"
+    ],
+    "export_conventions": [
+      "Components MUST use named exports (export const ComponentName = ...)",
+      "Pages MUST use default exports (export default function PageName() {...})"
+    ],
+    "toasts": [
+      "Use 'sonner' for toasts",
+      "Sonner component are located in /app/src/components/ui/sonner.tsx"
+    ]
+  },
+  "instructions_to_main_agent": [
+    "1. Install dependencies: 'npm install lucide-react recharts clsx tailwind-merge'",
+    "2. Update 'tailwind.config.js' to include the new colors and font families defined in 'typography' and 'colors'.",
+    "3. Create a 'Layout' component that includes the Sidebar and Topbar, and wraps all dashboard pages.",
+    "4. Implement the 'RaceCard' and 'BankrollWidget' as reusable components first.",
+    "5. Use 'recharts' for the Profit/Loss graph on the Statistics page.",
+    "6. Ensure all data inputs (odds, stakes) use numeric inputs with validation.",
+    "7. Apply the 'glassmorphism' class to the Sidebar and sticky headers."
+  ]
+}
