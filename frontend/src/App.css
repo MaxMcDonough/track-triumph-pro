@@ -1,34 +1,198 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Horse Racing Analyzer - Custom Styles */
+
+/* Login page background */
+.login-bg {
+    background-image: linear-gradient(to bottom, rgba(9, 9, 11, 0.85), rgba(9, 9, 11, 0.95)),
+        url('https://images.unsplash.com/photo-1691388205947-15659f1a4820?crop=entropy&cs=srgb&fm=jpg&q=85');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
+/* Dashboard header background */
+.dashboard-header-bg {
+    background-image: linear-gradient(to right, rgba(9, 9, 11, 0.9), rgba(9, 9, 11, 0.7)),
+        url('https://images.unsplash.com/photo-1609510038916-9328a3c86966?crop=entropy&cs=srgb&fm=jpg&q=85');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Bet card border styles based on confidence */
+.bet-card-excellent {
+    border-left: 4px solid hsl(142, 71%, 45%);
+}
+
+.bet-card-strong {
+    border-left: 4px solid hsl(217, 91%, 60%);
+}
+
+.bet-card-borderline {
+    border-left: 4px solid hsl(48, 96%, 53%);
+}
+
+.bet-card-weak {
+    border-left: 4px solid hsl(0, 84%, 60%);
+}
+
+/* Stat box hover effect */
+.stat-box {
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-box:hover {
+    background-color: hsl(240, 10%, 10%);
+    border-color: hsl(240, 5%, 25%);
+}
+
+/* Mobile sidebar toggle */
+@media (max-width: 768px) {
+    .sidebar-mobile {
+        position: fixed;
+        left: -100%;
+        top: 0;
+        height: 100vh;
+        z-index: 50;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar-mobile.open {
+        left: 0;
     }
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+/* Loading skeleton shimmer */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
 }
 
-.App-link {
-    color: #61dafb;
+.skeleton-shimmer {
+    background: linear-gradient(
+        90deg,
+        hsl(var(--muted)) 25%,
+        hsl(var(--muted) / 0.5) 50%,
+        hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Criteria icon animations */
+.criteria-pass {
+    color: hsl(142, 71%, 45%);
+}
+
+.criteria-partial {
+    color: hsl(48, 96%, 53%);
+}
+
+.criteria-fail {
+    color: hsl(0, 84%, 60%);
+}
+
+/* Custom number input styling */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 30px;
+}
+
+/* Tooltip custom styles */
+.tooltip-content {
+    background: hsl(240, 10%, 10%);
+    border: 1px solid hsl(240, 5%, 20%);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    max-width: 300px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* Progress bar for bankroll */
+.bankroll-progress {
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    background: hsl(var(--muted));
+}
+
+.bankroll-progress-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+.bankroll-safe {
+    background: hsl(142, 71%, 45%);
+}
+
+.bankroll-warning {
+    background: hsl(48, 96%, 53%);
+}
+
+.bankroll-danger {
+    background: hsl(0, 84%, 60%);
+}
+
+/* Form validation states */
+.input-error {
+    border-color: hsl(0, 84%, 60%) !important;
+    box-shadow: 0 0 0 2px hsl(0, 84%, 60%, 0.2);
+}
+
+.input-success {
+    border-color: hsl(142, 71%, 45%) !important;
+    box-shadow: 0 0 0 2px hsl(142, 71%, 45%, 0.2);
+}
+
+/* Table row hover */
+.table-row-hover:hover {
+    background-color: hsl(var(--muted) / 0.5);
+}
+
+/* Race card grid */
+.race-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1rem;
+}
+
+/* Sticky header */
+.sticky-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    backdrop-filter: blur(12px);
+    background: hsl(var(--background) / 0.8);
+    border-bottom: 1px solid hsl(var(--border));
+}
+
+/* Odds display */
+.odds-display {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+}
+
+/* Win/Loss badge */
+.badge-win {
+    background: hsl(142, 71%, 45%, 0.15);
+    color: hsl(142, 71%, 45%);
+    border: 1px solid hsl(142, 71%, 45%, 0.3);
+}
+
+.badge-loss {
+    background: hsl(0, 84%, 60%, 0.15);
+    color: hsl(0, 84%, 60%);
+    border: 1px solid hsl(0, 84%, 60%, 0.3);
+}
+
+.badge-pending {
+    background: hsl(var(--muted));
+    color: hsl(var(--muted-foreground));
+    border: 1px solid hsl(var(--border));
 }
