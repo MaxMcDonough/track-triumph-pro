@@ -1,0 +1,256 @@
+{
+  "auth": [
+    {
+      "test": "User Registration",
+      "success": true,
+      "details": "User registered successfully with ID: user_1bebf7aeca03",
+      "timestamp": "2026-02-05T11:21:34.380828",
+      "response_data": {
+        "user_id": "user_1bebf7aeca03",
+        "email": "test_user_1770290494@example.com",
+        "name": "Test User",
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlcl8xYmViZjdhZWNhMDMiLCJlbWFpbCI6InRlc3RfdXNlcl8xNzcwMjkwNDk0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzcwODk1Mjk0LCJpYXQiOjE3NzAyOTA0OTR9.Xp16JcubuvQzb3DW2iXJSI2iNYa_uNX26itE4NPENL4"
+      }
+    },
+    {
+      "test": "User Login",
+      "success": true,
+      "details": "Login successful",
+      "timestamp": "2026-02-05T11:21:34.616789",
+      "response_data": {
+        "user_id": "user_1bebf7aeca03",
+        "email": "test_user_1770290494@example.com",
+        "name": "Test User",
+        "picture": null,
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlcl8xYmViZjdhZWNhMDMiLCJlbWFpbCI6InRlc3RfdXNlcl8xNzcwMjkwNDk0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzcwODk1Mjk0LCJpYXQiOjE3NzAyOTA0OTR9.Xp16JcubuvQzb3DW2iXJSI2iNYa_uNX26itE4NPENL4"
+      }
+    },
+    {
+      "test": "Auth Me",
+      "success": true,
+      "details": "User data retrieved: test_user_1770290494@example.com",
+      "timestamp": "2026-02-05T11:21:34.630564",
+      "response_data": {
+        "user_id": "user_1bebf7aeca03",
+        "email": "test_user_1770290494@example.com",
+        "name": "Test User",
+        "picture": null
+      }
+    },
+    {
+      "test": "Google OAuth Redirect",
+      "success": true,
+      "details": "Auth service accessible (Status: 200)",
+      "timestamp": "2026-02-05T11:21:34.748161"
+    },
+    {
+      "test": "Logout",
+      "success": true,
+      "details": "Logout successful",
+      "timestamp": "2026-02-05T11:21:34.871490",
+      "response_data": {
+        "message": "Logged out successfully"
+      }
+    }
+  ],
+  "bankroll": [
+    {
+      "test": "Get Bankroll",
+      "success": true,
+      "details": "Bankroll: $250.0, Stop-loss: $60.0",
+      "timestamp": "2026-02-05T11:21:34.760748",
+      "response_data": {
+        "user_id": "user_1bebf7aeca03",
+        "starting_bankroll": 250.0,
+        "current_bankroll": 250.0,
+        "stop_loss": 60.0,
+        "max_daily_bets": 5,
+        "max_stake_percent": 0.03,
+        "consecutive_losses": 0,
+        "created_at": "2026-02-05T11:21:34.368336+00:00",
+        "today_pl": 0,
+        "cushion": 190.0,
+        "percent_above_stop_loss": 316.66666666666663
+      }
+    },
+    {
+      "test": "Update Bankroll",
+      "success": true,
+      "details": "Bankroll updated successfully",
+      "timestamp": "2026-02-05T11:21:34.777154",
+      "response_data": {
+        "user_id": "user_1bebf7aeca03",
+        "starting_bankroll": 250.0,
+        "current_bankroll": 300.0,
+        "stop_loss": 75.0,
+        "max_daily_bets": 5,
+        "max_stake_percent": 0.03,
+        "consecutive_losses": 0,
+        "created_at": "2026-02-05T11:21:34.368336+00:00",
+        "today_pl": 0,
+        "cushion": 225.0,
+        "percent_above_stop_loss": 300.0
+      }
+    }
+  ],
+  "tracks": [
+    {
+      "test": "Get Tracks",
+      "success": true,
+      "details": "Retrieved 10 UK tracks and 7 US tracks",
+      "timestamp": "2026-02-05T11:21:34.787163",
+      "response_data": {
+        "uk_tracks": [
+          {
+            "id": "wolverhampton",
+            "name": "Wolverhampton (AW)",
+            "country": "UK"
+          },
+          {
+            "id": "southwell",
+            "name": "Southwell (AW)",
+            "country": "UK"
+          },
+          {
+            "id": "chelmsford",
+            "name": "Chelmsford (AW)",
+            "country": "UK"
+          },
+          {
+            "id": "kempton",
+            "name": "Kempton (AW)",
+            "country": "UK"
+          },
+          {
+            "id": "lingfield",
+            "name": "Lingfield (AW)",
+            "country": "UK"
+          },
+          {
+            "id": "newcastle",
+            "name": "Newcastle (AW)",
+            "country": "UK"
+          },
+          {
+            "id": "dundalk",
+            "name": "Dundalk",
+            "country": "Ireland"
+          },
+          {
+            "id": "curragh",
+            "name": "Curragh",
+            "country": "Ireland"
+          },
+          {
+            "id": "leopardstown",
+            "name": "Leopardstown",
+            "country": "Ireland"
+          },
+          {
+            "id": "naas",
+            "name": "Naas",
+            "country": "Ireland"
+          }
+        ],
+        "us_tracks": [
+          {
+            "id": "churchill-downs",
+            "name": "Churchill Downs",
+            "country": "USA"
+          },
+          {
+            "id": "santa-anita",
+            "name": "Santa Anita",
+            "country": "USA"
+          },
+          {
+            "id": "gulfstream",
+            "name": "Gulfstream Park",
+            "country": "USA"
+          },
+          {
+            "id": "belmont",
+            "name": "Belmont Park",
+            "country": "USA"
+          },
+          {
+            "id": "saratoga",
+            "name": "Saratoga",
+            "country": "USA"
+          },
+          {
+            "id": "keeneland",
+            "name": "Keeneland",
+            "country": "USA"
+          },
+          {
+            "id": "del-mar",
+            "name": "Del Mar",
+            "country": "USA"
+          }
+        ]
+      }
+    }
+  ],
+  "analysis": [
+    {
+      "test": "Race Analysis",
+      "success": true,
+      "details": "Analysis complete for 8 horses with 8-criteria scoring",
+      "timestamp": "2026-02-05T11:21:34.801242",
+      "response_data": {
+        "horse_count": 8,
+        "has_recommendations": true
+      }
+    }
+  ],
+  "bets": [
+    {
+      "test": "Create Bet",
+      "success": true,
+      "details": "Bet created with ID: bet_ec27802eeb58",
+      "timestamp": "2026-02-05T11:21:34.823328",
+      "response_data": {
+        "bet_id": "bet_ec27802eeb58",
+        "message": "Bet placed successfully",
+        "new_bankroll": 291.0
+      }
+    },
+    {
+      "test": "Get Bet History",
+      "success": true,
+      "details": "Retrieved 1 bets",
+      "timestamp": "2026-02-05T11:21:34.840781",
+      "response_data": {
+        "bet_count": 1
+      }
+    },
+    {
+      "test": "Settle Bet",
+      "success": true,
+      "details": "Bet settled as WIN, P/L: $15.21",
+      "timestamp": "2026-02-05T11:21:34.851052",
+      "response_data": {
+        "outcome": "WIN",
+        "profit_loss": 15.21,
+        "new_bankroll": 315.21,
+        "consecutive_losses": 0,
+        "must_stop": false,
+        "message": "\u2705 BET WON! +$15.21. New bankroll: $315.21"
+      }
+    }
+  ],
+  "statistics": [
+    {
+      "test": "Get Statistics",
+      "success": true,
+      "details": "Stats: 1 bets, 100.0% win rate, 169.0% ROI",
+      "timestamp": "2026-02-05T11:21:34.861262",
+      "response_data": {
+        "total_bets": 1,
+        "score_levels": 1
+      }
+    }
+  ],
+  "errors": []
+}
