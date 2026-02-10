@@ -1,332 +1,167 @@
 """
 The Racing API Integration Module
-https://api.theracingapi.com/documentation
+https://api.theracingapi.com/v1
 """
 import os
 import httpx
-from datetime import datetime, timezone
 from typing import Optional, Dict, List
 import logging
-import base64
+import re
 
 logger = logging.getLogger(__name__)
 
+
 class TheRacingAPI:
-    """Client for The Racing API (theracingapi.com)"""
-    
     BASE_URL = "https://api.theracingapi.com/v1"
-    
+
     def __init__(self):
         self.username = os.environ.get("RACING_API_USERNAME")
         self.password = os.environ.get("RACING_API_PASSWORD")
-        
-        if not self.username or not self.password:
-            logger.warning("Racing API credentials not configured")
-            self.configured = False
-        else:
-            self.configured = True
-            logger.info(f"Racing API configured with username: {self.username[:8]}...")
-    
-    def _get_auth(self):
-        """Get HTTP Basic Auth tuple"""
+        self.configured = bool(self.username and self.password)
+        if self.configured:
+            logger.info("Racing API configured")
+
+    def _auth(self):
         return (self.username, self.password)
-    
-    async def get_racecards_free(self, date: Optional[str] = None) -> Dict:
-        """
-        Get today's free racecards (available on all plans)
-        """
+
+    async def _get(self, path: str, params: Optional[Dict] = None) -> Dict:
         if not self.configured:
             return {"error": "API not configured", "configured": False}
-        
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                params = {}
-                if date:
-                    params["date"] = date
-                
                 response = await client.get(
-                    f"{self.BASE_URL}/racecards/free",
-                    auth=self._get_auth(),
-                    params=params
+                    f"{self.BASE_URL}{path}",
+                    auth=self._auth(),
+                    params=params or {},
                 )
-                
-                logger.info(f"Racecards API response status: {response.status_code}")
-                
                 if response.status_code == 200:
                     return {"success": True, "data": response.json()}
                 elif response.status_code == 401:
-                    return {"error": "Authentication failed - check API credentials", "status": 401}
+                    return {"error": "Authentication failed", "status": 401}
                 else:
                     return {"error": f"API error: {response.status_code}", "detail": response.text}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
-    
-    async def get_racecards_basic(self, date: Optional[str] = None) -> Dict:
-        """
-        Get racecards with basic data (requires Basic+ plan)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                params = {}
-                if date:
-                    params["date"] = date
-                
-                response = await client.get(
-                    f"{self.BASE_URL}/racecards/basic",
-                    auth=self._get_auth(),
-                    params=params
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                elif response.status_code == 401:
-                    return {"error": "Authentication failed or insufficient plan", "status": 401}
-                else:
-                    return {"error": f"API error: {response.status_code}", "detail": response.text}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
-    
-    async def get_racecards_standard(self, date: Optional[str] = None) -> Dict:
-        """
-        Get racecards with standard data (requires Standard+ plan)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                params = {}
-                if date:
-                    params["date"] = date
-                
-                response = await client.get(
-                    f"{self.BASE_URL}/racecards/standard",
-                    auth=self._get_auth(),
-                    params=params
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                elif response.status_code == 401:
-                    return {"error": "Authentication failed or insufficient plan", "status": 401}
-                else:
-                    return {"error": f"API error: {response.status_code}", "detail": response.text}
-                    
         except Exception as e:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
 
-    async def get_courses(self, region_codes: Optional[List[str]] = None) -> Dict:
-        """
-        Get list of courses (free endpoint)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                params = {}
-                if region_codes:
-                    params["region_codes"] = region_codes
-                
-                response = await client.get(
-                    f"{self.BASE_URL}/courses",
-                    auth=self._get_auth(),
-                    params=params
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                else:
-                    return {"error": f"API error: {response.status_code}"}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
+    async def get_racecards_free(self, date: Optional[str] = None) -> Dict:
+        params = {}
+        if date:
+            params["date"] = date
+        return await self._get("/racecards/free", params)
+
+    async def get_courses(self, region_codes: Optional[str] = None) -> Dict:
+        params = {}
+        if region_codes:
+            params["region_codes"] = region_codes
+        return await self._get("/courses", params)
 
     async def get_regions(self) -> Dict:
-        """
-        Get list of regions (free endpoint)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    f"{self.BASE_URL}/courses/regions",
-                    auth=self._get_auth()
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                else:
-                    return {"error": f"API error: {response.status_code}"}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
+        return await self._get("/courses/regions")
 
-    async def get_results_today_free(self) -> Dict:
-        """
-        Get today's results (free endpoint)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    f"{self.BASE_URL}/results/today-free",
-                    auth=self._get_auth()
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                else:
-                    return {"error": f"API error: {response.status_code}"}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
+    async def get_results_today(self) -> Dict:
+        return await self._get("/results/today-free")
 
-    async def search_horse(self, name: str) -> Dict:
-        """
-        Search for a horse by name (requires Standard+ plan)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    f"{self.BASE_URL}/horses/search",
-                    auth=self._get_auth(),
-                    params={"name": name}
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                else:
-                    return {"error": f"API error: {response.status_code}"}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
+    def parse_form(self, form_str: str) -> Dict:
+        """Parse form string like '6P84U4' into useful metrics."""
+        if not form_str:
+            return {"runs": 0, "wins": 0, "places": 0, "win_rate": 0, "place_rate": 0, "recent_trend": "unknown"}
 
-    async def search_trainer(self, name: str) -> Dict:
-        """
-        Search for a trainer by name (requires Standard+ plan)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    f"{self.BASE_URL}/trainers/search",
-                    auth=self._get_auth(),
-                    params={"name": name}
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                else:
-                    return {"error": f"API error: {response.status_code}"}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
+        runs = []
+        for ch in form_str:
+            if ch.isdigit():
+                runs.append(int(ch))
+            elif ch in ('P', 'p'):
+                runs.append(0)  # pulled up
+            elif ch in ('F', 'f'):
+                runs.append(0)  # fell
+            elif ch in ('U', 'u'):
+                runs.append(0)  # unseated
+            elif ch == '-':
+                continue
 
-    async def search_jockey(self, name: str) -> Dict:
-        """
-        Search for a jockey by name (requires Standard+ plan)
-        """
-        if not self.configured:
-            return {"error": "API not configured", "configured": False}
-        
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    f"{self.BASE_URL}/jockeys/search",
-                    auth=self._get_auth(),
-                    params={"name": name}
-                )
-                
-                if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
-                else:
-                    return {"error": f"API error: {response.status_code}"}
-                    
-        except Exception as e:
-            logger.error(f"Racing API error: {e}")
-            return {"error": str(e)}
+        total = len(runs) if runs else 1
+        wins = sum(1 for r in runs if r == 1)
+        places = sum(1 for r in runs if 1 <= r <= 3)
 
-    def transform_runner_to_horse_data(self, runner: Dict, race_info: Dict) -> Dict:
-        """
-        Transform API runner data to our horse data format for scoring
-        """
-        # Parse odds from fractional to decimal
-        odds_str = runner.get("odds", "5/1")
-        try:
-            if "/" in str(odds_str):
-                num, den = odds_str.split("/")
-                decimal_odds = (float(num) / float(den)) + 1
+        # Recent trend (last 3 runs)
+        recent = runs[-3:] if len(runs) >= 3 else runs
+        if recent:
+            avg_recent = sum(recent) / len(recent)
+            older = runs[:-3] if len(runs) > 3 else []
+            avg_older = sum(older) / len(older) if older else avg_recent
+            if avg_recent < avg_older:
+                trend = "improving"
+            elif avg_recent > avg_older:
+                trend = "declining"
             else:
-                decimal_odds = float(odds_str)
-        except:
-            decimal_odds = 5.0
-        
+                trend = "stable"
+        else:
+            trend = "unknown"
+
         return {
-            "name": runner.get("horse", "Unknown"),
-            "draw_number": int(runner.get("draw", runner.get("number", 0))),
-            "jockey_name": runner.get("jockey", ""),
-            "trainer_name": runner.get("trainer", ""),
-            "age": int(runner.get("age", 0)),
-            "weight": runner.get("weight", runner.get("lbs", "")),
-            "official_rating": int(runner.get("or", 0)) if runner.get("or") else None,
-            "form": runner.get("form", ""),
-            "horse_id": runner.get("horse_id"),
-            "jockey_id": runner.get("jockey_id"),
-            "trainer_id": runner.get("trainer_id"),
-            
-            # These will be populated from additional API calls
-            "trainer_last_14_days_percent": None,
-            "jockey_last_14_days_percent": None,
-            "course_percent": None,
-            "distance_percent": None,
-            "racing_post_top3_position": None,
-            "at_the_races_top3_position": None,
-            "timeform_rating": None,
-            "timeform_flags": [],
-            
-            # Odds
-            "best_win_odds": decimal_odds,
-            "best_place_odds": decimal_odds / 4 + 1,  # Approximate place odds
-            "best_win_odds_bookmaker": "The Racing API",
-            "best_place_odds_bookmaker": "The Racing API",
-            
-            # Market data (placeholder - needs separate API)
-            "betfair_matched_volume": 0,
-            "betfair_price_movement": "stable",
-            "betfair_sharp_money_indicator": "none",
-            
-            # Angles
-            "class_movement": None,
-            "first_time_blinkers": runner.get("headgear", "").lower().startswith("first"),
-            "first_time_tongue_tie": False,
-            "trainer_after_break_percent": None,
-            "draw_advantage": None,
-            "pace_advantage": None
+            "runs": total,
+            "wins": wins,
+            "places": places,
+            "win_rate": round((wins / total) * 100, 1) if total else 0,
+            "place_rate": round((places / total) * 100, 1) if total else 0,
+            "recent_trend": trend,
+            "last_position": runs[-1] if runs else None,
+        }
+
+    def transform_racecard(self, racecard: Dict) -> Dict:
+        """Transform API racecard into our app format."""
+        runners = []
+        for r in racecard.get("runners", []):
+            form_analysis = self.parse_form(r.get("form", ""))
+
+            # Parse official rating
+            try:
+                ofr = int(r.get("ofr", 0)) if r.get("ofr") else 0
+            except (ValueError, TypeError):
+                ofr = 0
+
+            runners.append({
+                "name": r.get("horse", "Unknown"),
+                "horse_id": r.get("horse_id", ""),
+                "age": r.get("age", ""),
+                "sex": r.get("sex", ""),
+                "draw_number": int(r.get("draw", 0) or 0),
+                "number": int(r.get("number", 0) or 0),
+                "jockey_name": r.get("jockey", ""),
+                "jockey_id": r.get("jockey_id", ""),
+                "trainer_name": r.get("trainer", ""),
+                "trainer_id": r.get("trainer_id", ""),
+                "weight_lbs": int(r.get("lbs", 0) or 0),
+                "official_rating": ofr,
+                "headgear": r.get("headgear", ""),
+                "form": r.get("form", ""),
+                "form_analysis": form_analysis,
+                "last_run_days": int(r.get("last_run", 0) or 0),
+                "sire": r.get("sire", ""),
+                "dam": r.get("dam", ""),
+                "owner": r.get("owner", ""),
+            })
+
+        return {
+            "race_id": racecard.get("race_id", ""),
+            "course": racecard.get("course", ""),
+            "date": racecard.get("date", ""),
+            "off_time": racecard.get("off_time", ""),
+            "off_dt": racecard.get("off_dt", ""),
+            "race_name": racecard.get("race_name", ""),
+            "distance": racecard.get("distance_f", ""),
+            "region": racecard.get("region", ""),
+            "race_class": racecard.get("race_class", ""),
+            "race_type": racecard.get("type", ""),
+            "age_band": racecard.get("age_band", ""),
+            "prize": racecard.get("prize", ""),
+            "field_size": int(racecard.get("field_size", 0) or 0),
+            "going": racecard.get("going", ""),
+            "surface": racecard.get("surface", ""),
+            "race_status": racecard.get("race_status", ""),
+            "runners": runners,
         }
 
 
-# Singleton instance
 racing_api = TheRacingAPI()
