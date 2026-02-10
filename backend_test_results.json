@@ -1,73 +1,19 @@
 {
-  "auth": [
-    {
-      "test": "User Registration",
-      "success": true,
-      "details": "User registered successfully with ID: user_1bebf7aeca03",
-      "timestamp": "2026-02-05T11:21:34.380828",
-      "response_data": {
-        "user_id": "user_1bebf7aeca03",
-        "email": "test_user_1770290494@example.com",
-        "name": "Test User",
-        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlcl8xYmViZjdhZWNhMDMiLCJlbWFpbCI6InRlc3RfdXNlcl8xNzcwMjkwNDk0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzcwODk1Mjk0LCJpYXQiOjE3NzAyOTA0OTR9.Xp16JcubuvQzb3DW2iXJSI2iNYa_uNX26itE4NPENL4"
-      }
-    },
-    {
-      "test": "User Login",
-      "success": true,
-      "details": "Login successful",
-      "timestamp": "2026-02-05T11:21:34.616789",
-      "response_data": {
-        "user_id": "user_1bebf7aeca03",
-        "email": "test_user_1770290494@example.com",
-        "name": "Test User",
-        "picture": null,
-        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoidXNlcl8xYmViZjdhZWNhMDMiLCJlbWFpbCI6InRlc3RfdXNlcl8xNzcwMjkwNDk0QGV4YW1wbGUuY29tIiwiZXhwIjoxNzcwODk1Mjk0LCJpYXQiOjE3NzAyOTA0OTR9.Xp16JcubuvQzb3DW2iXJSI2iNYa_uNX26itE4NPENL4"
-      }
-    },
-    {
-      "test": "Auth Me",
-      "success": true,
-      "details": "User data retrieved: test_user_1770290494@example.com",
-      "timestamp": "2026-02-05T11:21:34.630564",
-      "response_data": {
-        "user_id": "user_1bebf7aeca03",
-        "email": "test_user_1770290494@example.com",
-        "name": "Test User",
-        "picture": null
-      }
-    },
-    {
-      "test": "Google OAuth Redirect",
-      "success": true,
-      "details": "Auth service accessible (Status: 200)",
-      "timestamp": "2026-02-05T11:21:34.748161"
-    },
-    {
-      "test": "Logout",
-      "success": true,
-      "details": "Logout successful",
-      "timestamp": "2026-02-05T11:21:34.871490",
-      "response_data": {
-        "message": "Logged out successfully"
-      }
-    }
-  ],
   "bankroll": [
     {
       "test": "Get Bankroll",
       "success": true,
       "details": "Bankroll: $250.0, Stop-loss: $60.0",
-      "timestamp": "2026-02-05T11:21:34.760748",
+      "timestamp": "2026-02-10T08:51:55.789235",
       "response_data": {
-        "user_id": "user_1bebf7aeca03",
+        "user_id": "default_user",
         "starting_bankroll": 250.0,
         "current_bankroll": 250.0,
         "stop_loss": 60.0,
         "max_daily_bets": 5,
         "max_stake_percent": 0.03,
         "consecutive_losses": 0,
-        "created_at": "2026-02-05T11:21:34.368336+00:00",
+        "created_at": "2026-02-10T08:37:41.554361+00:00",
         "today_pl": 0,
         "cushion": 190.0,
         "percent_above_stop_loss": 316.66666666666663
@@ -77,16 +23,16 @@
       "test": "Update Bankroll",
       "success": true,
       "details": "Bankroll updated successfully",
-      "timestamp": "2026-02-05T11:21:34.777154",
+      "timestamp": "2026-02-10T08:51:55.808507",
       "response_data": {
-        "user_id": "user_1bebf7aeca03",
+        "user_id": "default_user",
         "starting_bankroll": 250.0,
         "current_bankroll": 300.0,
         "stop_loss": 75.0,
         "max_daily_bets": 5,
         "max_stake_percent": 0.03,
         "consecutive_losses": 0,
-        "created_at": "2026-02-05T11:21:34.368336+00:00",
+        "created_at": "2026-02-10T08:37:41.554361+00:00",
         "today_pl": 0,
         "cushion": 225.0,
         "percent_above_stop_loss": 300.0
@@ -97,8 +43,8 @@
     {
       "test": "Get Tracks",
       "success": true,
-      "details": "Retrieved 10 UK tracks and 7 US tracks",
-      "timestamp": "2026-02-05T11:21:34.787163",
+      "details": "Retrieved 10 UK tracks and 7 US tracks (wolverhampton found)",
+      "timestamp": "2026-02-10T08:51:55.858759",
       "response_data": {
         "uk_tracks": [
           {
@@ -196,47 +142,47 @@
     {
       "test": "Race Analysis",
       "success": true,
-      "details": "Analysis complete for 8 horses with 8-criteria scoring",
-      "timestamp": "2026-02-05T11:21:34.801242",
+      "details": "Analysis complete for 11 horses with 8-criteria scoring",
+      "timestamp": "2026-02-10T08:51:55.874019",
       "response_data": {
-        "horse_count": 8,
+        "horse_count": 11,
         "has_recommendations": true
       }
     }
   ],
   "bets": [
     {
-      "test": "Create Bet",
+      "test": "Get Bet History",
       "success": true,
-      "details": "Bet created with ID: bet_ec27802eeb58",
-      "timestamp": "2026-02-05T11:21:34.823328",
+      "details": "Retrieved 0 bets (initially empty is expected)",
+      "timestamp": "2026-02-10T08:51:55.922764",
       "response_data": {
-        "bet_id": "bet_ec27802eeb58",
-        "message": "Bet placed successfully",
-        "new_bankroll": 291.0
+        "bet_count": 0
       }
     },
     {
-      "test": "Get Bet History",
+      "test": "Create Bet",
       "success": true,
-      "details": "Retrieved 1 bets",
-      "timestamp": "2026-02-05T11:21:34.840781",
+      "details": "Bet created with ID: bet_4a00e52506f1",
+      "timestamp": "2026-02-10T08:51:55.943825",
       "response_data": {
-        "bet_count": 1
+        "bet_id": "bet_4a00e52506f1",
+        "message": "Bet placed successfully",
+        "new_bankroll": 292.5
       }
     },
     {
       "test": "Settle Bet",
       "success": true,
-      "details": "Bet settled as WIN, P/L: $15.21",
-      "timestamp": "2026-02-05T11:21:34.851052",
+      "details": "Bet settled as WIN, P/L: $26.324999999999996",
+      "timestamp": "2026-02-10T08:51:55.953299",
       "response_data": {
         "outcome": "WIN",
-        "profit_loss": 15.21,
-        "new_bankroll": 315.21,
+        "profit_loss": 26.324999999999996,
+        "new_bankroll": 326.325,
         "consecutive_losses": 0,
         "must_stop": false,
-        "message": "\u2705 BET WON! +$15.21. New bankroll: $315.21"
+        "message": "\u2705 BET WON! +$26.32. New bankroll: $326.32"
       }
     }
   ],
@@ -244,8 +190,8 @@
     {
       "test": "Get Statistics",
       "success": true,
-      "details": "Stats: 1 bets, 100.0% win rate, 169.0% ROI",
-      "timestamp": "2026-02-05T11:21:34.861262",
+      "details": "Stats: 1 bets, 100.0% win rate, 351.0% ROI",
+      "timestamp": "2026-02-10T08:51:56.002787",
       "response_data": {
         "total_bets": 1,
         "score_levels": 1
