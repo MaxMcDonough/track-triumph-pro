@@ -289,6 +289,26 @@ class HorseRacingAPITester:
         
         bet_id = None
         
+        # Test GET bet history first (should be empty initially)
+        try:
+            response = self.session.get(f"{self.api_url}/bets")
+            
+            if response.status_code == 200:
+                data = response.json()
+                if "bets" in data:
+                    bet_count = len(data["bets"])
+                    self.log_result("bets", "Get Bet History", True, 
+                                  f"Retrieved {bet_count} bets (initially empty is expected)", {"bet_count": bet_count})
+                else:
+                    self.log_result("bets", "Get Bet History", False, 
+                                  "Missing bets field in response", data)
+            else:
+                self.log_result("bets", "Get Bet History", False, 
+                              f"Status {response.status_code}: {response.text}")
+                
+        except Exception as e:
+            self.log_result("bets", "Get Bet History", False, f"Exception: {str(e)}")
+        
         # Test POST bet creation
         try:
             bet_data = {
@@ -330,26 +350,6 @@ class HorseRacingAPITester:
                 
         except Exception as e:
             self.log_result("bets", "Create Bet", False, f"Exception: {str(e)}")
-
-        # Test GET bet history
-        try:
-            response = self.session.get(f"{self.api_url}/bets")
-            
-            if response.status_code == 200:
-                data = response.json()
-                if "bets" in data:
-                    bet_count = len(data["bets"])
-                    self.log_result("bets", "Get Bet History", True, 
-                                  f"Retrieved {bet_count} bets", {"bet_count": bet_count})
-                else:
-                    self.log_result("bets", "Get Bet History", False, 
-                                  "Missing bets field in response", data)
-            else:
-                self.log_result("bets", "Get Bet History", False, 
-                              f"Status {response.status_code}: {response.text}")
-                
-        except Exception as e:
-            self.log_result("bets", "Get Bet History", False, f"Exception: {str(e)}")
 
         # Test bet settlement if we have a bet_id
         if bet_id:
