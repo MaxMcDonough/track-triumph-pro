@@ -177,7 +177,7 @@ class TheRacingAPI:
             "race_type": racecard.get("type", ""),
             "age_band": racecard.get("age_band", ""),
             "prize": racecard.get("prize", ""),
-            "field_size": int(racecard.get("field_size", 0) or 0),
+            "field_size": len(runners),
             "going": racecard.get("going", ""),
             "surface": racecard.get("surface", ""),
             "race_status": racecard.get("race_status", ""),
