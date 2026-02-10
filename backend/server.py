@@ -505,6 +505,126 @@ async def get_todays_racecards():
     }
 
 
+@api_router.get("/best-bets")
+async def get_best_bets():
+    """Auto-scan all today's races and return the top picks."""
+    result = await racing_api.get_racecards_free()
+    if "error" in result:
+        return {"success": False, "error": result["error"], "picks": []}
+
+    settings = await ensure_default_bankroll()
+    bankroll = settings.get("current_bankroll", 250.0)
+
+    raw_cards = result.get("data", {}).get("racecards", [])
+    all_picks = []
+
+    for rc in raw_cards:
+        transformed = racing_api.transform_racecard(rc)
+        track = transformed["course"]
+        for horse in transformed["runners"]:
+            ps = calculate_horse_score(horse, track, "PLACE")
+            if ps["score"] >= 4:
+                stake = calculate_stake(ps["score"], bankroll, "PLACE")
+                est_odds = max(1.5, (12.0 - ps["score"]) / 3 + 1)
+                all_picks.append({
+                    "race_id": transformed["race_id"],
+                    "course": track,
+                    "off_time": transformed["off_time"],
+                    "race_name": transformed["race_name"],
+                    "race_type": transformed["race_type"],
+                    "race_class": transformed["race_class"],
+                    "distance": transformed["distance"],
+                    "going": transformed["going"],
+                    "horse": horse["name"],
+                    "draw_number": horse.get("draw_number", 0),
+                    "jockey": horse.get("jockey_name", ""),
+                    "trainer": horse.get("trainer_name", ""),
+                    "form": horse.get("form", ""),
+                    "official_rating": horse.get("official_rating", 0),
+                    "score": ps["score"],
+                    "max_score": ps["max_score"],
+                    "confidence": ps["confidence_rating"],
+                    "star_rating": ps["star_rating"],
+                    "recommendation": ps["recommendation"],
+                    "criteria_breakdown": ps["criteria_breakdown"],
+                    "estimated_odds": round(est_odds, 2),
+                    "recommended_stake": stake,
+                    "potential_profit": round((stake * est_odds) - stake, 2),
+                })
+
+    all_picks.sort(key=lambda p: p["score"], reverse=True)
+    top_picks = all_picks[:10]
+
+    return {
+        "success": True,
+        "data_source": "LIVE - The Racing API",
+        "date": raw_cards[0]["date"] if raw_cards else datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "total_races_scanned": len(raw_cards),
+        "total_qualifying": len(all_picks),
+        "picks": top_picks,
+    }
+
+
+@api_router.get("/results")
+async def get_race_results():
+    """Get today's race results from The Racing API + user's bet outcomes."""
+    # Fetch live results
+    api_result = await racing_api.get_results_today()
+    live_results = []
+    if api_result.get("success"):
+        for r in api_result.get("data", {}).get("results", []):
+            runners = []
+            for runner in r.get("runners", []):
+                pos = runner.get("position", "")
+                try:
+                    pos_num = int(pos) if pos and pos.isdigit() else 0
+                except (ValueError, TypeError):
+                    pos_num = 0
+                runners.append({
+                    "position": pos,
+                    "horse": runner.get("horse", ""),
+                    "jockey": runner.get("jockey", ""),
+                    "trainer": runner.get("trainer", ""),
+                    "sp": runner.get("sp", ""),
+                    "distance_beaten": runner.get("distance_beaten", ""),
+                })
+            runners.sort(key=lambda x: int(x["position"]) if x["position"].isdigit() else 999)
+            live_results.append({
+                "race_id": r.get("race_id", ""),
+                "course": r.get("course", ""),
+                "off_time": r.get("off_time", ""),
+                "race_name": r.get("race_name", ""),
+                "distance": r.get("distance_f", ""),
+                "going": r.get("going", ""),
+                "race_class": r.get("race_class", ""),
+                "race_type": r.get("type", ""),
+                "prize": r.get("prize", ""),
+                "runners": runners,
+                "winner": runners[0]["horse"] if runners and runners[0].get("position") == "1" else "",
+            })
+
+    # Fetch user's settled bets
+    settled_bets = await db.bets.find(
+        {"user_id": DEFAULT_USER_ID, "result": {"$ne": None}},
+        {"_id": 0}
+    ).sort("timestamp", -1).to_list(50)
+
+    # Fetch user's pending bets
+    pending_bets = await db.bets.find(
+        {"user_id": DEFAULT_USER_ID, "result": None},
+        {"_id": 0}
+    ).sort("timestamp", -1).to_list(50)
+
+    return {
+        "success": True,
+        "live_results": live_results,
+        "live_results_count": len(live_results),
+        "settled_bets": settled_bets,
+        "pending_bets": pending_bets,
+        "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+    }
+
+
 @api_router.post("/analyze")
 async def analyze_race(request: RaceAnalysisRequest):
     """Analyze a race using live data (by race_id) or mock data (by track+race_number)."""
