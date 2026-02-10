@@ -210,8 +210,16 @@ class HorseRacingAPITester:
                 if "uk_tracks" in data and "us_tracks" in data:
                     uk_count = len(data["uk_tracks"])
                     us_count = len(data["us_tracks"])
-                    self.log_result("tracks", "Get Tracks", True, 
-                                  f"Retrieved {uk_count} UK tracks and {us_count} US tracks", data)
+                    
+                    # Check if wolverhampton is in the tracks (required for testing)
+                    wolverhampton_found = any(track.get("id") == "wolverhampton" for track in data["uk_tracks"])
+                    
+                    if wolverhampton_found:
+                        self.log_result("tracks", "Get Tracks", True, 
+                                      f"Retrieved {uk_count} UK tracks and {us_count} US tracks (wolverhampton found)", data)
+                    else:
+                        self.log_result("tracks", "Get Tracks", False, 
+                                      f"Retrieved tracks but wolverhampton not found in UK tracks", data)
                     return data
                 else:
                     self.log_result("tracks", "Get Tracks", False, 
