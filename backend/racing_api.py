@@ -3,21 +3,23 @@ The Racing API Integration Module
 https://api.theracingapi.com/v1
 """
 import os
+import time
 import httpx
 from typing import Optional, Dict, List
 import logging
-import re
 
 logger = logging.getLogger(__name__)
 
 
 class TheRacingAPI:
     BASE_URL = "https://api.theracingapi.com/v1"
+    CACHE_TTL = 120  # Cache for 2 minutes to avoid 429 rate limits
 
     def __init__(self):
         self.username = os.environ.get("RACING_API_USERNAME")
         self.password = os.environ.get("RACING_API_PASSWORD")
         self.configured = bool(self.username and self.password)
+        self._cache = {}
         if self.configured:
             logger.info("Racing API configured")
 
@@ -27,6 +29,13 @@ class TheRacingAPI:
     async def _get(self, path: str, params: Optional[Dict] = None) -> Dict:
         if not self.configured:
             return {"error": "API not configured", "configured": False}
+
+        # Check cache
+        cache_key = f"{path}:{str(params or {})}"
+        cached = self._cache.get(cache_key)
+        if cached and (time.time() - cached["ts"]) < self.CACHE_TTL:
+            return cached["data"]
+
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
@@ -35,13 +44,23 @@ class TheRacingAPI:
                     params=params or {},
                 )
                 if response.status_code == 200:
-                    return {"success": True, "data": response.json()}
+                    result = {"success": True, "data": response.json()}
+                    self._cache[cache_key] = {"data": result, "ts": time.time()}
+                    return result
                 elif response.status_code == 401:
                     return {"error": "Authentication failed", "status": 401}
+                elif response.status_code == 429:
+                    # Rate limited - return cached data if available, otherwise error
+                    if cached:
+                        logger.warning("Rate limited, returning stale cache")
+                        return cached["data"]
+                    return {"error": "Rate limited - please try again shortly", "status": 429}
                 else:
                     return {"error": f"API error: {response.status_code}", "detail": response.text}
         except Exception as e:
             logger.error(f"Racing API error: {e}")
+            if cached:
+                return cached["data"]
             return {"error": str(e)}
 
     async def get_racecards_free(self, date: Optional[str] = None) -> Dict:
