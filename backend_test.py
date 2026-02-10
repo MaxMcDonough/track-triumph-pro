@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Comprehensive Backend API Testing for Horse Racing Betting Analyzer
-Tests all authentication, bankroll, race analysis, betting, and statistics endpoints
+Tests bankroll, race analysis, betting, and statistics endpoints (NO AUTH MODE)
 """
 
 import requests
@@ -17,10 +17,8 @@ class HorseRacingAPITester:
         self.session = requests.Session()
         self.session.headers.update({'Content-Type': 'application/json'})
         
-        self.user_token = None
-        self.user_data = None
+        # No auth mode - removed user credentials
         self.test_results = {
-            "auth": [],
             "bankroll": [],
             "tracks": [],
             "analysis": [],
@@ -28,11 +26,6 @@ class HorseRacingAPITester:
             "statistics": [],
             "errors": []
         }
-        
-        # Test user credentials
-        self.test_email = f"test_user_{int(time.time())}@example.com"
-        self.test_password = "TestPass123!"
-        self.test_name = "Test User"
 
     def log_result(self, category, test_name, success, details="", response_data=None):
         """Log test result"""
