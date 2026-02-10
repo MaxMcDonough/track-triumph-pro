@@ -5,7 +5,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 import uuid
 from datetime import datetime, timezone
@@ -14,22 +14,17 @@ import random
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Import Racing API integration
-from racing_api import racing_api, TheRacingAPI
+from racing_api import racing_api
 
-# MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# Default user ID for no-auth mode
 DEFAULT_USER_ID = "default_user"
 
-# Create the main app
 app = FastAPI(title="Horse Racing Betting Analyzer API")
 api_router = APIRouter(prefix="/api")
 
-# Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
@@ -51,17 +46,17 @@ class BetCreate(BaseModel):
     score: int
 
 class BetSettle(BaseModel):
-    result: str  # WIN or LOSS
+    result: str
 
 class RaceAnalysisRequest(BaseModel):
-    track: str
-    race_number: int
+    race_id: Optional[str] = None
+    track: Optional[str] = None
+    race_number: Optional[int] = None
     date: Optional[str] = None
 
-# ==================== HELPER FUNCTIONS ====================
+# ==================== HELPERS ====================
 
 async def ensure_default_bankroll():
-    """Ensure default user has bankroll settings"""
     settings = await db.bankroll_settings.find_one({"user_id": DEFAULT_USER_ID}, {"_id": 0})
     if not settings:
         await db.bankroll_settings.insert_one({
@@ -80,17 +75,12 @@ async def ensure_default_bankroll():
 
 @api_router.get("/bankroll")
 async def get_bankroll():
-    """Get bankroll settings"""
     settings = await ensure_default_bankroll()
-    
-    # Calculate today's P/L
     bets = await db.bets.find({
         "user_id": DEFAULT_USER_ID,
         "result": {"$ne": None}
     }, {"_id": 0}).to_list(1000)
-    
     today_pl = sum(bet.get("profit_loss", 0) for bet in bets if bet.get("profit_loss"))
-    
     return {
         **settings,
         "today_pl": today_pl,
@@ -100,7 +90,6 @@ async def get_bankroll():
 
 @api_router.put("/bankroll")
 async def update_bankroll(update: BankrollUpdate):
-    """Update bankroll settings"""
     await ensure_default_bankroll()
     update_data = {k: v for k, v in update.model_dump().items() if v is not None}
     if update_data:
@@ -112,7 +101,6 @@ async def update_bankroll(update: BankrollUpdate):
 
 @api_router.post("/bankroll/reset")
 async def reset_bankroll():
-    """Reset bankroll to starting amount"""
     settings = await ensure_default_bankroll()
     await db.bankroll_settings.update_one(
         {"user_id": DEFAULT_USER_ID},
@@ -123,523 +111,562 @@ async def reset_bankroll():
     )
     return await get_bankroll()
 
-# ==================== 8-CRITERIA SCORING ALGORITHM ====================
+# ==================== 8-CRITERIA SCORING ====================
 
-APPROVED_UK_TRACKS = [
+APPROVED_TRACKS = {
     'wolverhampton', 'southwell', 'chelmsford', 'kempton',
     'lingfield', 'newcastle', 'dundalk', 'curragh',
-    'leopardstown', 'naas', 'downpatrick'
-]
-
-APPROVED_US_TRACKS = [
+    'leopardstown', 'naas', 'downpatrick',
     'churchill-downs', 'santa-anita', 'gulfstream',
-    'belmont', 'saratoga', 'keeneland', 'del-mar'
-]
+    'belmont', 'saratoga', 'keeneland', 'del-mar',
+    # Add common UK/IRE courses from the API
+    'ayr', 'ffos las', 'limerick', 'ascot', 'aintree',
+    'cheltenham', 'doncaster', 'epsom', 'goodwood',
+    'haydock', 'market rasen', 'musselburgh', 'perth',
+    'redcar', 'sandown', 'sedgefield', 'thirsk',
+    'warwick', 'wetherby', 'wincanton', 'windsor',
+    'york', 'catterick', 'exeter', 'fontwell',
+    'huntingdon', 'leicester', 'ludlow', 'newbury',
+    'nottingham', 'plumpton', 'stratford', 'taunton',
+    'uttoxeter', 'bath', 'beverley', 'brighton',
+    'carlisle', 'chepstow', 'hamilton', 'hexham',
+    'pontefract', 'ripon', 'towcester', 'bangor-on-dee',
+    'cork', 'fairyhouse', 'galway', 'gowran park',
+    'killarney', 'kilbeggan', 'laytown', 'listowel',
+    'navan', 'punchestown', 'roscommon', 'sligo',
+    'thurles', 'tipperary', 'tramore', 'wexford',
+}
+
 
 def calculate_horse_score(horse: Dict, track: str, bet_type: str = "PLACE") -> Dict:
-    """Calculate 8-criteria score for a horse"""
+    """Calculate 8-criteria score for a horse using available live data."""
     score = 0
     max_score = 8
-    criteria_breakdown = {}
-    
-    # CRITERION 1: TRACK TYPE (Pass/Fail)
-    is_approved_track = track.lower() in APPROVED_UK_TRACKS or track.lower() in APPROVED_US_TRACKS
-    if not is_approved_track:
+    criteria = {}
+
+    # Normalize track name for matching
+    track_lower = track.lower().strip()
+
+    # CRITERION 1: TRACK TYPE
+    is_approved = any(t in track_lower for t in APPROVED_TRACKS) or track_lower in APPROVED_TRACKS
+    if not is_approved:
         return {
-            "score": 0,
-            "max_score": max_score,
+            "score": 0, "max_score": max_score,
             "verdict": "REJECTED - Not approved track",
-            "criteria_breakdown": {"track_type": "FAIL - International/minor track"}
+            "criteria_breakdown": {"track_type": "FAIL - Unapproved track: " + track}
         }
-    criteria_breakdown["track_type"] = "✅ PASS - Approved UK/US track"
-    
-    # CRITERION 2: COMPLETE STATISTICS (Pass/Fail)
-    has_complete_stats = all([
-        horse.get("trainer_last_14_days_percent") is not None,
-        horse.get("jockey_last_14_days_percent") is not None,
-        horse.get("course_percent") is not None,
-        horse.get("distance_percent") is not None
-    ])
-    
-    if not has_complete_stats:
+    criteria["track_type"] = "PASS - Approved track"
+
+    # CRITERION 2: FORM COMPLETENESS
+    form = horse.get("form_analysis", {})
+    has_form = form.get("runs", 0) >= 3
+    has_rating = horse.get("official_rating", 0) > 0
+
+    if not has_form:
         return {
-            "score": 0,
-            "max_score": max_score,
-            "verdict": "REJECTED - Incomplete data",
+            "score": 0, "max_score": max_score,
+            "verdict": "REJECTED - Insufficient form data",
             "criteria_breakdown": {
-                **criteria_breakdown,
-                "complete_stats": "FAIL - Missing critical statistics"
+                **criteria,
+                "complete_stats": "FAIL - Fewer than 3 runs on record"
             }
         }
-    criteria_breakdown["complete_stats"] = "✅ PASS - All statistics available"
-    
-    # CRITERION 3: EXPERT CONSENSUS (0-2 points)
-    expert_score = 0
-    expert_details = []
-    
-    if horse.get("racing_post_top3_position") and horse["racing_post_top3_position"] > 0:
-        expert_score += 1
-        expert_details.append(f"Racing Post: #{horse['racing_post_top3_position']}")
-    
-    if horse.get("at_the_races_top3_position") and horse["at_the_races_top3_position"] > 0:
-        expert_score += 1
-        expert_details.append(f"At The Races: #{horse['at_the_races_top3_position']}")
-    
-    score += expert_score
-    
-    if expert_score == 2:
-        criteria_breakdown["expert_consensus"] = f"✅ 2/2 - {', '.join(expert_details)}"
-    elif expert_score == 1:
-        criteria_breakdown["expert_consensus"] = f"⚠️ 1/2 - {', '.join(expert_details)}"
+    criteria["complete_stats"] = f"PASS - {form['runs']} runs, OR {horse.get('official_rating', 'N/A')}"
+
+    # CRITERION 3: FORM & CONSISTENCY (replaces expert consensus for live data)
+    form_score = 0
+    place_rate = form.get("place_rate", 0)
+    win_rate = form.get("win_rate", 0)
+
+    if place_rate >= 50:
+        form_score += 1
+    if win_rate >= 20:
+        form_score += 1
+
+    score += form_score
+    if form_score == 2:
+        criteria["form_analysis"] = f"PASS 2/2 - Win {win_rate}%, Place {place_rate}%"
+    elif form_score == 1:
+        criteria["form_analysis"] = f"PARTIAL 1/2 - Win {win_rate}%, Place {place_rate}%"
     else:
-        criteria_breakdown["expert_consensus"] = "❌ 0/2 - Not in expert top 3"
-    
-    # CRITERION 4: HOT STATISTICS (0-2 points)
-    HOT_THRESHOLD = 20
-    hot_stats_score = 0
-    hot_stats_details = []
-    
-    trainer_percent = horse.get("trainer_last_14_days_percent", 0)
-    if trainer_percent >= HOT_THRESHOLD:
-        hot_stats_score += 1
-        hot_stats_details.append(f"Trainer: {trainer_percent}% 🔥")
+        criteria["form_analysis"] = f"FAIL 0/2 - Win {win_rate}%, Place {place_rate}%"
+
+    # CRITERION 4: RECENT TREND (replaces hot stats for live data)
+    trend_score = 0
+    trend = form.get("recent_trend", "unknown")
+    last_pos = form.get("last_position")
+
+    if trend == "improving":
+        trend_score += 1
+    if last_pos and 1 <= last_pos <= 3:
+        trend_score += 1
+
+    score += trend_score
+    last_str = f"Last: {last_pos}" if last_pos else "Last: N/A"
+    if trend_score == 2:
+        criteria["recent_trend"] = f"PASS 2/2 - {trend.title()}, {last_str}"
+    elif trend_score == 1:
+        criteria["recent_trend"] = f"PARTIAL 1/2 - {trend.title()}, {last_str}"
     else:
-        hot_stats_details.append(f"Trainer: {trainer_percent}%")
-    
-    jockey_percent = horse.get("jockey_last_14_days_percent", 0)
-    if jockey_percent >= HOT_THRESHOLD:
-        hot_stats_score += 1
-        hot_stats_details.append(f"Jockey: {jockey_percent}% 🔥")
-    else:
-        hot_stats_details.append(f"Jockey: {jockey_percent}%")
-    
-    score += hot_stats_score
-    
-    if hot_stats_score == 2:
-        criteria_breakdown["hot_stats"] = f"✅ 2/2 - {', '.join(hot_stats_details)}"
-    elif hot_stats_score == 1:
-        criteria_breakdown["hot_stats"] = f"⚠️ 1/2 - {', '.join(hot_stats_details)}"
-    else:
-        criteria_breakdown["hot_stats"] = f"❌ 0/2 - {', '.join(hot_stats_details)}"
-    
-    # CRITERION 5: ODDS VALUE (0-1 points)
-    odds_score = 0
-    if bet_type == "WIN":
-        win_odds = horse.get("best_win_odds", 0)
-        if 2.0 <= win_odds <= 9.0:
-            odds_score = 1
-            criteria_breakdown["odds_value"] = f"✅ WIN odds {win_odds:.2f} - Good value"
-        elif win_odds < 2.0:
-            criteria_breakdown["odds_value"] = f"❌ WIN odds {win_odds:.2f} - Too short"
+        criteria["recent_trend"] = f"FAIL 0/2 - {trend.title()}, {last_str}"
+
+    # CRITERION 5: OFFICIAL RATING VALUE
+    rating_score = 0
+    ofr = horse.get("official_rating", 0)
+    if ofr > 0:
+        # Higher rated horse in the field is a positive signal
+        if ofr >= 90:
+            rating_score = 1
+            criteria["rating_value"] = f"PASS - OR {ofr} (strong)"
+        elif ofr >= 70:
+            rating_score = 1
+            criteria["rating_value"] = f"PASS - OR {ofr} (competitive)"
         else:
-            criteria_breakdown["odds_value"] = f"❌ WIN odds {win_odds:.2f} - Too long"
+            criteria["rating_value"] = f"FAIL - OR {ofr} (low rated)"
     else:
-        place_odds = horse.get("best_place_odds", 0)
-        if place_odds >= 1.83:
-            odds_score = 1
-            criteria_breakdown["odds_value"] = f"✅ PLACE odds {place_odds:.2f} - Good value"
+        criteria["rating_value"] = "FAIL - No official rating"
+    score += rating_score
+
+    # CRITERION 6: WEIGHT & CLASS
+    weight_score = 0
+    weight_lbs = horse.get("weight_lbs", 0)
+    if weight_lbs > 0:
+        # Lighter weight is generally better (in handicaps)
+        if weight_lbs <= 150:
+            weight_score = 1
+            criteria["weight_class"] = f"PASS - {weight_lbs}lbs (light)"
+        elif weight_lbs <= 165:
+            criteria["weight_class"] = f"NEUTRAL - {weight_lbs}lbs (mid range)"
         else:
-            criteria_breakdown["odds_value"] = f"❌ PLACE odds {place_odds:.2f} - Too short"
-    
-    score += odds_score
-    
-    # CRITERION 6: MARKET CONFIDENCE (0-1 points)
-    market_score = 0
-    volume = horse.get("betfair_matched_volume", 0)
-    movement = horse.get("betfair_price_movement", "stable")
-    sharp_money = horse.get("betfair_sharp_money_indicator", "none")
-    
-    if (volume > 50000 and movement == "steam") or sharp_money == "strong":
-        market_score = 1
-        criteria_breakdown["market_confidence"] = f"✅ Strong market support (£{volume/1000:.0f}k matched, {movement})"
-    elif movement == "drift":
-        criteria_breakdown["market_confidence"] = "❌ Drifting in odds (negative signal)"
+            criteria["weight_class"] = f"FAIL - {weight_lbs}lbs (heavy)"
     else:
-        criteria_breakdown["market_confidence"] = "⚠️ Moderate market activity"
-    
-    score += market_score
-    
-    # CRITERION 7: THIRD EXPERT OPINION (0-1 points)
-    timeform_score = 0
-    timeform_rating = horse.get("timeform_rating", 0)
-    timeform_flags = horse.get("timeform_flags", [])
-    
-    has_strong_timeform = timeform_rating >= 80
-    has_timeform_flags = any(f in timeform_flags for f in ['!', '↑', 'C'])
-    
-    if has_strong_timeform and (expert_score >= 1 or has_timeform_flags):
-        timeform_score = 1
-        flags_str = f" ({', '.join(timeform_flags)})" if timeform_flags else ""
-        criteria_breakdown["timeform_opinion"] = f"✅ Timeform {timeform_rating}{flags_str}"
+        criteria["weight_class"] = "NEUTRAL - Weight not available"
+    score += weight_score
+
+    # CRITERION 7: FITNESS (days since last run)
+    fitness_score = 0
+    last_run = horse.get("last_run_days", 0)
+    if 7 <= last_run <= 42:
+        fitness_score = 1
+        criteria["fitness"] = f"PASS - {last_run} days since last run (fit)"
+    elif last_run > 0 and last_run < 7:
+        criteria["fitness"] = f"NEUTRAL - {last_run} days (quick turnaround)"
+    elif last_run > 42:
+        criteria["fitness"] = f"FAIL - {last_run} days since last run (long layoff)"
     else:
-        criteria_breakdown["timeform_opinion"] = f"⚠️ Timeform {timeform_rating or 'N/A'}"
-    
-    score += timeform_score
-    
-    # CRITERION 8: POSITIVE ANGLE (0-1 points)
+        criteria["fitness"] = "NEUTRAL - Last run data unavailable"
+    score += fitness_score
+
+    # CRITERION 8: POSITIVE ANGLE
     angle_score = 0
-    positive_angles = []
-    
-    if horse.get("class_movement") == "dropping":
-        positive_angles.append("Class drop")
-    if horse.get("first_time_blinkers") or horse.get("first_time_tongue_tie"):
-        positive_angles.append("First-time equipment")
-    if horse.get("course_percent", 0) >= 25:
-        positive_angles.append(f"Track specialist ({horse['course_percent']}%)")
-    if horse.get("trainer_after_break_percent", 0) >= 25:
-        positive_angles.append("Trainer after break angle")
-    if horse.get("draw_advantage") == "strong":
-        positive_angles.append("Favorable draw")
-    if horse.get("pace_advantage") == "sole front-runner":
-        positive_angles.append("Sole early speed")
-    
-    if positive_angles:
+    angles = []
+
+    headgear = horse.get("headgear", "")
+    if headgear and "first" in headgear.lower():
+        angles.append("First-time headgear")
+
+    if form.get("recent_trend") == "improving" and ofr >= 70:
+        angles.append("Improving form + good rating")
+
+    if last_pos and last_pos <= 2 and trend == "improving":
+        angles.append("Recent podium + upward trend")
+
+    if weight_lbs > 0 and weight_lbs <= 140 and ofr >= 80:
+        angles.append("Well handicapped (light + high OR)")
+
+    if angles:
         angle_score = 1
-        criteria_breakdown["positive_angle"] = f"✅ {', '.join(positive_angles)}"
+        criteria["positive_angle"] = f"PASS - {', '.join(angles)}"
     else:
-        criteria_breakdown["positive_angle"] = "⚠️ No standout angles"
-    
+        criteria["positive_angle"] = "NEUTRAL - No standout angles"
     score += angle_score
-    
-    # Calculate confidence and recommendations
-    score_percentage = (score / max_score) * 100
-    
+
+    # Confidence & recommendation
     if score >= 7:
-        confidence_rating = "90-95%"
-        star_rating = 5
-        recommendation = "EXCELLENT BET - Strong recommend"
+        confidence, stars, rec = "90-95%", 5, "EXCELLENT BET - Strong recommend"
     elif score >= 6:
-        confidence_rating = "80-90%"
-        star_rating = 4
-        recommendation = "STRONG BET - Recommend"
+        confidence, stars, rec = "80-90%", 4, "STRONG BET - Recommend"
     elif score >= 5:
-        confidence_rating = "70-80%"
-        star_rating = 4
-        recommendation = "GOOD BET - Acceptable"
+        confidence, stars, rec = "70-80%", 4, "GOOD BET - Acceptable"
     elif score >= 4:
-        confidence_rating = "60-70%"
-        star_rating = 3
-        recommendation = "BORDERLINE - Proceed with caution"
+        confidence, stars, rec = "60-70%", 3, "BORDERLINE - Proceed with caution"
     elif score >= 3:
-        confidence_rating = "50-60%"
-        star_rating = 2
-        recommendation = "WEAK - Not recommended"
+        confidence, stars, rec = "50-60%", 2, "WEAK - Not recommended"
     else:
-        confidence_rating = "<50%"
-        star_rating = 1
-        recommendation = "AVOID - Do not bet"
-    
+        confidence, stars, rec = "<50%", 1, "AVOID - Do not bet"
+
     return {
         "score": score,
         "max_score": max_score,
-        "score_percentage": score_percentage,
-        "confidence_rating": confidence_rating,
-        "star_rating": star_rating,
-        "recommendation": recommendation,
-        "criteria_breakdown": criteria_breakdown,
+        "score_percentage": (score / max_score) * 100,
+        "confidence_rating": confidence,
+        "star_rating": stars,
+        "recommendation": rec,
+        "criteria_breakdown": criteria,
         "horse_name": horse.get("name"),
         "draw_number": horse.get("draw_number"),
-        "current_odds": {
-            "win": horse.get("best_win_odds"),
-            "place": horse.get("best_place_odds")
-        }
     }
 
+
 def calculate_stake(score: int, bankroll: float, bet_type: str) -> float:
-    """Calculate recommended stake based on score and bankroll"""
-    MAX_STAKE_PERCENT = 0.03
-    
     if score >= 7:
-        stake_percent = 0.03
+        pct = 0.03
     elif score >= 6:
-        stake_percent = 0.025
+        pct = 0.025
     elif score >= 5:
-        stake_percent = 0.02
+        pct = 0.02
     elif score >= 4:
-        stake_percent = 0.015
+        pct = 0.015
     else:
-        stake_percent = 0.01
-    
-    stake = bankroll * stake_percent
-    stake = round(stake * 2) / 2  # Round to nearest $0.50
-    stake = max(stake, 2)  # Minimum $2
-    stake = min(stake, bankroll * MAX_STAKE_PERCENT)  # Max 3%
-    
+        pct = 0.01
+    stake = bankroll * pct
+    stake = round(stake * 2) / 2
+    stake = max(stake, 2)
+    stake = min(stake, bankroll * 0.03)
     return stake
 
-def generate_warnings(horses: List[Dict], bankroll: float, stop_loss: float, consecutive_losses: int) -> List[Dict]:
-    """Generate warnings based on analysis"""
+
+def generate_warnings(scored_horses: List[Dict], bankroll: float, stop_loss: float, consecutive_losses: int) -> List[Dict]:
     warnings = []
-    
-    # Check if top pick has low score
-    if horses:
-        top_score = max(h.get("score", 0) for h in horses)
+    if scored_horses:
+        top_score = max(h.get("score", 0) for h in scored_horses)
         if top_score < 4:
             warnings.append({
                 "level": "HIGH",
-                "message": f"⚠️ Top pick only scores {top_score}/8 - No qualifying bets for this race",
+                "message": f"Top pick only scores {top_score}/8 - No qualifying bets for this race",
                 "action": "SKIP_RACE"
             })
-    
-    # Check if close to stop-loss
     cushion = bankroll - stop_loss
-    cushion_percent = (cushion / stop_loss) * 100 if stop_loss > 0 else 0
-    
-    if cushion_percent < 20:
+    cushion_pct = (cushion / stop_loss) * 100 if stop_loss > 0 else 0
+    if cushion_pct < 20:
         warnings.append({
             "level": "CRITICAL",
-            "message": f"🛑 Only {cushion_percent:.0f}% above stop-loss - Extreme caution required",
+            "message": f"Only {cushion_pct:.0f}% above stop-loss - Extreme caution required",
             "action": "REDUCE_STAKES"
         })
-    elif cushion_percent < 50:
+    elif cushion_pct < 50:
         warnings.append({
             "level": "HIGH",
-            "message": f"⚠️ {cushion_percent:.0f}% above stop-loss - Be selective with bets",
+            "message": f"{cushion_pct:.0f}% above stop-loss - Be selective with bets",
             "action": "BE_SELECTIVE"
         })
-    
-    # Check consecutive losses
     if consecutive_losses >= 2:
         warnings.append({
             "level": "CRITICAL",
-            "message": f"🛑 STOP BETTING: {consecutive_losses} consecutive losses. Per strategy, stop for the day.",
+            "message": f"STOP BETTING: {consecutive_losses} consecutive losses. Per strategy, stop for the day.",
             "action": "STOP_FOR_DAY"
         })
     elif consecutive_losses == 1:
         warnings.append({
             "level": "HIGH",
-            "message": "⚠️ WARNING: 1 loss away from mandatory stop. Next bet is critical.",
+            "message": "WARNING: 1 loss away from mandatory stop. Next bet is critical.",
             "action": "PROCEED_WITH_CAUTION"
         })
-    
     return warnings
 
-async def get_mock_race_data(track: str, race_number: int) -> List[Dict]:
-    """Generate mock race data for demonstration"""
-    horse_names = [
-        "Thunder Bolt", "Silver Storm", "Golden Arrow", "Dark Knight",
-        "Flying Spirit", "Royal Champion", "Lucky Star", "Midnight Run",
-        "Fast Forward", "Wild Card", "Storm Chaser", "Iron Will"
-    ]
-    
-    jockeys = ["J. Murphy", "T. Marquand", "W. Buick", "R. Havlin", "D. Tudhope", 
-               "H. Bentley", "C. Soumillon", "F. Dettori"]
-    trainers = ["J. Gosden", "C. Appleby", "A. Balding", "W. Haggas", 
-                "R. Varian", "M. Johnston", "R. Hannon", "K. Ryan"]
-    
-    num_horses = random.randint(8, 12)
-    horses = []
-    
-    for i in range(num_horses):
-        trainer_hot = random.random() > 0.6
-        jockey_hot = random.random() > 0.6
-        
-        horse = {
-            "name": horse_names[i % len(horse_names)],
-            "draw_number": i + 1,
-            "jockey_name": random.choice(jockeys),
-            "trainer_name": random.choice(trainers),
-            "age": random.randint(3, 7),
-            "weight": f"{random.randint(8, 10)}-{random.randint(0, 13)}",
-            "official_rating": random.randint(60, 110),
-            "form": "-".join([str(random.randint(1, 9)) for _ in range(5)]),
-            "trainer_last_14_days_percent": random.randint(15, 35) if trainer_hot else random.randint(5, 18),
-            "jockey_last_14_days_percent": random.randint(15, 35) if jockey_hot else random.randint(5, 18),
-            "course_percent": random.randint(10, 40),
-            "distance_percent": random.randint(15, 45),
-            "racing_post_top3_position": random.choice([0, 0, 0, 1, 2, 3]),
-            "at_the_races_top3_position": random.choice([0, 0, 0, 1, 2, 3]),
-            "timeform_rating": random.randint(65, 95),
-            "timeform_flags": random.sample(["!", "↑", "C", "D", "p"], random.randint(0, 2)),
-            "best_win_odds": round(random.uniform(2.0, 15.0), 2),
-            "best_place_odds": round(random.uniform(1.5, 5.0), 2),
-            "best_win_odds_bookmaker": random.choice(["Bet365", "William Hill", "Ladbrokes", "Betfair"]),
-            "best_place_odds_bookmaker": random.choice(["Bet365", "William Hill", "Ladbrokes", "Betfair"]),
-            "betfair_matched_volume": random.randint(5000, 150000),
-            "betfair_price_movement": random.choice(["steam", "drift", "stable", "stable"]),
-            "betfair_sharp_money_indicator": random.choice(["strong", "moderate", "none", "none"]),
-            "class_movement": random.choice(["dropping", "rising", None, None]),
-            "first_time_blinkers": random.random() > 0.9,
-            "first_time_tongue_tie": random.random() > 0.95,
-            "trainer_after_break_percent": random.randint(10, 35),
-            "draw_advantage": random.choice(["strong", "moderate", "none", None]),
-            "pace_advantage": random.choice(["sole front-runner", "prominent", None, None])
-        }
-        horses.append(horse)
-    
-    return horses
 
-# ==================== RACE ANALYSIS ENDPOINTS ====================
-
-@api_router.post("/analyze")
-async def analyze_race(request: RaceAnalysisRequest):
-    """Analyze a race and generate betting recommendations"""
-    
-    settings = await ensure_default_bankroll()
-    bankroll = settings.get("current_bankroll", 250.0)
-    stop_loss = settings.get("stop_loss", 60.0)
-    consecutive_losses = settings.get("consecutive_losses", 0)
-    
-    # Get mock race data
-    horses = await get_mock_race_data(request.track, request.race_number)
-    
-    # Score all horses
-    scored_horses = []
-    for horse in horses:
-        win_score = calculate_horse_score(horse, request.track, "WIN")
-        place_score = calculate_horse_score(horse, request.track, "PLACE")
-        scored_horses.append({
-            **horse,
-            "win_score": win_score,
-            "place_score": place_score
-        })
-    
-    # Sort by score for recommendations
+def build_recommendations(scored_horses: List[Dict], bankroll: float):
+    """Build WIN, PLACE, TRIFECTA, and SAFETY recommendations from scored horses."""
     win_sorted = sorted(scored_horses, key=lambda h: h["win_score"]["score"], reverse=True)
     place_sorted = sorted(scored_horses, key=lambda h: h["place_score"]["score"], reverse=True)
-    
-    # Generate WIN recommendation
-    top_win = win_sorted[0] if win_sorted else None
-    win_recommendation = None
-    if top_win:
-        stake = calculate_stake(top_win["win_score"]["score"], bankroll, "WIN")
-        win_recommendation = {
+
+    win_rec = None
+    top = win_sorted[0] if win_sorted else None
+    if top and top["win_score"]["score"] >= 3:
+        stake = calculate_stake(top["win_score"]["score"], bankroll, "WIN")
+        est_odds = max(2.0, 12.0 - top["win_score"]["score"])  # Estimate based on score
+        win_rec = {
             "type": "WIN",
-            "horse": top_win["name"],
-            "draw_number": top_win["draw_number"],
-            "odds": top_win["best_win_odds"],
-            "bookmaker": top_win["best_win_odds_bookmaker"],
-            "score": top_win["win_score"]["score"],
-            "max_score": top_win["win_score"]["max_score"],
-            "confidence": top_win["win_score"]["confidence_rating"],
-            "star_rating": top_win["win_score"]["star_rating"],
+            "horse": top["name"],
+            "draw_number": top.get("draw_number", top.get("number", 0)),
+            "odds": est_odds,
+            "bookmaker": "Estimated",
+            "score": top["win_score"]["score"],
+            "max_score": top["win_score"]["max_score"],
+            "confidence": top["win_score"]["confidence_rating"],
+            "star_rating": top["win_score"]["star_rating"],
             "stake": stake,
-            "potential_return": stake * top_win["best_win_odds"],
-            "potential_profit": (stake * top_win["best_win_odds"]) - stake,
-            "criteria_breakdown": top_win["win_score"]["criteria_breakdown"],
-            "recommendation": top_win["win_score"]["recommendation"]
+            "potential_return": round(stake * est_odds, 2),
+            "potential_profit": round((stake * est_odds) - stake, 2),
+            "criteria_breakdown": top["win_score"]["criteria_breakdown"],
+            "recommendation": top["win_score"]["recommendation"],
         }
-    
-    # Generate PLACE recommendation
-    top_place = place_sorted[0] if place_sorted else None
-    place_recommendation = None
-    if top_place:
-        stake = calculate_stake(top_place["place_score"]["score"], bankroll, "PLACE")
-        place_recommendation = {
+
+    place_rec = None
+    top_p = place_sorted[0] if place_sorted else None
+    if top_p and top_p["place_score"]["score"] >= 3:
+        stake = calculate_stake(top_p["place_score"]["score"], bankroll, "PLACE")
+        est_place_odds = max(1.5, (12.0 - top_p["place_score"]["score"]) / 3 + 1)
+        place_rec = {
             "type": "PLACE",
-            "horse": top_place["name"],
-            "draw_number": top_place["draw_number"],
-            "odds": top_place["best_place_odds"],
-            "bookmaker": top_place["best_place_odds_bookmaker"],
-            "score": top_place["place_score"]["score"],
-            "max_score": top_place["place_score"]["max_score"],
-            "confidence": top_place["place_score"]["confidence_rating"],
-            "star_rating": top_place["place_score"]["star_rating"],
+            "horse": top_p["name"],
+            "draw_number": top_p.get("draw_number", top_p.get("number", 0)),
+            "odds": round(est_place_odds, 2),
+            "bookmaker": "Estimated",
+            "score": top_p["place_score"]["score"],
+            "max_score": top_p["place_score"]["max_score"],
+            "confidence": top_p["place_score"]["confidence_rating"],
+            "star_rating": top_p["place_score"]["star_rating"],
             "stake": stake,
-            "potential_return": stake * top_place["best_place_odds"],
-            "potential_profit": (stake * top_place["best_place_odds"]) - stake,
-            "criteria_breakdown": top_place["place_score"]["criteria_breakdown"],
-            "recommendation": top_place["place_score"]["recommendation"]
+            "potential_return": round(stake * est_place_odds, 2),
+            "potential_profit": round((stake * est_place_odds) - stake, 2),
+            "criteria_breakdown": top_p["place_score"]["criteria_breakdown"],
+            "recommendation": top_p["place_score"]["recommendation"],
         }
-    
-    # Generate TRIFECTA recommendation
+
+    tri_rec = None
     top3 = place_sorted[:3]
-    trifecta_recommendation = None
     if len(top3) >= 3:
-        avg_score = sum(h["place_score"]["score"] for h in top3) / 3
-        trifecta_recommendation = {
+        avg = sum(h["place_score"]["score"] for h in top3) / 3
+        tri_rec = {
             "type": "BOX_TRIFECTA",
             "horses": [
-                {"position": i+1, "name": h["name"], "draw_number": h["draw_number"], 
+                {"position": i + 1, "name": h["name"], "draw_number": h.get("draw_number", 0),
                  "score": h["place_score"]["score"], "confidence": h["place_score"]["confidence_rating"]}
                 for i, h in enumerate(top3)
             ],
             "unit_stake": 2,
             "total_combinations": 6,
             "total_stake": 12,
-            "avg_score": avg_score,
-            "confidence": "75-85%" if avg_score >= 6 else ("65-75%" if avg_score >= 5 else "50-65%"),
-            "star_rating": 4 if avg_score >= 6 else (3 if avg_score >= 5 else 2),
-            "recommendation": "Box trifecta - These 3 to finish top 3 in any order"
+            "avg_score": round(avg, 1),
+            "confidence": "75-85%" if avg >= 6 else ("65-75%" if avg >= 5 else "50-65%"),
+            "star_rating": 4 if avg >= 6 else (3 if avg >= 5 else 2),
+            "recommendation": "Box trifecta - These 3 to finish top 3 in any order",
         }
-    
-    # Generate SAFETY bet recommendation
+
+    safety_rec = None
     safety_candidates = [h for h in place_sorted if h["place_score"]["score"] >= 4]
-    safety_recommendation = None
     if safety_candidates:
-        safety = max(safety_candidates, key=lambda h: h["best_place_odds"])
-        stake = min(
-            calculate_stake(safety["place_score"]["score"], bankroll, "PLACE"),
-            bankroll * 0.015
-        )
-        safety_recommendation = {
+        s = safety_candidates[0]
+        stake = min(calculate_stake(s["place_score"]["score"], bankroll, "PLACE"), bankroll * 0.015)
+        est_odds = max(1.5, (12.0 - s["place_score"]["score"]) / 3 + 1)
+        safety_rec = {
             "type": "SAFETY_PLACE",
-            "horse": safety["name"],
-            "draw_number": safety["draw_number"],
-            "odds": safety["best_place_odds"],
-            "bookmaker": safety["best_place_odds_bookmaker"],
-            "score": safety["place_score"]["score"],
+            "horse": s["name"],
+            "draw_number": s.get("draw_number", 0),
+            "odds": round(est_odds, 2),
+            "bookmaker": "Estimated",
+            "score": s["place_score"]["score"],
             "confidence": "60-70%",
             "star_rating": 3,
             "stake": stake,
-            "potential_return": stake * safety["best_place_odds"],
-            "potential_profit": (stake * safety["best_place_odds"]) - stake,
-            "recommendation": "Conservative PLACE bet - Lower risk option"
+            "potential_return": round(stake * est_odds, 2),
+            "potential_profit": round((stake * est_odds) - stake, 2),
+            "recommendation": "Conservative PLACE bet - Lower risk option",
         }
-    
-    # Generate warnings
-    warnings = generate_warnings(
-        [{"score": h["place_score"]["score"]} for h in scored_horses],
-        bankroll, stop_loss, consecutive_losses
-    )
-    
+
+    return {"win": win_rec, "place": place_rec, "trifecta": tri_rec, "safety": safety_rec}
+
+
+# ==================== LIVE DATA ENDPOINTS ====================
+
+@api_router.get("/racecards/today")
+async def get_todays_racecards():
+    """Get today's live racecards from The Racing API."""
+    result = await racing_api.get_racecards_free()
+    if "error" in result:
+        return {"success": False, "error": result["error"], "racecards": []}
+
+    raw_cards = result.get("data", {}).get("racecards", [])
+    # Group by course
+    courses = {}
+    all_races = []
+    for rc in raw_cards:
+        transformed = racing_api.transform_racecard(rc)
+        course = transformed["course"]
+        if course not in courses:
+            courses[course] = {
+                "course": course,
+                "region": transformed["region"],
+                "going": transformed["going"],
+                "surface": transformed["surface"],
+                "races": [],
+            }
+        courses[course]["races"].append({
+            "race_id": transformed["race_id"],
+            "off_time": transformed["off_time"],
+            "race_name": transformed["race_name"],
+            "race_type": transformed["race_type"],
+            "race_class": transformed["race_class"],
+            "distance": transformed["distance"],
+            "field_size": transformed["field_size"],
+            "prize": transformed["prize"],
+            "going": transformed["going"],
+        })
+        all_races.append(transformed)
+
     return {
         "success": True,
+        "data_source": "LIVE - The Racing API",
+        "date": raw_cards[0]["date"] if raw_cards else datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+        "total_races": len(raw_cards),
+        "courses": list(courses.values()),
+        "races": all_races,
+    }
+
+
+@api_router.post("/analyze")
+async def analyze_race(request: RaceAnalysisRequest):
+    """Analyze a race using live data (by race_id) or mock data (by track+race_number)."""
+    settings = await ensure_default_bankroll()
+    bankroll = settings.get("current_bankroll", 250.0)
+    stop_loss = settings.get("stop_loss", 60.0)
+    consecutive_losses = settings.get("consecutive_losses", 0)
+
+    # If race_id provided, use live data
+    if request.race_id:
+        return await _analyze_live_race(request.race_id, bankroll, stop_loss, consecutive_losses)
+
+    # Fallback: mock data
+    return await _analyze_mock_race(request.track or "wolverhampton", request.race_number or 1,
+                                     request.date, bankroll, stop_loss, consecutive_losses)
+
+
+async def _analyze_live_race(race_id: str, bankroll: float, stop_loss: float, consecutive_losses: int):
+    """Analyze a specific race from live racecards."""
+    result = await racing_api.get_racecards_free()
+    if "error" in result:
+        raise HTTPException(status_code=502, detail=result["error"])
+
+    raw_cards = result.get("data", {}).get("racecards", [])
+    target = None
+    for rc in raw_cards:
+        if rc.get("race_id") == race_id:
+            target = rc
+            break
+
+    if not target:
+        raise HTTPException(status_code=404, detail=f"Race {race_id} not found in today's racecards")
+
+    transformed = racing_api.transform_racecard(target)
+    track = transformed["course"]
+    runners = transformed["runners"]
+
+    scored = []
+    for horse in runners:
+        ws = calculate_horse_score(horse, track, "WIN")
+        ps = calculate_horse_score(horse, track, "PLACE")
+        scored.append({**horse, "win_score": ws, "place_score": ps})
+
+    recs = build_recommendations(scored, bankroll)
+    warnings = generate_warnings(
+        [{"score": h["place_score"]["score"]} for h in scored],
+        bankroll, stop_loss, consecutive_losses
+    )
+
+    return {
+        "success": True,
+        "data_source": "LIVE - The Racing API",
         "race_info": {
-            "track": request.track,
-            "race_number": request.race_number,
-            "date": request.date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "field_size": len(horses)
+            "race_id": race_id,
+            "track": track,
+            "race_name": transformed["race_name"],
+            "off_time": transformed["off_time"],
+            "race_type": transformed["race_type"],
+            "race_class": transformed["race_class"],
+            "distance": transformed["distance"],
+            "going": transformed["going"],
+            "surface": transformed["surface"],
+            "field_size": len(runners),
+            "date": transformed["date"],
         },
-        "recommendations": {
-            "win": win_recommendation,
-            "place": place_recommendation,
-            "trifecta": trifecta_recommendation,
-            "safety": safety_recommendation
-        },
-        "all_horses": scored_horses,
+        "recommendations": recs,
+        "all_horses": scored,
         "bankroll_status": {
             "current": bankroll,
             "stop_loss": stop_loss,
             "cushion": bankroll - stop_loss,
             "percent_above_stop_loss": ((bankroll - stop_loss) / stop_loss * 100) if stop_loss > 0 else 0
         },
-        "warnings": warnings
+        "warnings": warnings,
     }
 
-# ==================== BET MANAGEMENT ENDPOINTS ====================
+
+async def _analyze_mock_race(track: str, race_number: int, date: Optional[str],
+                              bankroll: float, stop_loss: float, consecutive_losses: int):
+    """Analyze with mock data (fallback)."""
+    horses = _generate_mock_data(track, race_number)
+    scored = []
+    for horse in horses:
+        ws = calculate_horse_score(horse, track, "WIN")
+        ps = calculate_horse_score(horse, track, "PLACE")
+        scored.append({**horse, "win_score": ws, "place_score": ps})
+
+    recs = build_recommendations(scored, bankroll)
+    warnings = generate_warnings(
+        [{"score": h["place_score"]["score"]} for h in scored],
+        bankroll, stop_loss, consecutive_losses
+    )
+
+    return {
+        "success": True,
+        "data_source": "MOCK - Demo data",
+        "race_info": {
+            "track": track,
+            "race_number": race_number,
+            "date": date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "field_size": len(horses),
+        },
+        "recommendations": recs,
+        "all_horses": scored,
+        "bankroll_status": {
+            "current": bankroll,
+            "stop_loss": stop_loss,
+            "cushion": bankroll - stop_loss,
+            "percent_above_stop_loss": ((bankroll - stop_loss) / stop_loss * 100) if stop_loss > 0 else 0
+        },
+        "warnings": warnings,
+    }
+
+
+def _generate_mock_data(track: str, race_number: int) -> List[Dict]:
+    names = ["Thunder Bolt", "Silver Storm", "Golden Arrow", "Dark Knight",
+             "Flying Spirit", "Royal Champion", "Lucky Star", "Midnight Run",
+             "Fast Forward", "Wild Card", "Storm Chaser", "Iron Will"]
+    jockeys = ["J. Murphy", "T. Marquand", "W. Buick", "R. Havlin", "D. Tudhope", "H. Bentley"]
+    trainers = ["J. Gosden", "C. Appleby", "A. Balding", "W. Haggas", "R. Varian", "M. Johnston"]
+
+    num = random.randint(8, 12)
+    horses = []
+    for i in range(num):
+        form_str = "".join([str(random.randint(1, 9)) for _ in range(6)])
+        horses.append({
+            "name": names[i % len(names)],
+            "draw_number": i + 1,
+            "number": i + 1,
+            "jockey_name": random.choice(jockeys),
+            "trainer_name": random.choice(trainers),
+            "age": str(random.randint(3, 7)),
+            "weight_lbs": random.randint(130, 175),
+            "official_rating": random.randint(50, 110),
+            "form": form_str,
+            "form_analysis": racing_api.parse_form(form_str),
+            "last_run_days": random.randint(5, 60),
+            "headgear": "",
+            "sire": "", "dam": "", "owner": "",
+            "horse_id": "", "jockey_id": "", "trainer_id": "",
+            "sex": "gelding",
+        })
+    return horses
+
+
+# ==================== BET MANAGEMENT ====================
 
 @api_router.post("/bets")
 async def place_bet(bet_data: BetCreate):
-    """Record a new bet"""
     settings = await ensure_default_bankroll()
-    
     bankroll = settings.get("current_bankroll", 0)
     stop_loss = settings.get("stop_loss", 0)
     consecutive_losses = settings.get("consecutive_losses", 0)
-    
-    # Validate bet
+
     if bankroll - bet_data.stake < stop_loss:
         raise HTTPException(status_code=400, detail="Bet would breach stop-loss")
-    
     if consecutive_losses >= 2:
         raise HTTPException(status_code=400, detail="Two consecutive losses - betting stopped for today")
-    
     max_stake = bankroll * settings.get("max_stake_percent", 0.03)
     if bet_data.stake > max_stake:
         raise HTTPException(status_code=400, detail=f"Stake exceeds maximum ({max_stake:.2f})")
-    
-    # Create bet record
+
     bet_id = f"bet_{uuid.uuid4().hex[:12]}"
     bet_doc = {
         "bet_id": bet_id,
@@ -656,63 +683,50 @@ async def place_bet(bet_data: BetCreate):
         "profit_loss": None,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }
-    
     await db.bets.insert_one(bet_doc)
-    
-    # Update bankroll
     new_bankroll = bankroll - bet_data.stake
     await db.bankroll_settings.update_one(
         {"user_id": DEFAULT_USER_ID},
         {"$set": {"current_bankroll": new_bankroll}}
     )
-    
-    return {
-        "bet_id": bet_id,
-        "message": "Bet placed successfully",
-        "new_bankroll": new_bankroll
-    }
+    return {"bet_id": bet_id, "message": "Bet placed successfully", "new_bankroll": new_bankroll}
+
 
 @api_router.post("/bets/{bet_id}/settle")
 async def settle_bet(bet_id: str, settle_data: BetSettle):
-    """Settle a bet (mark as WIN or LOSS)"""
     bet = await db.bets.find_one({"bet_id": bet_id, "user_id": DEFAULT_USER_ID}, {"_id": 0})
     if not bet:
         raise HTTPException(status_code=404, detail="Bet not found")
-    
     if bet.get("result"):
         raise HTTPException(status_code=400, detail="Bet already settled")
-    
+
     settings = await ensure_default_bankroll()
     bankroll = settings.get("current_bankroll", 0)
     consecutive_losses = settings.get("consecutive_losses", 0)
-    
+
     if settle_data.result == "WIN":
         profit_loss = (bet["stake"] * bet["odds"]) - bet["stake"]
         new_bankroll = bankroll + bet["stake"] + profit_loss
         consecutive_losses = 0
-        message = f"✅ BET WON! +${profit_loss:.2f}. New bankroll: ${new_bankroll:.2f}"
+        message = f"BET WON! +${profit_loss:.2f}. New bankroll: ${new_bankroll:.2f}"
     else:
         profit_loss = -bet["stake"]
         new_bankroll = bankroll
         consecutive_losses += 1
         must_stop = consecutive_losses >= 2
-        message = f"❌ BET LOST. -${bet['stake']:.2f}. " + (
-            f"{consecutive_losses} losses in a row. 🛑 STOP BETTING FOR TODAY." if must_stop 
+        message = f"BET LOST. -${bet['stake']:.2f}. " + (
+            f"{consecutive_losses} losses in a row. STOP BETTING FOR TODAY." if must_stop
             else f"New bankroll: ${new_bankroll:.2f}"
         )
-    
-    # Update bet
+
     await db.bets.update_one(
         {"bet_id": bet_id},
         {"$set": {"result": settle_data.result, "profit_loss": profit_loss}}
     )
-    
-    # Update bankroll
     await db.bankroll_settings.update_one(
         {"user_id": DEFAULT_USER_ID},
         {"$set": {"current_bankroll": new_bankroll, "consecutive_losses": consecutive_losses}}
     )
-    
     return {
         "outcome": settle_data.result,
         "profit_loss": profit_loss,
@@ -722,86 +736,75 @@ async def settle_bet(bet_id: str, settle_data: BetSettle):
         "message": message
     }
 
+
 @api_router.get("/bets")
 async def get_bets():
-    """Get bet history"""
     bets = await db.bets.find({"user_id": DEFAULT_USER_ID}, {"_id": 0}).sort("timestamp", -1).to_list(100)
     return {"bets": bets}
 
+
 @api_router.get("/statistics")
 async def get_statistics():
-    """Get betting statistics"""
     bets = await db.bets.find({"user_id": DEFAULT_USER_ID, "result": {"$ne": None}}, {"_id": 0}).to_list(1000)
     settings = await ensure_default_bankroll()
-    
+
     if not bets:
         return {
             "overall": {
-                "total_bets": 0,
-                "wins": 0,
-                "losses": 0,
-                "win_rate": "0%",
-                "total_staked": "0.00",
-                "total_profit": "0.00",
-                "roi": "0%"
+                "total_bets": 0, "wins": 0, "losses": 0, "win_rate": "0%",
+                "total_staked": "0.00", "total_profit": "0.00", "roi": "0%"
             },
             "by_score": {},
             "recent_form": {"last_10_bets": "", "consecutive_losses": 0}
         }
-    
+
     wins = len([b for b in bets if b.get("result") == "WIN"])
     losses = len([b for b in bets if b.get("result") == "LOSS"])
     total_staked = sum(b.get("stake", 0) for b in bets)
     total_profit = sum(b.get("profit_loss", 0) for b in bets)
-    
     roi = (total_profit / total_staked * 100) if total_staked > 0 else 0
     win_rate = (wins / len(bets) * 100) if bets else 0
-    
-    # By score level
+
     by_score = {}
-    for score in range(3, 9):
-        score_bets = [b for b in bets if b.get("score") == score]
-        if score_bets:
-            score_wins = len([b for b in score_bets if b.get("result") == "WIN"])
-            score_staked = sum(b.get("stake", 0) for b in score_bets)
-            score_profit = sum(b.get("profit_loss", 0) for b in score_bets)
-            by_score[str(score)] = {
-                "bets": len(score_bets),
-                "wins": score_wins,
-                "win_rate": f"{(score_wins / len(score_bets) * 100):.1f}%",
-                "total_staked": f"{score_staked:.2f}",
-                "total_profit": f"{score_profit:.2f}",
-                "roi": f"{(score_profit / score_staked * 100):.1f}%" if score_staked > 0 else "0%"
+    for s in range(3, 9):
+        sb = [b for b in bets if b.get("score") == s]
+        if sb:
+            sw = len([b for b in sb if b.get("result") == "WIN"])
+            ss = sum(b.get("stake", 0) for b in sb)
+            sp = sum(b.get("profit_loss", 0) for b in sb)
+            by_score[str(s)] = {
+                "bets": len(sb), "wins": sw,
+                "win_rate": f"{(sw / len(sb) * 100):.1f}%",
+                "total_staked": f"{ss:.2f}",
+                "total_profit": f"{sp:.2f}",
+                "roi": f"{(sp / ss * 100):.1f}%" if ss > 0 else "0%"
             }
-    
-    # Recent form
+
     recent = sorted(bets, key=lambda b: b.get("timestamp", ""), reverse=True)[:10]
     last_10 = "".join(["W" if b.get("result") == "WIN" else "L" for b in recent])
-    
+
     return {
         "overall": {
-            "total_bets": len(bets),
-            "wins": wins,
-            "losses": losses,
+            "total_bets": len(bets), "wins": wins, "losses": losses,
             "win_rate": f"{win_rate:.1f}%",
             "total_staked": f"{total_staked:.2f}",
             "total_profit": f"{total_profit:.2f}",
             "roi": f"{roi:.1f}%",
-            "current_bankroll": f"{settings.get('current_bankroll', 0):.2f}" if settings else "0.00",
-            "starting_bankroll": f"{settings.get('starting_bankroll', 250):.2f}" if settings else "250.00"
+            "current_bankroll": f"{settings.get('current_bankroll', 0):.2f}",
+            "starting_bankroll": f"{settings.get('starting_bankroll', 250):.2f}"
         },
         "by_score": by_score,
         "recent_form": {
             "last_10_bets": last_10,
-            "consecutive_losses": settings.get("consecutive_losses", 0) if settings else 0
+            "consecutive_losses": settings.get("consecutive_losses", 0)
         }
     }
 
-# ==================== TRACKS ENDPOINT ====================
+
+# ==================== TRACKS ====================
 
 @api_router.get("/tracks")
 async def get_tracks():
-    """Get list of approved tracks"""
     return {
         "uk_tracks": [
             {"id": "wolverhampton", "name": "Wolverhampton (AW)", "country": "UK"},
@@ -826,234 +829,29 @@ async def get_tracks():
         ]
     }
 
-# ==================== SCRAPER STATUS ====================
 
 @api_router.get("/scraper/status")
 async def get_scraper_status():
-    """Get status of scraping configuration"""
     return {
         "the_racing_api": {
-            "configured": racing_api.configured, 
-            "source": "The Racing API (theracingapi.com)"
+            "configured": racing_api.configured,
+            "source": "The Racing API (theracingapi.com)",
+            "status": "connected" if racing_api.configured else "not configured"
         },
-        "racing_post": {"configured": bool(os.environ.get("RACING_POST_API_KEY")), "source": "Racing Post"},
-        "betfair": {"configured": bool(os.environ.get("BETFAIR_API_KEY")), "source": "Betfair Exchange"},
-        "timeform": {"configured": bool(os.environ.get("TIMEFORM_API_KEY")), "source": "Timeform"},
-        "at_the_races": {"configured": bool(os.environ.get("ATR_API_KEY")), "source": "At The Races"},
-        "oddschecker": {"configured": bool(os.environ.get("ODDSCHECKER_API_KEY")), "source": "OddsChecker"},
-        "message": "The Racing API is configured and ready for live data" if racing_api.configured else "Configure API keys in environment variables"
+        "racing_post": {"configured": False, "source": "Racing Post"},
+        "betfair": {"configured": False, "source": "Betfair Exchange"},
+        "timeform": {"configured": False, "source": "Timeform"},
+        "at_the_races": {"configured": False, "source": "At The Races"},
+        "oddschecker": {"configured": False, "source": "OddsChecker"},
     }
 
-# ==================== LIVE RACING DATA ENDPOINTS ====================
-
-@api_router.get("/racecards/today")
-async def get_todays_racecards(region: str = "gb"):
-    """Get today's racecards from The Racing API"""
-    result = await racing_api.get_todays_racecards(region)
-    return result
-
-@api_router.get("/racecards/course/{course}")
-async def get_course_racecards(course: str, date: Optional[str] = None):
-    """Get racecards for a specific course"""
-    result = await racing_api.get_racecard_by_course(course, date)
-    return result
-
-@api_router.get("/race/{race_id}")
-async def get_race_detail(race_id: str):
-    """Get detailed information for a specific race"""
-    result = await racing_api.get_race_detail(race_id)
-    return result
-
-@api_router.get("/race/{race_id}/runners")
-async def get_race_runners(race_id: str):
-    """Get runners for a specific race"""
-    result = await racing_api.get_runners(race_id)
-    return result
-
-@api_router.get("/race/{race_id}/odds")
-async def get_race_odds(race_id: str):
-    """Get current odds for a race"""
-    result = await racing_api.get_odds(race_id)
-    return result
-
-@api_router.get("/horse/{horse_id}/form")
-async def get_horse_form(horse_id: str):
-    """Get historical form for a horse"""
-    result = await racing_api.get_horse_form(horse_id)
-    return result
-
-@api_router.get("/jockey/{jockey_id}/stats")
-async def get_jockey_stats(jockey_id: str, days: int = 14):
-    """Get jockey statistics"""
-    result = await racing_api.get_jockey_stats(jockey_id, days)
-    return result
-
-@api_router.get("/trainer/{trainer_id}/stats")
-async def get_trainer_stats(trainer_id: str, days: int = 14):
-    """Get trainer statistics"""
-    result = await racing_api.get_trainer_stats(trainer_id, days)
-    return result
-
-class LiveAnalysisRequest(BaseModel):
-    race_id: str
-    use_live_data: bool = True
-
-@api_router.post("/analyze-live")
-async def analyze_live_race(request: LiveAnalysisRequest):
-    """
-    Analyze a race using LIVE data from The Racing API
-    """
-    if not racing_api.configured:
-        raise HTTPException(status_code=503, detail="Racing API not configured")
-    
-    # Get race details
-    race_result = await racing_api.get_race_detail(request.race_id)
-    if "error" in race_result:
-        raise HTTPException(status_code=500, detail=race_result["error"])
-    
-    # Get runners
-    runners_result = await racing_api.get_runners(request.race_id)
-    if "error" in runners_result:
-        raise HTTPException(status_code=500, detail=runners_result["error"])
-    
-    # Get bankroll settings
-    settings = await ensure_default_bankroll()
-    bankroll = settings.get("current_bankroll", 250.0)
-    stop_loss = settings.get("stop_loss", 60.0)
-    consecutive_losses = settings.get("consecutive_losses", 0)
-    
-    # Transform runners to our format
-    race_data = race_result.get("data", {})
-    runners = runners_result.get("runners", [])
-    
-    horses = []
-    for runner in runners:
-        horse = racing_api.transform_runner_to_horse_data(runner, race_data)
-        
-        # Try to get trainer/jockey stats (may fail for some)
-        try:
-            if horse.get("trainer_id"):
-                trainer_stats = await racing_api.get_trainer_stats(horse["trainer_id"], 14)
-                if trainer_stats.get("success"):
-                    horse["trainer_last_14_days_percent"] = trainer_stats.get("win_percent", 0)
-            
-            if horse.get("jockey_id"):
-                jockey_stats = await racing_api.get_jockey_stats(horse["jockey_id"], 14)
-                if jockey_stats.get("success"):
-                    horse["jockey_last_14_days_percent"] = jockey_stats.get("win_percent", 0)
-        except Exception as e:
-            logger.warning(f"Could not fetch stats: {e}")
-        
-        # Set defaults for missing stats (to pass criteria check)
-        if horse["trainer_last_14_days_percent"] is None:
-            horse["trainer_last_14_days_percent"] = 15  # Default assumption
-        if horse["jockey_last_14_days_percent"] is None:
-            horse["jockey_last_14_days_percent"] = 15
-        if horse["course_percent"] is None:
-            horse["course_percent"] = 20
-        if horse["distance_percent"] is None:
-            horse["distance_percent"] = 25
-        
-        horses.append(horse)
-    
-    # Get track name from race data
-    track = race_data.get("course", "unknown").lower().replace(" ", "-")
-    
-    # Score all horses
-    scored_horses = []
-    for horse in horses:
-        win_score = calculate_horse_score(horse, track, "WIN")
-        place_score = calculate_horse_score(horse, track, "PLACE")
-        scored_horses.append({
-            **horse,
-            "win_score": win_score,
-            "place_score": place_score
-        })
-    
-    # Sort by score
-    win_sorted = sorted(scored_horses, key=lambda h: h["win_score"]["score"], reverse=True)
-    place_sorted = sorted(scored_horses, key=lambda h: h["place_score"]["score"], reverse=True)
-    
-    # Generate recommendations (same logic as mock)
-    top_win = win_sorted[0] if win_sorted else None
-    win_recommendation = None
-    if top_win:
-        stake = calculate_stake(top_win["win_score"]["score"], bankroll, "WIN")
-        win_recommendation = {
-            "type": "WIN",
-            "horse": top_win["name"],
-            "draw_number": top_win["draw_number"],
-            "odds": top_win["best_win_odds"],
-            "bookmaker": top_win["best_win_odds_bookmaker"],
-            "score": top_win["win_score"]["score"],
-            "max_score": top_win["win_score"]["max_score"],
-            "confidence": top_win["win_score"]["confidence_rating"],
-            "star_rating": top_win["win_score"]["star_rating"],
-            "stake": stake,
-            "potential_return": stake * top_win["best_win_odds"],
-            "potential_profit": (stake * top_win["best_win_odds"]) - stake,
-            "criteria_breakdown": top_win["win_score"]["criteria_breakdown"],
-            "recommendation": top_win["win_score"]["recommendation"]
-        }
-    
-    top_place = place_sorted[0] if place_sorted else None
-    place_recommendation = None
-    if top_place:
-        stake = calculate_stake(top_place["place_score"]["score"], bankroll, "PLACE")
-        place_recommendation = {
-            "type": "PLACE",
-            "horse": top_place["name"],
-            "draw_number": top_place["draw_number"],
-            "odds": top_place["best_place_odds"],
-            "bookmaker": top_place["best_place_odds_bookmaker"],
-            "score": top_place["place_score"]["score"],
-            "max_score": top_place["place_score"]["max_score"],
-            "confidence": top_place["place_score"]["confidence_rating"],
-            "star_rating": top_place["place_score"]["star_rating"],
-            "stake": stake,
-            "potential_return": stake * top_place["best_place_odds"],
-            "potential_profit": (stake * top_place["best_place_odds"]) - stake,
-            "criteria_breakdown": top_place["place_score"]["criteria_breakdown"],
-            "recommendation": top_place["place_score"]["recommendation"]
-        }
-    
-    warnings = generate_warnings(
-        [{"score": h["place_score"]["score"]} for h in scored_horses],
-        bankroll, stop_loss, consecutive_losses
-    )
-    
-    return {
-        "success": True,
-        "data_source": "LIVE - The Racing API",
-        "race_info": {
-            "race_id": request.race_id,
-            "track": race_data.get("course", ""),
-            "race_name": race_data.get("race", ""),
-            "time": race_data.get("off", ""),
-            "distance": race_data.get("dist", ""),
-            "going": race_data.get("going", ""),
-            "field_size": len(horses)
-        },
-        "recommendations": {
-            "win": win_recommendation,
-            "place": place_recommendation
-        },
-        "all_horses": scored_horses,
-        "bankroll_status": {
-            "current": bankroll,
-            "stop_loss": stop_loss,
-            "cushion": bankroll - stop_loss
-        },
-        "warnings": warnings
-    }
-
-# ==================== ROOT ENDPOINT ====================
 
 @api_router.get("/")
 async def root():
     return {"message": "Horse Racing Betting Analyzer API", "status": "running"}
 
-# Include router and add middleware
+
+# Include router and middleware
 app.include_router(api_router)
 
 app.add_middleware(
