@@ -444,7 +444,7 @@ class HorseRacingAPITester:
     def generate_report(self):
         """Generate comprehensive test report"""
         print("\n" + "=" * 60)
-        print("📊 BACKEND API TEST REPORT")
+        print("📊 BACKEND API TEST REPORT (NO AUTH MODE)")
         print("=" * 60)
         
         total_tests = 0
@@ -474,10 +474,10 @@ class HorseRacingAPITester:
                 print(f"   • {error}")
         
         # Determine if backend is functional
-        auth_working = any(test["success"] for test in self.test_results["auth"] if "Registration" in test["test"] or "Login" in test["test"])
         core_working = any(test["success"] for test in self.test_results["analysis"])
+        bankroll_working = any(test["success"] for test in self.test_results["bankroll"])
         
-        if auth_working and core_working:
+        if core_working and bankroll_working:
             print(f"\n✅ BACKEND STATUS: FUNCTIONAL - Ready for frontend testing")
             return True
         else:
