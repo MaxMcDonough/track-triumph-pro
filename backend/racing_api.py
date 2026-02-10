@@ -25,39 +25,37 @@ class TheRacingAPI:
             self.configured = False
         else:
             self.configured = True
-            # Create Basic Auth header
-            credentials = f"{self.username}:{self.password}"
-            encoded = base64.b64encode(credentials.encode()).decode()
-            self.auth_header = f"Basic {encoded}"
+            logger.info(f"Racing API configured with username: {self.username[:8]}...")
     
-    def _get_headers(self) -> Dict:
-        """Get request headers with authentication"""
-        return {
-            "Authorization": self.auth_header,
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+    def _get_auth(self):
+        """Get HTTP Basic Auth tuple"""
+        return (self.username, self.password)
     
-    async def get_todays_racecards(self, region: str = "gb") -> Dict:
+    async def get_racecards_free(self, date: Optional[str] = None) -> Dict:
         """
-        Get today's racecards
-        region: gb (UK), ire (Ireland), usa, aus, etc.
+        Get today's free racecards (available on all plans)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
+                params = {}
+                if date:
+                    params["date"] = date
+                
                 response = await client.get(
-                    f"{self.BASE_URL}/racecards",
-                    headers=self._get_headers(),
-                    params={"region": region}
+                    f"{self.BASE_URL}/racecards/free",
+                    auth=self._get_auth(),
+                    params=params
                 )
                 
+                logger.info(f"Racecards API response status: {response.status_code}")
+                
                 if response.status_code == 200:
-                    return response.json()
+                    return {"success": True, "data": response.json()}
                 elif response.status_code == 401:
-                    return {"error": "Authentication failed - check API credentials"}
+                    return {"error": "Authentication failed - check API credentials", "status": 401}
                 else:
                     return {"error": f"API error: {response.status_code}", "detail": response.text}
                     
@@ -65,63 +63,83 @@ class TheRacingAPI:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
     
-    async def get_racecard_by_course(self, course: str, date: Optional[str] = None) -> Dict:
+    async def get_racecards_basic(self, date: Optional[str] = None) -> Dict:
         """
-        Get racecard for a specific course
-        course: Course name (e.g., 'wolverhampton', 'chelmsford')
-        date: Date in YYYY-MM-DD format (default: today)
+        Get racecards with basic data (requires Basic+ plan)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
         
-        if not date:
-            date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
-                # First get today's racecards
+                params = {}
+                if date:
+                    params["date"] = date
+                
                 response = await client.get(
-                    f"{self.BASE_URL}/racecards",
-                    headers=self._get_headers(),
-                    params={"date": date}
+                    f"{self.BASE_URL}/racecards/basic",
+                    auth=self._get_auth(),
+                    params=params
                 )
                 
-                if response.status_code != 200:
-                    return {"error": f"API error: {response.status_code}"}
-                
-                data = response.json()
-                
-                # Filter by course
-                racecards = data.get("racecards", [])
-                course_racecards = [
-                    rc for rc in racecards 
-                    if course.lower() in rc.get("course", "").lower()
-                ]
-                
-                return {
-                    "success": True,
-                    "course": course,
-                    "date": date,
-                    "racecards": course_racecards
-                }
-                
+                if response.status_code == 200:
+                    return {"success": True, "data": response.json()}
+                elif response.status_code == 401:
+                    return {"error": "Authentication failed or insufficient plan", "status": 401}
+                else:
+                    return {"error": f"API error: {response.status_code}", "detail": response.text}
+                    
         except Exception as e:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
     
-    async def get_race_detail(self, race_id: str) -> Dict:
+    async def get_racecards_standard(self, date: Optional[str] = None) -> Dict:
         """
-        Get detailed information for a specific race
-        race_id: The race ID from the racecard
+        Get racecards with standard data (requires Standard+ plan)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
         
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
+                params = {}
+                if date:
+                    params["date"] = date
+                
                 response = await client.get(
-                    f"{self.BASE_URL}/racecards/{race_id}",
-                    headers=self._get_headers()
+                    f"{self.BASE_URL}/racecards/standard",
+                    auth=self._get_auth(),
+                    params=params
+                )
+                
+                if response.status_code == 200:
+                    return {"success": True, "data": response.json()}
+                elif response.status_code == 401:
+                    return {"error": "Authentication failed or insufficient plan", "status": 401}
+                else:
+                    return {"error": f"API error: {response.status_code}", "detail": response.text}
+                    
+        except Exception as e:
+            logger.error(f"Racing API error: {e}")
+            return {"error": str(e)}
+
+    async def get_courses(self, region_codes: Optional[List[str]] = None) -> Dict:
+        """
+        Get list of courses (free endpoint)
+        """
+        if not self.configured:
+            return {"error": "API not configured", "configured": False}
+        
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                params = {}
+                if region_codes:
+                    params["region_codes"] = region_codes
+                
+                response = await client.get(
+                    f"{self.BASE_URL}/courses",
+                    auth=self._get_auth(),
+                    params=params
                 )
                 
                 if response.status_code == 200:
@@ -132,10 +150,10 @@ class TheRacingAPI:
         except Exception as e:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
-    
-    async def get_runners(self, race_id: str) -> Dict:
+
+    async def get_regions(self) -> Dict:
         """
-        Get runners/horses for a specific race with detailed stats
+        Get list of regions (free endpoint)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
@@ -143,22 +161,22 @@ class TheRacingAPI:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
-                    f"{self.BASE_URL}/racecards/{race_id}/runners",
-                    headers=self._get_headers()
+                    f"{self.BASE_URL}/courses/regions",
+                    auth=self._get_auth()
                 )
                 
                 if response.status_code == 200:
-                    return {"success": True, "runners": response.json()}
+                    return {"success": True, "data": response.json()}
                 else:
                     return {"error": f"API error: {response.status_code}"}
                     
         except Exception as e:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
-    
-    async def get_horse_form(self, horse_id: str) -> Dict:
+
+    async def get_results_today_free(self) -> Dict:
         """
-        Get historical form/results for a specific horse
+        Get today's results (free endpoint)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
@@ -166,22 +184,22 @@ class TheRacingAPI:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
-                    f"{self.BASE_URL}/horses/{horse_id}/results",
-                    headers=self._get_headers()
+                    f"{self.BASE_URL}/results/today-free",
+                    auth=self._get_auth()
                 )
                 
                 if response.status_code == 200:
-                    return {"success": True, "form": response.json()}
+                    return {"success": True, "data": response.json()}
                 else:
                     return {"error": f"API error: {response.status_code}"}
                     
         except Exception as e:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
-    
-    async def get_jockey_stats(self, jockey_id: str, days: int = 14) -> Dict:
+
+    async def search_horse(self, name: str) -> Dict:
         """
-        Get jockey statistics for recent period
+        Search for a horse by name (requires Standard+ plan)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
@@ -189,36 +207,23 @@ class TheRacingAPI:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
-                    f"{self.BASE_URL}/jockeys/{jockey_id}/results",
-                    headers=self._get_headers(),
-                    params={"period": f"{days}d"}
+                    f"{self.BASE_URL}/horses/search",
+                    auth=self._get_auth(),
+                    params={"name": name}
                 )
                 
                 if response.status_code == 200:
-                    results = response.json()
-                    # Calculate win percentage
-                    total = len(results.get("results", []))
-                    wins = len([r for r in results.get("results", []) if r.get("position") == "1"])
-                    win_percent = (wins / total * 100) if total > 0 else 0
-                    
-                    return {
-                        "success": True,
-                        "jockey_id": jockey_id,
-                        "period_days": days,
-                        "total_rides": total,
-                        "wins": wins,
-                        "win_percent": round(win_percent, 1)
-                    }
+                    return {"success": True, "data": response.json()}
                 else:
                     return {"error": f"API error: {response.status_code}"}
                     
         except Exception as e:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
-    
-    async def get_trainer_stats(self, trainer_id: str, days: int = 14) -> Dict:
+
+    async def search_trainer(self, name: str) -> Dict:
         """
-        Get trainer statistics for recent period
+        Search for a trainer by name (requires Standard+ plan)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
@@ -226,36 +231,23 @@ class TheRacingAPI:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
-                    f"{self.BASE_URL}/trainers/{trainer_id}/results",
-                    headers=self._get_headers(),
-                    params={"period": f"{days}d"}
+                    f"{self.BASE_URL}/trainers/search",
+                    auth=self._get_auth(),
+                    params={"name": name}
                 )
                 
                 if response.status_code == 200:
-                    results = response.json()
-                    # Calculate win percentage
-                    total = len(results.get("results", []))
-                    wins = len([r for r in results.get("results", []) if r.get("position") == "1"])
-                    win_percent = (wins / total * 100) if total > 0 else 0
-                    
-                    return {
-                        "success": True,
-                        "trainer_id": trainer_id,
-                        "period_days": days,
-                        "total_runners": total,
-                        "wins": wins,
-                        "win_percent": round(win_percent, 1)
-                    }
+                    return {"success": True, "data": response.json()}
                 else:
                     return {"error": f"API error: {response.status_code}"}
                     
         except Exception as e:
             logger.error(f"Racing API error: {e}")
             return {"error": str(e)}
-    
-    async def get_odds(self, race_id: str) -> Dict:
+
+    async def search_jockey(self, name: str) -> Dict:
         """
-        Get current odds for a race
+        Search for a jockey by name (requires Standard+ plan)
         """
         if not self.configured:
             return {"error": "API not configured", "configured": False}
@@ -263,12 +255,13 @@ class TheRacingAPI:
         try:
             async with httpx.AsyncClient(timeout=30.0) as client:
                 response = await client.get(
-                    f"{self.BASE_URL}/racecards/{race_id}/odds",
-                    headers=self._get_headers()
+                    f"{self.BASE_URL}/jockeys/search",
+                    auth=self._get_auth(),
+                    params={"name": name}
                 )
                 
                 if response.status_code == 200:
-                    return {"success": True, "odds": response.json()}
+                    return {"success": True, "data": response.json()}
                 else:
                     return {"error": f"API error: {response.status_code}"}
                     
