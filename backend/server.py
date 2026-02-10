@@ -616,6 +616,7 @@ async def get_race_results():
         "success": True,
         "live_results": live_results,
         "live_results_count": len(live_results),
+        "live_results_available": results_available,
         "settled_bets": settled_bets,
         "pending_bets": pending_bets,
         "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
