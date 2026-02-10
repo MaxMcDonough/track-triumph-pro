@@ -163,12 +163,14 @@ class HorseRacingAPITester:
             
             if response.status_code == 200:
                 data = response.json()
-                if "current_bankroll" in data and "stop_loss" in data:
+                required_fields = ["current_bankroll", "stop_loss", "starting_bankroll", "max_daily_bets"]
+                if all(field in data for field in required_fields):
                     self.log_result("bankroll", "Get Bankroll", True, 
                                   f"Bankroll: ${data['current_bankroll']}, Stop-loss: ${data['stop_loss']}", data)
                 else:
+                    missing = [f for f in required_fields if f not in data]
                     self.log_result("bankroll", "Get Bankroll", False, 
-                                  "Missing bankroll fields in response", data)
+                                  f"Missing bankroll fields: {missing}", data)
             else:
                 self.log_result("bankroll", "Get Bankroll", False, 
                               f"Status {response.status_code}: {response.text}")
