@@ -179,10 +179,7 @@ export default function RaceAnalysis({ user }) {
                   <SelectContent>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
                       <SelectItem key={num} value={num.toString()}>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-3 h-3" />
-                          Race {num}
-                        </div>
+                        Race {num}
                       </SelectItem>
                     ))}
                   </SelectContent>
