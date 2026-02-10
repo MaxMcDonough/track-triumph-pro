@@ -121,13 +121,27 @@ class TheRacingAPI:
             except (ValueError, TypeError):
                 ofr = 0
 
+            # Skip non-runners
+            num_str = str(r.get("number", "0") or "0")
+            if num_str.upper() == "NR":
+                continue
+
+            try:
+                draw = int(r.get("draw", 0) or 0)
+            except (ValueError, TypeError):
+                draw = 0
+            try:
+                number = int(num_str)
+            except (ValueError, TypeError):
+                number = 0
+
             runners.append({
                 "name": r.get("horse", "Unknown"),
                 "horse_id": r.get("horse_id", ""),
                 "age": r.get("age", ""),
                 "sex": r.get("sex", ""),
-                "draw_number": int(r.get("draw", 0) or 0),
-                "number": int(r.get("number", 0) or 0),
+                "draw_number": draw,
+                "number": number,
                 "jockey_name": r.get("jockey", ""),
                 "jockey_id": r.get("jockey_id", ""),
                 "trainer_name": r.get("trainer", ""),
