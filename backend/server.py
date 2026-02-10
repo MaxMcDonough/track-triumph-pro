@@ -1,18 +1,15 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Depends, Response, Request, Cookie
-from fastapi.security import HTTPBearer
+from fastapi import FastAPI, APIRouter, HTTPException
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict, EmailStr
-from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Optional, Dict
 import uuid
-from datetime import datetime, timezone, timedelta
-import httpx
-import bcrypt
-import jwt
+from datetime import datetime, timezone
+import random
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -22,15 +19,12 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
-# JWT Configuration
-JWT_SECRET = os.environ.get('JWT_SECRET', 'horse-racing-analyzer-secret-key-2024')
-JWT_ALGORITHM = "HS256"
-JWT_EXPIRATION_HOURS = 168  # 7 days
+# Default user ID for no-auth mode
+DEFAULT_USER_ID = "default_user"
 
 # Create the main app
 app = FastAPI(title="Horse Racing Betting Analyzer API")
 api_router = APIRouter(prefix="/api")
-security = HTTPBearer(auto_error=False)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -38,49 +32,10 @@ logger = logging.getLogger(__name__)
 
 # ==================== MODELS ====================
 
-class UserCreate(BaseModel):
-    email: EmailStr
-    password: str
-    name: str
-
-class UserLogin(BaseModel):
-    email: EmailStr
-    password: str
-
-class User(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    user_id: str
-    email: str
-    name: str
-    picture: Optional[str] = None
-    created_at: datetime
-
-class BankrollSettings(BaseModel):
-    starting_bankroll: float = 250.0
-    current_bankroll: float = 250.0
-    stop_loss: float = 60.0
-    max_daily_bets: int = 5
-    max_stake_percent: float = 0.03
-
 class BankrollUpdate(BaseModel):
     current_bankroll: Optional[float] = None
     stop_loss: Optional[float] = None
     max_daily_bets: Optional[int] = None
-
-class BetRecord(BaseModel):
-    bet_id: str = Field(default_factory=lambda: f"bet_{uuid.uuid4().hex[:12]}")
-    user_id: str
-    track: str
-    race_number: int
-    horse_name: str
-    draw_number: int
-    bet_type: str  # WIN, PLACE, TRIFECTA, SAFETY
-    stake: float
-    odds: float
-    score: int
-    result: Optional[str] = None  # WIN, LOSS
-    profit_loss: Optional[float] = None
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class BetCreate(BaseModel):
     track: str
@@ -100,237 +55,14 @@ class RaceAnalysisRequest(BaseModel):
     race_number: int
     date: Optional[str] = None
 
-class HorseData(BaseModel):
-    name: str
-    draw_number: int
-    jockey_name: str
-    trainer_name: str
-    age: int
-    weight: str
-    official_rating: Optional[int] = None
-    form: str
-    trainer_last_14_days_percent: Optional[float] = None
-    jockey_last_14_days_percent: Optional[float] = None
-    course_percent: Optional[float] = None
-    distance_percent: Optional[float] = None
-    racing_post_top3_position: Optional[int] = None
-    at_the_races_top3_position: Optional[int] = None
-    timeform_rating: Optional[int] = None
-    timeform_flags: List[str] = []
-    best_win_odds: float = 5.0
-    best_place_odds: float = 2.5
-    best_win_odds_bookmaker: str = "Bet365"
-    best_place_odds_bookmaker: str = "Bet365"
-    betfair_matched_volume: float = 10000
-    betfair_price_movement: str = "stable"
-    betfair_sharp_money_indicator: str = "none"
-    class_movement: Optional[str] = None
-    first_time_blinkers: bool = False
-    first_time_tongue_tie: bool = False
-    trainer_after_break_percent: Optional[float] = None
-    draw_advantage: Optional[str] = None
-    pace_advantage: Optional[str] = None
+# ==================== HELPER FUNCTIONS ====================
 
-# ==================== AUTH HELPERS ====================
-
-def hash_password(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
-def verify_password(password: str, hashed: str) -> bool:
-    return bcrypt.checkpw(password.encode(), hashed.encode())
-
-def create_jwt_token(user_id: str, email: str) -> str:
-    payload = {
-        "user_id": user_id,
-        "email": email,
-        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRATION_HOURS),
-        "iat": datetime.now(timezone.utc)
-    }
-    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-
-def decode_jwt_token(token: str) -> dict:
-    try:
-        return jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_user(request: Request, session_token: Optional[str] = Cookie(default=None)):
-    """Get current user from session token cookie or Authorization header"""
-    token = None
-    
-    # First try cookie
-    if session_token:
-        token = session_token
-    else:
-        # Fall back to Authorization header
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-    
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    # Check if it's a session token (from Google OAuth)
-    session = await db.user_sessions.find_one({"session_token": token}, {"_id": 0})
-    if session:
-        # Validate expiry
-        expires_at = session.get("expires_at")
-        if isinstance(expires_at, str):
-            expires_at = datetime.fromisoformat(expires_at)
-        if expires_at.tzinfo is None:
-            expires_at = expires_at.replace(tzinfo=timezone.utc)
-        if expires_at < datetime.now(timezone.utc):
-            raise HTTPException(status_code=401, detail="Session expired")
-        
-        user = await db.users.find_one({"user_id": session["user_id"]}, {"_id": 0})
-        if user:
-            return User(**user)
-    
-    # Try JWT token
-    try:
-        payload = decode_jwt_token(token)
-        user = await db.users.find_one({"user_id": payload["user_id"]}, {"_id": 0})
-        if user:
-            return User(**user)
-    except:
-        pass
-    
-    raise HTTPException(status_code=401, detail="Invalid or expired token")
-
-# ==================== AUTH ENDPOINTS ====================
-
-@api_router.post("/auth/register")
-async def register(user_data: UserCreate, response: Response):
-    """Register with email/password"""
-    existing = await db.users.find_one({"email": user_data.email}, {"_id": 0})
-    if existing:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    
-    user_id = f"user_{uuid.uuid4().hex[:12]}"
-    hashed_password = hash_password(user_data.password)
-    
-    user_doc = {
-        "user_id": user_id,
-        "email": user_data.email,
-        "name": user_data.name,
-        "password_hash": hashed_password,
-        "picture": None,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    }
-    await db.users.insert_one(user_doc)
-    
-    # Create default bankroll settings
-    await db.bankroll_settings.insert_one({
-        "user_id": user_id,
-        "starting_bankroll": 250.0,
-        "current_bankroll": 250.0,
-        "stop_loss": 60.0,
-        "max_daily_bets": 5,
-        "max_stake_percent": 0.03,
-        "consecutive_losses": 0,
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
-    
-    token = create_jwt_token(user_id, user_data.email)
-    
-    response.set_cookie(
-        key="session_token",
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        path="/",
-        max_age=JWT_EXPIRATION_HOURS * 3600
-    )
-    
-    return {
-        "user_id": user_id,
-        "email": user_data.email,
-        "name": user_data.name,
-        "token": token
-    }
-
-@api_router.post("/auth/login")
-async def login(credentials: UserLogin, response: Response):
-    """Login with email/password"""
-    user = await db.users.find_one({"email": credentials.email}, {"_id": 0})
-    if not user or not user.get("password_hash"):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    if not verify_password(credentials.password, user["password_hash"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    token = create_jwt_token(user["user_id"], user["email"])
-    
-    response.set_cookie(
-        key="session_token",
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        path="/",
-        max_age=JWT_EXPIRATION_HOURS * 3600
-    )
-    
-    return {
-        "user_id": user["user_id"],
-        "email": user["email"],
-        "name": user["name"],
-        "picture": user.get("picture"),
-        "token": token
-    }
-
-@api_router.post("/auth/session")
-async def process_google_session(request: Request, response: Response):
-    """Process Google OAuth session_id and create local session"""
-    body = await request.json()
-    session_id = body.get("session_id")
-    
-    if not session_id:
-        raise HTTPException(status_code=400, detail="session_id required")
-    
-    # Call Emergent auth API to get user data
-    async with httpx.AsyncClient() as client_http:
-        auth_response = await client_http.get(
-            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
-            headers={"X-Session-ID": session_id}
-        )
-    
-    if auth_response.status_code != 200:
-        raise HTTPException(status_code=401, detail="Invalid session_id")
-    
-    user_data = auth_response.json()
-    email = user_data["email"]
-    name = user_data["name"]
-    picture = user_data.get("picture")
-    session_token = user_data["session_token"]
-    
-    # Check if user exists
-    existing_user = await db.users.find_one({"email": email}, {"_id": 0})
-    
-    if existing_user:
-        user_id = existing_user["user_id"]
-        # Update user data
-        await db.users.update_one(
-            {"email": email},
-            {"$set": {"name": name, "picture": picture}}
-        )
-    else:
-        # Create new user
-        user_id = f"user_{uuid.uuid4().hex[:12]}"
-        await db.users.insert_one({
-            "user_id": user_id,
-            "email": email,
-            "name": name,
-            "picture": picture,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        })
-        
-        # Create default bankroll settings
+async def ensure_default_bankroll():
+    """Ensure default user has bankroll settings"""
+    settings = await db.bankroll_settings.find_one({"user_id": DEFAULT_USER_ID}, {"_id": 0})
+    if not settings:
         await db.bankroll_settings.insert_one({
-            "user_id": user_id,
+            "user_id": DEFAULT_USER_ID,
             "starting_bankroll": 250.0,
             "current_bankroll": 250.0,
             "stop_loss": 60.0,
@@ -339,80 +71,22 @@ async def process_google_session(request: Request, response: Response):
             "consecutive_losses": 0,
             "created_at": datetime.now(timezone.utc).isoformat()
         })
-    
-    # Store session
-    expires_at = datetime.now(timezone.utc) + timedelta(days=7)
-    await db.user_sessions.insert_one({
-        "user_id": user_id,
-        "session_token": session_token,
-        "expires_at": expires_at.isoformat(),
-        "created_at": datetime.now(timezone.utc).isoformat()
-    })
-    
-    response.set_cookie(
-        key="session_token",
-        value=session_token,
-        httponly=True,
-        secure=True,
-        samesite="none",
-        path="/",
-        max_age=7 * 24 * 3600
-    )
-    
-    return {
-        "user_id": user_id,
-        "email": email,
-        "name": name,
-        "picture": picture
-    }
-
-@api_router.get("/auth/me")
-async def get_me(user: User = Depends(get_current_user)):
-    """Get current user info"""
-    return {
-        "user_id": user.user_id,
-        "email": user.email,
-        "name": user.name,
-        "picture": user.picture
-    }
-
-@api_router.post("/auth/logout")
-async def logout(response: Response, request: Request, session_token: Optional[str] = Cookie(default=None)):
-    """Logout user"""
-    if session_token:
-        await db.user_sessions.delete_one({"session_token": session_token})
-    
-    response.delete_cookie(key="session_token", path="/", secure=True, samesite="none")
-    return {"message": "Logged out successfully"}
+    return await db.bankroll_settings.find_one({"user_id": DEFAULT_USER_ID}, {"_id": 0})
 
 # ==================== BANKROLL ENDPOINTS ====================
 
 @api_router.get("/bankroll")
-async def get_bankroll(user: User = Depends(get_current_user)):
-    """Get user's bankroll settings"""
-    settings = await db.bankroll_settings.find_one({"user_id": user.user_id}, {"_id": 0})
-    if not settings:
-        # Create default settings
-        settings = {
-            "user_id": user.user_id,
-            "starting_bankroll": 250.0,
-            "current_bankroll": 250.0,
-            "stop_loss": 60.0,
-            "max_daily_bets": 5,
-            "max_stake_percent": 0.03,
-            "consecutive_losses": 0,
-            "created_at": datetime.now(timezone.utc).isoformat()
-        }
-        await db.bankroll_settings.insert_one(settings)
+async def get_bankroll():
+    """Get bankroll settings"""
+    settings = await ensure_default_bankroll()
     
     # Calculate today's P/L
-    today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
-    today_bets = await db.bets.find({
-        "user_id": user.user_id,
+    bets = await db.bets.find({
+        "user_id": DEFAULT_USER_ID,
         "result": {"$ne": None}
     }, {"_id": 0}).to_list(1000)
     
-    today_pl = sum(bet.get("profit_loss", 0) for bet in today_bets if bet.get("profit_loss"))
+    today_pl = sum(bet.get("profit_loss", 0) for bet in bets if bet.get("profit_loss"))
     
     return {
         **settings,
@@ -422,30 +96,29 @@ async def get_bankroll(user: User = Depends(get_current_user)):
     }
 
 @api_router.put("/bankroll")
-async def update_bankroll(update: BankrollUpdate, user: User = Depends(get_current_user)):
+async def update_bankroll(update: BankrollUpdate):
     """Update bankroll settings"""
+    await ensure_default_bankroll()
     update_data = {k: v for k, v in update.model_dump().items() if v is not None}
     if update_data:
         await db.bankroll_settings.update_one(
-            {"user_id": user.user_id},
+            {"user_id": DEFAULT_USER_ID},
             {"$set": update_data}
         )
-    
-    return await get_bankroll(user)
+    return await get_bankroll()
 
 @api_router.post("/bankroll/reset")
-async def reset_bankroll(user: User = Depends(get_current_user)):
+async def reset_bankroll():
     """Reset bankroll to starting amount"""
-    settings = await db.bankroll_settings.find_one({"user_id": user.user_id}, {"_id": 0})
-    if settings:
-        await db.bankroll_settings.update_one(
-            {"user_id": user.user_id},
-            {"$set": {
-                "current_bankroll": settings["starting_bankroll"],
-                "consecutive_losses": 0
-            }}
-        )
-    return await get_bankroll(user)
+    settings = await ensure_default_bankroll()
+    await db.bankroll_settings.update_one(
+        {"user_id": DEFAULT_USER_ID},
+        {"$set": {
+            "current_bankroll": settings["starting_bankroll"],
+            "consecutive_losses": 0
+        }}
+    )
+    return await get_bankroll()
 
 # ==================== 8-CRITERIA SCORING ALGORITHM ====================
 
@@ -738,23 +411,73 @@ def generate_warnings(horses: List[Dict], bankroll: float, stop_loss: float, con
     
     return warnings
 
+async def get_mock_race_data(track: str, race_number: int) -> List[Dict]:
+    """Generate mock race data for demonstration"""
+    horse_names = [
+        "Thunder Bolt", "Silver Storm", "Golden Arrow", "Dark Knight",
+        "Flying Spirit", "Royal Champion", "Lucky Star", "Midnight Run",
+        "Fast Forward", "Wild Card", "Storm Chaser", "Iron Will"
+    ]
+    
+    jockeys = ["J. Murphy", "T. Marquand", "W. Buick", "R. Havlin", "D. Tudhope", 
+               "H. Bentley", "C. Soumillon", "F. Dettori"]
+    trainers = ["J. Gosden", "C. Appleby", "A. Balding", "W. Haggas", 
+                "R. Varian", "M. Johnston", "R. Hannon", "K. Ryan"]
+    
+    num_horses = random.randint(8, 12)
+    horses = []
+    
+    for i in range(num_horses):
+        trainer_hot = random.random() > 0.6
+        jockey_hot = random.random() > 0.6
+        
+        horse = {
+            "name": horse_names[i % len(horse_names)],
+            "draw_number": i + 1,
+            "jockey_name": random.choice(jockeys),
+            "trainer_name": random.choice(trainers),
+            "age": random.randint(3, 7),
+            "weight": f"{random.randint(8, 10)}-{random.randint(0, 13)}",
+            "official_rating": random.randint(60, 110),
+            "form": "-".join([str(random.randint(1, 9)) for _ in range(5)]),
+            "trainer_last_14_days_percent": random.randint(15, 35) if trainer_hot else random.randint(5, 18),
+            "jockey_last_14_days_percent": random.randint(15, 35) if jockey_hot else random.randint(5, 18),
+            "course_percent": random.randint(10, 40),
+            "distance_percent": random.randint(15, 45),
+            "racing_post_top3_position": random.choice([0, 0, 0, 1, 2, 3]),
+            "at_the_races_top3_position": random.choice([0, 0, 0, 1, 2, 3]),
+            "timeform_rating": random.randint(65, 95),
+            "timeform_flags": random.sample(["!", "↑", "C", "D", "p"], random.randint(0, 2)),
+            "best_win_odds": round(random.uniform(2.0, 15.0), 2),
+            "best_place_odds": round(random.uniform(1.5, 5.0), 2),
+            "best_win_odds_bookmaker": random.choice(["Bet365", "William Hill", "Ladbrokes", "Betfair"]),
+            "best_place_odds_bookmaker": random.choice(["Bet365", "William Hill", "Ladbrokes", "Betfair"]),
+            "betfair_matched_volume": random.randint(5000, 150000),
+            "betfair_price_movement": random.choice(["steam", "drift", "stable", "stable"]),
+            "betfair_sharp_money_indicator": random.choice(["strong", "moderate", "none", "none"]),
+            "class_movement": random.choice(["dropping", "rising", None, None]),
+            "first_time_blinkers": random.random() > 0.9,
+            "first_time_tongue_tie": random.random() > 0.95,
+            "trainer_after_break_percent": random.randint(10, 35),
+            "draw_advantage": random.choice(["strong", "moderate", "none", None]),
+            "pace_advantage": random.choice(["sole front-runner", "prominent", None, None])
+        }
+        horses.append(horse)
+    
+    return horses
+
 # ==================== RACE ANALYSIS ENDPOINTS ====================
 
 @api_router.post("/analyze")
-async def analyze_race(request: RaceAnalysisRequest, user: User = Depends(get_current_user)):
+async def analyze_race(request: RaceAnalysisRequest):
     """Analyze a race and generate betting recommendations"""
     
-    # Get user's bankroll settings
-    settings = await db.bankroll_settings.find_one({"user_id": user.user_id}, {"_id": 0})
-    if not settings:
-        settings = {"current_bankroll": 250.0, "stop_loss": 60.0, "consecutive_losses": 0}
-    
+    settings = await ensure_default_bankroll()
     bankroll = settings.get("current_bankroll", 250.0)
     stop_loss = settings.get("stop_loss", 60.0)
     consecutive_losses = settings.get("consecutive_losses", 0)
     
-    # For demo purposes, generate mock race data
-    # In production, this would call the scraping infrastructure
+    # Get mock race data
     horses = await get_mock_race_data(request.track, request.race_number)
     
     # Score all horses
@@ -891,73 +614,12 @@ async def analyze_race(request: RaceAnalysisRequest, user: User = Depends(get_cu
         "warnings": warnings
     }
 
-async def get_mock_race_data(track: str, race_number: int) -> List[Dict]:
-    """Generate mock race data for demonstration. 
-    In production, this would call the scraping infrastructure."""
-    import random
-    
-    horse_names = [
-        "Thunder Bolt", "Silver Storm", "Golden Arrow", "Dark Knight",
-        "Flying Spirit", "Royal Champion", "Lucky Star", "Midnight Run",
-        "Fast Forward", "Wild Card", "Storm Chaser", "Iron Will"
-    ]
-    
-    jockeys = ["J. Murphy", "T. Marquand", "W. Buick", "R. Havlin", "D. Tudhope", 
-               "H. Bentley", "C. Soumillon", "F. Dettori"]
-    trainers = ["J. Gosden", "C. Appleby", "A. Balding", "W. Haggas", 
-                "R. Varian", "M. Johnston", "R. Hannon", "K. Ryan"]
-    
-    num_horses = random.randint(8, 12)
-    horses = []
-    
-    for i in range(num_horses):
-        # Generate random but realistic statistics
-        trainer_hot = random.random() > 0.6
-        jockey_hot = random.random() > 0.6
-        
-        horse = {
-            "name": horse_names[i % len(horse_names)],
-            "draw_number": i + 1,
-            "jockey_name": random.choice(jockeys),
-            "trainer_name": random.choice(trainers),
-            "age": random.randint(3, 7),
-            "weight": f"{random.randint(8, 10)}-{random.randint(0, 13)}",
-            "official_rating": random.randint(60, 110),
-            "form": "-".join([str(random.randint(1, 9)) for _ in range(5)]),
-            "trainer_last_14_days_percent": random.randint(15, 35) if trainer_hot else random.randint(5, 18),
-            "jockey_last_14_days_percent": random.randint(15, 35) if jockey_hot else random.randint(5, 18),
-            "course_percent": random.randint(10, 40),
-            "distance_percent": random.randint(15, 45),
-            "racing_post_top3_position": random.choice([0, 0, 0, 1, 2, 3]),
-            "at_the_races_top3_position": random.choice([0, 0, 0, 1, 2, 3]),
-            "timeform_rating": random.randint(65, 95),
-            "timeform_flags": random.sample(["!", "↑", "C", "D", "p"], random.randint(0, 2)),
-            "best_win_odds": round(random.uniform(2.0, 15.0), 2),
-            "best_place_odds": round(random.uniform(1.5, 5.0), 2),
-            "best_win_odds_bookmaker": random.choice(["Bet365", "William Hill", "Ladbrokes", "Betfair"]),
-            "best_place_odds_bookmaker": random.choice(["Bet365", "William Hill", "Ladbrokes", "Betfair"]),
-            "betfair_matched_volume": random.randint(5000, 150000),
-            "betfair_price_movement": random.choice(["steam", "drift", "stable", "stable"]),
-            "betfair_sharp_money_indicator": random.choice(["strong", "moderate", "none", "none"]),
-            "class_movement": random.choice(["dropping", "rising", None, None]),
-            "first_time_blinkers": random.random() > 0.9,
-            "first_time_tongue_tie": random.random() > 0.95,
-            "trainer_after_break_percent": random.randint(10, 35),
-            "draw_advantage": random.choice(["strong", "moderate", "none", None]),
-            "pace_advantage": random.choice(["sole front-runner", "prominent", None, None])
-        }
-        horses.append(horse)
-    
-    return horses
-
 # ==================== BET MANAGEMENT ENDPOINTS ====================
 
 @api_router.post("/bets")
-async def place_bet(bet_data: BetCreate, user: User = Depends(get_current_user)):
+async def place_bet(bet_data: BetCreate):
     """Record a new bet"""
-    settings = await db.bankroll_settings.find_one({"user_id": user.user_id}, {"_id": 0})
-    if not settings:
-        raise HTTPException(status_code=400, detail="Bankroll not configured")
+    settings = await ensure_default_bankroll()
     
     bankroll = settings.get("current_bankroll", 0)
     stop_loss = settings.get("stop_loss", 0)
@@ -975,46 +637,49 @@ async def place_bet(bet_data: BetCreate, user: User = Depends(get_current_user))
         raise HTTPException(status_code=400, detail=f"Stake exceeds maximum ({max_stake:.2f})")
     
     # Create bet record
-    bet = BetRecord(
-        user_id=user.user_id,
-        track=bet_data.track,
-        race_number=bet_data.race_number,
-        horse_name=bet_data.horse_name,
-        draw_number=bet_data.draw_number,
-        bet_type=bet_data.bet_type,
-        stake=bet_data.stake,
-        odds=bet_data.odds,
-        score=bet_data.score
-    )
+    bet_id = f"bet_{uuid.uuid4().hex[:12]}"
+    bet_doc = {
+        "bet_id": bet_id,
+        "user_id": DEFAULT_USER_ID,
+        "track": bet_data.track,
+        "race_number": bet_data.race_number,
+        "horse_name": bet_data.horse_name,
+        "draw_number": bet_data.draw_number,
+        "bet_type": bet_data.bet_type,
+        "stake": bet_data.stake,
+        "odds": bet_data.odds,
+        "score": bet_data.score,
+        "result": None,
+        "profit_loss": None,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
     
-    bet_doc = bet.model_dump()
-    bet_doc["timestamp"] = bet_doc["timestamp"].isoformat()
     await db.bets.insert_one(bet_doc)
     
     # Update bankroll
     new_bankroll = bankroll - bet_data.stake
     await db.bankroll_settings.update_one(
-        {"user_id": user.user_id},
+        {"user_id": DEFAULT_USER_ID},
         {"$set": {"current_bankroll": new_bankroll}}
     )
     
     return {
-        "bet_id": bet.bet_id,
+        "bet_id": bet_id,
         "message": "Bet placed successfully",
         "new_bankroll": new_bankroll
     }
 
 @api_router.post("/bets/{bet_id}/settle")
-async def settle_bet(bet_id: str, settle_data: BetSettle, user: User = Depends(get_current_user)):
+async def settle_bet(bet_id: str, settle_data: BetSettle):
     """Settle a bet (mark as WIN or LOSS)"""
-    bet = await db.bets.find_one({"bet_id": bet_id, "user_id": user.user_id}, {"_id": 0})
+    bet = await db.bets.find_one({"bet_id": bet_id, "user_id": DEFAULT_USER_ID}, {"_id": 0})
     if not bet:
         raise HTTPException(status_code=404, detail="Bet not found")
     
     if bet.get("result"):
         raise HTTPException(status_code=400, detail="Bet already settled")
     
-    settings = await db.bankroll_settings.find_one({"user_id": user.user_id}, {"_id": 0})
+    settings = await ensure_default_bankroll()
     bankroll = settings.get("current_bankroll", 0)
     consecutive_losses = settings.get("consecutive_losses", 0)
     
@@ -1041,7 +706,7 @@ async def settle_bet(bet_id: str, settle_data: BetSettle, user: User = Depends(g
     
     # Update bankroll
     await db.bankroll_settings.update_one(
-        {"user_id": user.user_id},
+        {"user_id": DEFAULT_USER_ID},
         {"$set": {"current_bankroll": new_bankroll, "consecutive_losses": consecutive_losses}}
     )
     
@@ -1055,16 +720,16 @@ async def settle_bet(bet_id: str, settle_data: BetSettle, user: User = Depends(g
     }
 
 @api_router.get("/bets")
-async def get_bets(user: User = Depends(get_current_user)):
-    """Get user's bet history"""
-    bets = await db.bets.find({"user_id": user.user_id}, {"_id": 0}).sort("timestamp", -1).to_list(100)
+async def get_bets():
+    """Get bet history"""
+    bets = await db.bets.find({"user_id": DEFAULT_USER_ID}, {"_id": 0}).sort("timestamp", -1).to_list(100)
     return {"bets": bets}
 
 @api_router.get("/statistics")
-async def get_statistics(user: User = Depends(get_current_user)):
+async def get_statistics():
     """Get betting statistics"""
-    bets = await db.bets.find({"user_id": user.user_id, "result": {"$ne": None}}, {"_id": 0}).to_list(1000)
-    settings = await db.bankroll_settings.find_one({"user_id": user.user_id}, {"_id": 0})
+    bets = await db.bets.find({"user_id": DEFAULT_USER_ID, "result": {"$ne": None}}, {"_id": 0}).to_list(1000)
+    settings = await ensure_default_bankroll()
     
     if not bets:
         return {
@@ -1158,17 +823,10 @@ async def get_tracks():
         ]
     }
 
-# ==================== SCRAPING INFRASTRUCTURE ====================
-# Note: This is the infrastructure for web scraping. Configure API keys in .env
-
-class ScraperConfig(BaseModel):
-    racing_post_api_key: Optional[str] = None
-    betfair_api_key: Optional[str] = None
-    timeform_api_key: Optional[str] = None
-    at_the_races_api_key: Optional[str] = None
+# ==================== SCRAPER STATUS ====================
 
 @api_router.get("/scraper/status")
-async def get_scraper_status(user: User = Depends(get_current_user)):
+async def get_scraper_status():
     """Get status of scraping configuration"""
     return {
         "racing_post": {"configured": bool(os.environ.get("RACING_POST_API_KEY")), "source": "Racing Post"},
@@ -1179,13 +837,19 @@ async def get_scraper_status(user: User = Depends(get_current_user)):
         "message": "Configure API keys in environment variables to enable live data scraping"
     }
 
+# ==================== ROOT ENDPOINT ====================
+
+@api_router.get("/")
+async def root():
+    return {"message": "Horse Racing Betting Analyzer API", "status": "running"}
+
 # Include router and add middleware
 app.include_router(api_router)
 
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
