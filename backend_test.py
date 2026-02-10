@@ -427,29 +427,17 @@ class HorseRacingAPITester:
         return False
 
     def run_comprehensive_test(self):
-        """Run all backend API tests"""
-        print("🚀 Starting Comprehensive Backend API Testing...")
+        """Run all backend API tests (NO AUTH MODE)"""
+        print("🚀 Starting Comprehensive Backend API Testing (NO AUTH MODE)...")
         print(f"🎯 Target API: {self.api_url}")
         print("=" * 60)
         
-        # Authentication Tests
-        if not self.test_user_registration():
-            print("❌ Registration failed - cannot continue with authenticated tests")
-            return self.generate_report()
-        
-        self.test_user_login()
-        self.test_auth_me()
-        self.test_google_oauth_redirect()
-        
-        # Core Feature Tests (require authentication)
+        # Core Feature Tests (no authentication required)
         self.test_bankroll_endpoints()
         tracks_data = self.test_tracks_endpoint()
         analysis_data = self.test_race_analysis()
         self.test_betting_endpoints(analysis_data)
         self.test_statistics_endpoint()
-        
-        # Cleanup
-        self.test_logout()
         
         return self.generate_report()
 
