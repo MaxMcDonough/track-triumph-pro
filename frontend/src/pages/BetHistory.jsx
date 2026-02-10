@@ -42,7 +42,7 @@ const betTypeIcons = {
   SAFETY_PLACE: Shield
 };
 
-export default function BetHistory({ user, setUser }) {
+export default function BetHistory({ user }) {
   const [bets, setBets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -100,7 +100,7 @@ export default function BetHistory({ user, setUser }) {
 
   if (loading) {
     return (
-      <DashboardLayout user={user} setUser={setUser}>
+      <DashboardLayout user={user}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>

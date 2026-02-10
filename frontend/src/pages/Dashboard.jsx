@@ -22,7 +22,7 @@ import {
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export default function Dashboard({ user, setUser }) {
+export default function Dashboard({ user }) {
   const [bankroll, setBankroll] = useState(null);
   const [statistics, setStatistics] = useState(null);
   const [recentBets, setRecentBets] = useState([]);
@@ -80,7 +80,7 @@ export default function Dashboard({ user, setUser }) {
 
   if (loading) {
     return (
-      <DashboardLayout user={user} setUser={setUser}>
+      <DashboardLayout user={user}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>

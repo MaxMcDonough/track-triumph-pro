@@ -41,7 +41,7 @@ import {
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export default function RaceAnalysis({ user, setUser }) {
+export default function RaceAnalysis({ user }) {
   const [tracks, setTracks] = useState({ uk_tracks: [], us_tracks: [] });
   const [selectedTrack, setSelectedTrack] = useState("");
   const [selectedRace, setSelectedRace] = useState("");
@@ -127,7 +127,7 @@ export default function RaceAnalysis({ user, setUser }) {
   };
 
   return (
-    <DashboardLayout user={user} setUser={setUser}>
+    <DashboardLayout user={user}>
       <div className="space-y-8" data-testid="race-analysis-page">
         {/* Header */}
         <div>

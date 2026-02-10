@@ -28,7 +28,7 @@ import {
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
-export default function Statistics({ user, setUser }) {
+export default function Statistics({ user }) {
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -63,7 +63,7 @@ export default function Statistics({ user, setUser }) {
 
   if (loading) {
     return (
-      <DashboardLayout user={user} setUser={setUser}>
+      <DashboardLayout user={user}>
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
