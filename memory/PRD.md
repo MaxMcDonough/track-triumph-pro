@@ -8,81 +8,85 @@ Build a comprehensive, professional-grade horse racing betting analysis web appl
 - No login required (removed per user request)
 - Full MVP with all features
 - Default bankroll $250, Stop-loss $60
-- Scraping infrastructure ready (API keys to be configured later)
+- Live data via The Racing API (theracingapi.com)
 
 ## Architecture
 
 ### Backend (FastAPI + MongoDB)
+- `/api/racecards/today` - Live racecards from The Racing API (cached 2min)
+- `/api/analyze` - 8-criteria race analysis (live by race_id or mock fallback)
 - `/api/bankroll` - Get/Update bankroll settings
-- `/api/tracks` - List approved UK/US tracks
-- `/api/analyze` - 8-criteria race analysis
 - `/api/bets` - Bet CRUD operations
+- `/api/bets/{id}/settle` - Settle bet as WIN/LOSS
 - `/api/statistics` - Performance statistics
+- `/api/tracks` - List approved UK/US tracks
 - `/api/scraper/status` - Data source configuration status
 
 ### Frontend (React + Tailwind + Shadcn UI)
 - Dashboard - Bankroll widget, quick stats, recent bets
-- Race Analysis - Track/race selection, recommendations, horse breakdown
+- Race Analysis - LIVE course/race selection, 8-criteria scoring, recommendations
 - Bet History - Track/settle bets, filter by status
 - Statistics - ROI/win rate charts, performance by score
 - Settings - Bankroll config, discipline rules display
 
-## Core Requirements (Static)
-1. 8-Criteria Scoring Algorithm
-   - Track Type (approved UK/US tracks only)
-   - Complete Statistics
-   - Expert Consensus (Racing Post + At The Races)
-   - Hot Statistics (20%+ trainer/jockey)
-   - Odds Value
-   - Market Confidence
-   - Third Expert Opinion (Timeform)
-   - Positive Angle
+## Core Requirements
+1. 8-Criteria Scoring Algorithm (adapted for live API data)
+   - Track Type (approved UK/US/IRE tracks)
+   - Form Completeness (minimum 3 runs + official rating)
+   - Form & Consistency (win rate + place rate analysis)
+   - Recent Trend (improving/declining + last position)
+   - Official Rating Value (competitive rating threshold)
+   - Weight & Class (lighter weight advantage in handicaps)
+   - Fitness (days since last run, 7-42 days optimal)
+   - Positive Angle (headgear, improving form + rating, etc.)
 
-2. Betting Recommendations
-   - WIN bet recommendation
-   - PLACE bet recommendation
-   - Box Trifecta recommendation
-   - Safety bet recommendation
+2. Betting Recommendations: WIN, PLACE, Box Trifecta, Safety bet
+3. Bankroll Management: Stop-loss, 2-loss rule, 3% max stake, daily limit
 
-3. Bankroll Management
-   - Stop-loss protection
-   - Two-loss rule (stop after 2 consecutive losses)
-   - Maximum stake rule (3% of bankroll)
-   - Daily bet limit
-   - Chasing detection
+## What's Been Implemented (Feb 10, 2026)
+- Full backend API with live Racing API integration
+- 2-minute response caching to handle API rate limits (429)
+- 8-criteria scoring working with real horse data
+- Live racecards showing 5 UK/IRE courses with real races
+- One-click race analysis with full criteria breakdown
+- Bankroll management persisted to MongoDB
+- Bet placement with bankroll deduction
+- Bet settlement (WIN/LOSS) with profit tracking
+- Statistics with score-level breakdown
+- Dark theme UI with LIVE data indicators
+- Testing: 100% pass rate (backend 17/17, all frontend flows)
 
-## What's Been Implemented (Feb 2026)
-- ✅ Full backend API with 8-criteria scoring
-- ✅ Mock race data generator (scraping infrastructure ready)
-- ✅ Bankroll management with all discipline rules
-- ✅ Dark mode UI with professional design
-- ✅ Dashboard with bankroll widget and quick actions
-- ✅ Race analysis with detailed recommendations
-- ✅ Bet history with settle functionality
-- ✅ Statistics with charts (Recharts)
-- ✅ Settings page with data source status
+## Tech Stack
+- Backend: Python FastAPI, Motor (MongoDB async), httpx
+- Frontend: React, Tailwind CSS, Shadcn UI, Recharts
+- Database: MongoDB
+- External API: The Racing API (theracingapi.com)
+- Fonts: Chivo (headings), Manrope (body), JetBrains Mono (data)
 
 ## Prioritized Backlog
 
 ### P0 (Done)
 - [x] 8-criteria scoring algorithm
-- [x] Bankroll management
-- [x] Race analysis UI
+- [x] Bankroll management with MongoDB persistence
+- [x] Race analysis UI with live data
 - [x] Bet tracking and settlement
+- [x] The Racing API integration (live racecards)
+- [x] API rate limit handling with caching
 
 ### P1 (Next)
-- [ ] Configure actual data sources (Racing Post, Betfair, etc.)
-- [ ] Real-time odds integration
+- [ ] Real-time bookmaker odds integration (requires paid API plan)
+- [ ] Expert consensus data (Racing Post, At The Races, Timeform)
+- [ ] Market confidence data (Betfair Exchange)
 - [ ] Push notifications for qualifying bets
 
 ### P2 (Future)
 - [ ] User authentication (if needed)
-- [ ] Historical data analysis
+- [ ] Historical data analysis and backtesting
 - [ ] Auto-bet execution
 - [ ] Mobile app
+- [ ] Additional data sources integration
 
-## Tech Stack
-- Backend: Python FastAPI, Motor (MongoDB async)
-- Frontend: React, Tailwind CSS, Shadcn UI, Recharts
-- Database: MongoDB
-- Fonts: Chivo (headings), Manrope (body), JetBrains Mono (data)
+## Known Limitations
+- Odds shown as "Estimated" (free API plan doesn't provide bookmaker odds)
+- Expert consensus, Timeform, and Betfair criteria not yet available
+- Rate limit: ~30 requests/minute on The Racing API free plan
