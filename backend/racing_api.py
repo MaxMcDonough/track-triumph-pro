@@ -115,11 +115,18 @@ class TheRacingAPI:
         for r in racecard.get("runners", []):
             form_analysis = self.parse_form(r.get("form", ""))
 
-            # Parse official rating
             try:
-                ofr = int(r.get("ofr", 0)) if r.get("ofr") else 0
+                ofr = int(r.get("ofr", 0) or 0)
             except (ValueError, TypeError):
                 ofr = 0
+            try:
+                lbs = int(r.get("lbs", 0) or 0)
+            except (ValueError, TypeError):
+                lbs = 0
+            try:
+                last_run = int(r.get("last_run", 0) or 0)
+            except (ValueError, TypeError):
+                last_run = 0
 
             # Skip non-runners
             num_str = str(r.get("number", "0") or "0")
