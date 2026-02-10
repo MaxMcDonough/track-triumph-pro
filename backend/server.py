@@ -571,17 +571,14 @@ async def get_race_results():
     # Fetch live results
     api_result = await racing_api.get_results_today()
     live_results = []
+    results_available = False
     if api_result.get("success"):
+        results_available = True
         for r in api_result.get("data", {}).get("results", []):
             runners = []
             for runner in r.get("runners", []):
-                pos = runner.get("position", "")
-                try:
-                    pos_num = int(pos) if pos and pos.isdigit() else 0
-                except (ValueError, TypeError):
-                    pos_num = 0
                 runners.append({
-                    "position": pos,
+                    "position": runner.get("position", ""),
                     "horse": runner.get("horse", ""),
                     "jockey": runner.get("jockey", ""),
                     "trainer": runner.get("trainer", ""),
