@@ -89,7 +89,7 @@ export default function Dashboard({ user }) {
   }
 
   return (
-    <DashboardLayout user={user} setUser={setUser}>
+    <DashboardLayout user={user}>
       <div className="space-y-8" data-testid="dashboard-page">
         {/* Header */}
         <div className="dashboard-header-bg rounded-2xl p-8 -m-4 md:-m-8 mb-4">
