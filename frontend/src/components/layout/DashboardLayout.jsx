@@ -3,14 +3,13 @@ import { Sidebar } from "./Sidebar";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 
-export const DashboardLayout = ({ children, user, setUser }) => {
+export const DashboardLayout = ({ children, user }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-background noise-bg">
       <Sidebar 
         user={user} 
-        setUser={setUser} 
         isOpen={sidebarOpen} 
         onClose={() => setSidebarOpen(false)} 
       />
