@@ -38,7 +38,7 @@ export default function Statistics({ user }) {
 
   const fetchStatistics = async () => {
     try {
-      const response = await axios.get(`${API}/statistics`, { withCredentials: true });
+      const response = await axios.get(`${API}/statistics`);
       setStatistics(response.data);
     } catch (error) {
       console.error("Error fetching statistics:", error);

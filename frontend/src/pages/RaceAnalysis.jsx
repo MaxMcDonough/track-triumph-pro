@@ -56,7 +56,7 @@ export default function RaceAnalysis({ user }) {
 
   const fetchTracks = async () => {
     try {
-      const response = await axios.get(`${API}/tracks`, { withCredentials: true });
+      const response = await axios.get(`${API}/tracks`);
       setTracks(response.data);
     } catch (error) {
       console.error("Error fetching tracks:", error);
@@ -76,7 +76,7 @@ export default function RaceAnalysis({ user }) {
       const response = await axios.post(`${API}/analyze`, {
         track: selectedTrack,
         race_number: parseInt(selectedRace)
-      }, { withCredentials: true });
+      });
 
       setAnalysisResult(response.data);
       toast.success("Race analysis complete!");
@@ -106,7 +106,7 @@ export default function RaceAnalysis({ user }) {
         stake: placeBetDialog.stake,
         odds: placeBetDialog.odds,
         score: placeBetDialog.score
-      }, { withCredentials: true });
+      });
 
       toast.success(`Bet placed on ${placeBetDialog.horse}!`);
       setPlaceBetDialog(null);

@@ -35,9 +35,9 @@ export default function Dashboard({ user }) {
   const fetchDashboardData = async () => {
     try {
       const [bankrollRes, statsRes, betsRes] = await Promise.all([
-        axios.get(`${API}/bankroll`, { withCredentials: true }),
-        axios.get(`${API}/statistics`, { withCredentials: true }),
-        axios.get(`${API}/bets`, { withCredentials: true })
+        axios.get(`${API}/bankroll`),
+        axios.get(`${API}/statistics`),
+        axios.get(`${API}/bets`)
       ]);
 
       setBankroll(bankrollRes.data);

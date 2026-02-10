@@ -55,7 +55,7 @@ export default function BetHistory({ user }) {
 
   const fetchBets = async () => {
     try {
-      const response = await axios.get(`${API}/bets`, { withCredentials: true });
+      const response = await axios.get(`${API}/bets`);
       setBets(response.data.bets || []);
     } catch (error) {
       console.error("Error fetching bets:", error);

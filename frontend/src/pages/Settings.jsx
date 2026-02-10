@@ -43,8 +43,8 @@ export default function Settings({ user }) {
   const fetchData = async () => {
     try {
       const [bankrollRes, scraperRes] = await Promise.all([
-        axios.get(`${API}/bankroll`, { withCredentials: true }),
-        axios.get(`${API}/scraper/status`, { withCredentials: true })
+        axios.get(`${API}/bankroll`),
+        axios.get(`${API}/scraper/status`)
       ]);
 
       setBankroll(bankrollRes.data);
@@ -70,7 +70,7 @@ export default function Settings({ user }) {
       if (formData.stop_loss) updateData.stop_loss = parseFloat(formData.stop_loss);
       if (formData.max_daily_bets) updateData.max_daily_bets = parseInt(formData.max_daily_bets);
 
-      await axios.put(`${API}/bankroll`, updateData, { withCredentials: true });
+      await axios.put(`${API}/bankroll`, updateData);
       toast.success("Settings saved!");
       fetchData();
     } catch (error) {
@@ -85,7 +85,7 @@ export default function Settings({ user }) {
     
     setResetting(true);
     try {
-      await axios.post(`${API}/bankroll/reset`, {}, { withCredentials: true });
+      await axios.post(`${API}/bankroll/reset`, {});
       toast.success("Bankroll reset to starting amount!");
       fetchData();
     } catch (error) {
