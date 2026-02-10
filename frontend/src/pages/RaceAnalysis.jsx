@@ -155,26 +155,14 @@ export default function RaceAnalysis({ user }) {
                     <SelectValue placeholder="Select track..." />
                   </SelectTrigger>
                   <SelectContent>
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground">
-                      UK & Ireland
-                    </div>
                     {tracks.uk_tracks.map((track) => (
                       <SelectItem key={track.id} value={track.id}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-3 h-3" />
-                          {track.name}
-                        </div>
+                        {track.name}
                       </SelectItem>
                     ))}
-                    <div className="px-2 py-1 text-xs font-semibold text-muted-foreground mt-2">
-                      USA
-                    </div>
                     {tracks.us_tracks.map((track) => (
                       <SelectItem key={track.id} value={track.id}>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-3 h-3" />
-                          {track.name}
-                        </div>
+                        {track.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
