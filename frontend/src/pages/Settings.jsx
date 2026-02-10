@@ -106,7 +106,7 @@ export default function Settings({ user }) {
   }
 
   return (
-    <DashboardLayout user={user} setUser={setUser}>
+    <DashboardLayout user={user}>
       <div className="space-y-8 max-w-4xl" data-testid="settings-page">
         {/* Header */}
         <div>

@@ -72,7 +72,7 @@ export default function Statistics({ user }) {
   }
 
   return (
-    <DashboardLayout user={user} setUser={setUser}>
+    <DashboardLayout user={user}>
       <div className="space-y-8" data-testid="statistics-page">
         {/* Header */}
         <div>

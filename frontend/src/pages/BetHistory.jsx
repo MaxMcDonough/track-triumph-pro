@@ -109,7 +109,7 @@ export default function BetHistory({ user }) {
   }
 
   return (
-    <DashboardLayout user={user} setUser={setUser}>
+    <DashboardLayout user={user}>
       <div className="space-y-8" data-testid="bet-history-page">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
