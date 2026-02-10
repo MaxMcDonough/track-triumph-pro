@@ -1,16 +1,7 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
-import { toast } from "sonner";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   Trophy,
   LayoutDashboard,
@@ -18,12 +9,8 @@ import {
   History,
   BarChart3,
   Settings,
-  LogOut,
-  ChevronDown,
   X
 } from "lucide-react";
-
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -33,22 +20,8 @@ const navItems = [
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
-export const Sidebar = ({ user, setUser, isOpen, onClose }) => {
+export const Sidebar = ({ user, isOpen, onClose }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await axios.post(`${API}/auth/logout`, {}, { withCredentials: true });
-      setUser(null);
-      toast.success("Logged out successfully");
-      navigate("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-      setUser(null);
-      navigate("/login");
-    }
-  };
 
   const getInitials = (name) => {
     return name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
@@ -117,52 +90,24 @@ export const Sidebar = ({ user, setUser, isOpen, onClose }) => {
           })}
         </nav>
 
-        {/* User Menu */}
+        {/* User Info */}
         <div className="p-4 border-t border-white/5">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="w-full justify-between h-auto p-3 hover:bg-muted/50"
-                data-testid="user-menu-btn"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-9 h-9">
-                    <AvatarImage src={user?.picture} />
-                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
-                      {getInitials(user?.name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="text-left">
-                    <p className="text-sm font-medium truncate max-w-[120px]">
-                      {user?.name}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate max-w-[120px]">
-                      {user?.email}
-                    </p>
-                  </div>
-                </div>
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/settings" className="cursor-pointer">
-                  <Settings className="w-4 h-4 mr-2" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={handleLogout}
-                className="text-destructive cursor-pointer"
-                data-testid="logout-btn"
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-3 p-3">
+            <Avatar className="w-9 h-9">
+              <AvatarImage src={user?.picture} />
+              <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                {getInitials(user?.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="text-left">
+              <p className="text-sm font-medium truncate max-w-[140px]">
+                {user?.name}
+              </p>
+              <p className="text-xs text-muted-foreground truncate max-w-[140px]">
+                {user?.email}
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
     </>
