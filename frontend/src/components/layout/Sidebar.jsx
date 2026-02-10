@@ -9,12 +9,14 @@ import {
   History,
   BarChart3,
   Settings,
+  Flag,
   X
 } from "lucide-react";
 
 const navItems = [
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { path: "/analyze", label: "Race Analysis", icon: Search },
+  { path: "/results", label: "Results", icon: Flag },
   { path: "/history", label: "Bet History", icon: History },
   { path: "/statistics", label: "Statistics", icon: BarChart3 },
   { path: "/settings", label: "Settings", icon: Settings },
