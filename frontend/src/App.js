@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 // Pages
 import Dashboard from "@/pages/Dashboard";
 import RaceAnalysis from "@/pages/RaceAnalysis";
+import Results from "@/pages/Results";
 import BetHistory from "@/pages/BetHistory";
 import Statistics from "@/pages/Statistics";
 import Settings from "@/pages/Settings";
@@ -30,6 +31,7 @@ function App() {
         <Routes>
           <Route path="/dashboard" element={<Dashboard user={user} />} />
           <Route path="/analyze" element={<RaceAnalysis user={user} />} />
+          <Route path="/results" element={<Results user={user} />} />
           <Route path="/history" element={<BetHistory user={user} />} />
           <Route path="/statistics" element={<Statistics user={user} />} />
           <Route path="/settings" element={<Settings user={user} />} />
