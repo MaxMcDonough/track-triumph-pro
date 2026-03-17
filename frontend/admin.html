@@ -533,12 +533,12 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   <div class="card">
     <h3>Firebase Configuration</h3>
     <div style="display:flex;flex-direction:column;gap:0">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">API Key</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">AIzaSyAwFPWCs-gryIaIZa7Jznunhvxx0uiJ36A</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">API Key</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">AIzaSyCl4We-6JnZvAJ8ec5GuQ5TmHBx7IDfPQo</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Auth Domain</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">track-triumph-pro.firebaseapp.com</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Project ID</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">track-triumph-pro</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Storage Bucket</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">track-triumph-pro.firebasestorage.app</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Messaging Sender ID</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">1068820115443</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0"><span style="font-size:13px;font-weight:600">App ID</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">1:1068820115443:web:a132300a23f41c519d6c86</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Messaging Sender ID</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">398383333024</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0"><span style="font-size:13px;font-weight:600">App ID</span><span style="font-size:12px;color:var(--t2);font-family:'SF Mono',Monaco,monospace">1:398383333024:web:df6a5def4ea58a566953c5</span></div>
     </div>
   </div>
   <div class="card">
@@ -1458,7 +1458,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
       </div>
       <div class="lp-field file-card" style="border-left:3px solid #448aff;cursor:pointer" onclick="previewFile('leads_xlsx','📊 Leads Export','Spreadsheet export of all 89 leads with scores, roles, companies, locations, statuses, channels, and personalized DMs.')">
         <div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700">📊 Leads Spreadsheet</div><div style="font-size:11px;color:var(--t3);margin-top:2px">Data · All 89 leads</div></div><span class="badge badge-blue" style="font-size:9px">XLSX</span></div>
-        <div style="font-size:11px;color:var(--acc);margin-top:6px">TradeCommand_Leads.xlsx</div>
+        <div style="font-size:11px;color:var(--acc);margin-top:6px">TrackTriumph_Leads.xlsx</div>
       </div>
     </div>
   </div>
@@ -1966,8 +1966,8 @@ function doLogin() {
   const errEl = document.getElementById('login-error');
   errEl.textContent = '';
   // Local bypass
-  if (pass === 'tcpro2024') {
-    localStorage.setItem('tc_bypass', '1');
+  if (pass === 'ttpro2026') {
+    localStorage.setItem('tt_bypass', '1');
     showApp();
     return;
   }
@@ -1990,7 +1990,7 @@ function doResetPassword() {
     });
 }
 function doLogout() {
-  localStorage.removeItem('tc_bypass');
+  localStorage.removeItem('tt_bypass');
   auth.signOut().catch(()=>{});
   document.getElementById('app').style.display = 'none';
   document.getElementById('login-screen').style.display = 'flex';
@@ -2043,7 +2043,7 @@ auth.getRedirectResult().then(function(result){
 }).catch(function(){});
 auth.onAuthStateChanged(u => {
   if (u && u.email === ADMIN_EMAIL) showApp();
-  else if (localStorage.getItem('tc_bypass') === '1') showApp();
+  else if (localStorage.getItem('tt_bypass') === '1') showApp();
 });
 
 // ═══ NAVIGATION ═══
@@ -2415,7 +2415,7 @@ function exportUsers() {
   var blob = new Blob([csv],{type:'text/csv'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'tc_users_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.download = 'tt_users_'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();
   toast('Users exported','grn');
 }
@@ -2573,7 +2573,7 @@ function exportAnalytics() {
   var blob = new Blob([csv],{type:'text/csv'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'tc_analytics_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.download = 'tt_analytics_'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();
   toast('Analytics exported','grn');
 }
@@ -2639,7 +2639,7 @@ function exportNewsletter() {
   var blob = new Blob([csv],{type:'text/csv'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'tc_subscribers_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.download = 'tt_subscribers_'+new Date().toISOString().split('T')[0]+'.csv';
   a.click();
   toast('Subscribers exported','grn');
 }
@@ -2757,7 +2757,7 @@ function deletePromo(id) {
 }
 
 function saveSettings() {
-  localStorage.setItem('tc_settings',JSON.stringify({
+  localStorage.setItem('tt_settings',JSON.stringify({
     name: document.getElementById('set-name').value,
     email: document.getElementById('set-email').value,
     maintenance: document.getElementById('set-maint').checked
@@ -2770,7 +2770,7 @@ function getLeadStatuses() {
   var statuses = {new:0,contacted:0,interested:0,converted:0,lost:0};
   (window._allLeads||SEED_LEADS).forEach(function(l,i){
     var id = l.id||('seed_'+i);
-    var saved = JSON.parse(localStorage.getItem('tc_lead_'+id)||'{}');
+    var saved = JSON.parse(localStorage.getItem('tt_lead_'+id)||'{}');
     var st = saved.status||l.status||'new';
     if(statuses[st]!==undefined) statuses[st]++;
   });
@@ -2837,9 +2837,9 @@ function renderBriefing(statuses) {
   dateEl.textContent = dayNames[now.getDay()] + ', ' + now.toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
 
   var tasks = typeof getScheduledTasks === 'function' ? getScheduledTasks() : [];
-  var saved = JSON.parse(localStorage.getItem('tc_sched_checks') || '[]');
-  var rollovers = JSON.parse(localStorage.getItem('tc_sched_rollovers') || '[]');
-  var betaState = JSON.parse(localStorage.getItem('tc_beta_state') || '{"count":0}');
+  var saved = JSON.parse(localStorage.getItem('tt_sched_checks') || '[]');
+  var rollovers = JSON.parse(localStorage.getItem('tt_sched_rollovers') || '[]');
+  var betaState = JSON.parse(localStorage.getItem('tt_beta_state') || '{"count":0}');
   var totalLeads = (window._allLeads||SEED_LEADS).length;
 
   var todayDone = saved.filter(function(v){return v;}).length;
@@ -2909,7 +2909,7 @@ function loadCRM() {
   var cols = {new:[],contacted:[],interested:[],converted:[]};
   (window._allLeads||SEED_LEADS).forEach(function(l,i){
     var id = l.id||('seed_'+i);
-    var saved = JSON.parse(localStorage.getItem('tc_lead_'+id)||'{}');
+    var saved = JSON.parse(localStorage.getItem('tt_lead_'+id)||'{}');
     var st = saved.status||l.status||'new';
     if(!cols[st]) cols[st] = [];
     cols[st].push({lead:l, id:id, idx:i});
@@ -3082,15 +3082,15 @@ function loadScheduled() {
   var dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
   document.getElementById('sched-header').textContent = '📅 Today\'s Game Plan — ' + dayNames[day] + ', ' + now.toLocaleDateString('en-US',{month:'long',day:'numeric'});
 
-  var betaState = JSON.parse(localStorage.getItem('tc_beta_state') || '{"count":0}');
+  var betaState = JSON.parse(localStorage.getItem('tt_beta_state') || '{"count":0}');
   document.getElementById('sched-beta').textContent = (betaState.count||0) + ' / 50';
 
   // ═══ ROLLOVER LOGIC ═══
   var tasks = getScheduledTasks();
-  var lastDate = localStorage.getItem('tc_sched_date') || '';
-  var saved = JSON.parse(localStorage.getItem('tc_sched_checks') || '[]');
-  var fuSaved = JSON.parse(localStorage.getItem('tc_sched_followups') || '[]');
-  var rollovers = JSON.parse(localStorage.getItem('tc_sched_rollovers') || '[]');
+  var lastDate = localStorage.getItem('tt_sched_date') || '';
+  var saved = JSON.parse(localStorage.getItem('tt_sched_checks') || '[]');
+  var fuSaved = JSON.parse(localStorage.getItem('tt_sched_followups') || '[]');
+  var rollovers = JSON.parse(localStorage.getItem('tt_sched_rollovers') || '[]');
 
   if (lastDate && lastDate !== todayKey) {
     // New day — roll over unchecked tasks
@@ -3111,11 +3111,11 @@ function loadScheduled() {
     // Reset checks and followups for new day
     saved = [];
     fuSaved = [];
-    localStorage.setItem('tc_sched_checks', '[]');
-    localStorage.setItem('tc_sched_followups', '[]');
-    localStorage.setItem('tc_sched_rollovers', JSON.stringify(rollovers));
+    localStorage.setItem('tt_sched_checks', '[]');
+    localStorage.setItem('tt_sched_followups', '[]');
+    localStorage.setItem('tt_sched_rollovers', JSON.stringify(rollovers));
   }
-  localStorage.setItem('tc_sched_date', todayKey);
+  localStorage.setItem('tt_sched_date', todayKey);
 
   // Count rolled-over tasks that are still pending
   var rolledCount = rollovers.length;
@@ -3174,7 +3174,7 @@ function loadScheduled() {
         var overdue = r.rolledDays >= 2 && r.pri === 'high';
         var dayLabel = r.rolledDays === 1 ? '1 day' : r.rolledDays + ' days';
         var borderColor = overdue ? '#ff1744' : '#ffab40';
-        var rChecked = JSON.parse(localStorage.getItem('tc_rollover_checks') || '[]');
+        var rChecked = JSON.parse(localStorage.getItem('tt_rollover_checks') || '[]');
         var isChecked = rChecked[ri];
         return '<div style="border-left:3px solid '+borderColor+';border-radius:8px;background:rgba(255,255,255,.03);margin-bottom:6px;'+(isChecked?'opacity:.5':'')+'">' +
           '<div style="display:flex;align-items:center;gap:10px;padding:10px 12px">' +
@@ -3192,7 +3192,7 @@ function loadScheduled() {
   var topLeads = (window._allLeads||SEED_LEADS).map(function(l,i){return Object.assign({},l,{idx:i,lid:l.id||('seed_'+i)});})
     .sort(function(a,b){return b.score-a.score;}).slice(0,15);
   document.getElementById('sched-contacts').innerHTML = topLeads.map(function(l){
-    var sv = JSON.parse(localStorage.getItem('tc_lead_'+l.lid)||'{}');
+    var sv = JSON.parse(localStorage.getItem('tt_lead_'+l.lid)||'{}');
     var st = sv.status||l.status||'new';
     var stColor = st==='contacted'?'var(--ylw)':st==='interested'?'var(--acc)':st==='converted'?'var(--grn)':'var(--t3)';
     return '<div class="lp-field" style="cursor:pointer;padding:10px 12px" onclick="openLeadPanel(\''+l.lid+'\')">'+
@@ -3213,9 +3213,9 @@ function toggleSchedExpand(idx) {
   el.style.display = el.style.display==='none'?'block':'none';
 }
 function toggleSchedTask(idx, checked) {
-  var saved = JSON.parse(localStorage.getItem('tc_sched_checks') || '[]');
+  var saved = JSON.parse(localStorage.getItem('tt_sched_checks') || '[]');
   saved[idx] = checked;
-  localStorage.setItem('tc_sched_checks', JSON.stringify(saved));
+  localStorage.setItem('tt_sched_checks', JSON.stringify(saved));
   if(checked) {
     var tasks = getScheduledTasks();
     var t = tasks[idx];
@@ -3227,25 +3227,25 @@ function scheduleFollowupTask(idx) {
   var tasks = getScheduledTasks();
   var t = tasks[idx];
   if(!t) return;
-  var fuSaved = JSON.parse(localStorage.getItem('tc_sched_followups') || '[]');
+  var fuSaved = JSON.parse(localStorage.getItem('tt_sched_followups') || '[]');
   fuSaved[idx] = true;
-  localStorage.setItem('tc_sched_followups', JSON.stringify(fuSaved));
+  localStorage.setItem('tt_sched_followups', JSON.stringify(fuSaved));
   toast('Follow-up scheduled: '+t.followup+' in '+t.followupDays+' days','grn');
   loadScheduled();
 }
 function toggleRolloverTask(idx, checked) {
-  var rChecked = JSON.parse(localStorage.getItem('tc_rollover_checks') || '[]');
+  var rChecked = JSON.parse(localStorage.getItem('tt_rollover_checks') || '[]');
   rChecked[idx] = checked;
-  localStorage.setItem('tc_rollover_checks', JSON.stringify(rChecked));
+  localStorage.setItem('tt_rollover_checks', JSON.stringify(rChecked));
   if (checked) {
     // Remove from rollovers when completed
-    var rollovers = JSON.parse(localStorage.getItem('tc_sched_rollovers') || '[]');
+    var rollovers = JSON.parse(localStorage.getItem('tt_sched_rollovers') || '[]');
     if (rollovers[idx]) {
       toast('✓ Rolled-over task completed: ' + rollovers[idx].text.substring(0,40) + '...', 'grn');
       rollovers.splice(idx, 1);
       rChecked.splice(idx, 1);
-      localStorage.setItem('tc_sched_rollovers', JSON.stringify(rollovers));
-      localStorage.setItem('tc_rollover_checks', JSON.stringify(rChecked));
+      localStorage.setItem('tt_sched_rollovers', JSON.stringify(rollovers));
+      localStorage.setItem('tt_rollover_checks', JSON.stringify(rChecked));
     }
   }
   loadScheduled();
@@ -3258,7 +3258,7 @@ function copySchedText(text) {
 // ═══ CAMPAIGNS DETAIL ═══
 function loadCampaigns() {
   // Update counts from localStorage
-  var betaState = JSON.parse(localStorage.getItem('tc_beta_state') || '{}');
+  var betaState = JSON.parse(localStorage.getItem('tt_beta_state') || '{}');
   var total = (betaState.friends||0)+(betaState.reddit||0)+(betaState.platforms||0)+(betaState.campus||0);
   document.getElementById('camp-sent').textContent = total;
 }
@@ -3266,7 +3266,7 @@ function openCampaign(id) {
   var data = getCampaignData(id);
   document.getElementById('campaign-list').style.display = 'none';
   document.getElementById('campaign-detail').style.display = 'block';
-  var saved = JSON.parse(localStorage.getItem('tc_camp_'+id)||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_camp_'+id)||'[]');
   var doneCount = saved.filter(function(v){return v;}).length;
   var totalCount = data.actions.length;
   var pct = totalCount ? Math.round((doneCount/totalCount)*100) : 0;
@@ -3307,9 +3307,9 @@ function closeCampaignDetail() {
   document.getElementById('campaign-detail').style.display = 'none';
 }
 function saveCampCheck(id,idx,checked) {
-  var saved = JSON.parse(localStorage.getItem('tc_camp_'+id)||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_camp_'+id)||'[]');
   saved[idx] = checked;
-  localStorage.setItem('tc_camp_'+id, JSON.stringify(saved));
+  localStorage.setItem('tt_camp_'+id, JSON.stringify(saved));
   openCampaign(id);
 }
 function getCampaignData(id) {
@@ -3556,7 +3556,7 @@ function loadGrowthPlan() {
   document.getElementById('gp-leads').textContent = (window._allLeads||SEED_LEADS).length;
   // Load saved checkboxes and update progress bars
   ['gp1','gp2','gp3','gp4'].forEach(function(phase){
-    var saved = JSON.parse(localStorage.getItem('tc_'+phase+'_checks')||'[]');
+    var saved = JSON.parse(localStorage.getItem('tt_'+phase+'_checks')||'[]');
     var cbs = document.querySelectorAll('.'+phase+'-cb');
     cbs.forEach(function(cb,i){ cb.checked = saved[i]||false; });
     updateGPBar(phase);
@@ -3570,13 +3570,13 @@ function toggleGrowthPhase(id) {
   else{el.style.display='none';arrow.textContent='▸';}
 }
 function saveGPCheck(phase,idx,checked) {
-  var saved = JSON.parse(localStorage.getItem('tc_'+phase+'_checks')||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_'+phase+'_checks')||'[]');
   saved[idx] = checked;
-  localStorage.setItem('tc_'+phase+'_checks', JSON.stringify(saved));
+  localStorage.setItem('tt_'+phase+'_checks', JSON.stringify(saved));
   updateGPBar(phase);
 }
 function updateGPBar(phase) {
-  var saved = JSON.parse(localStorage.getItem('tc_'+phase+'_checks')||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_'+phase+'_checks')||'[]');
   var cbs = document.querySelectorAll('.'+phase+'-cb');
   var total = cbs.length;
   var done = saved.filter(function(v){return v;}).length;
@@ -3589,12 +3589,12 @@ function updateGPBar(phase) {
 
 // ═══ BETA PLAN CHECKLIST (in Growth Plan) ═══
 function saveBetaPlanCheck(idx, checked) {
-  var saved = JSON.parse(localStorage.getItem('tc_beta_plan_checks')||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_beta_plan_checks')||'[]');
   saved[idx] = checked;
-  localStorage.setItem('tc_beta_plan_checks', JSON.stringify(saved));
+  localStorage.setItem('tt_beta_plan_checks', JSON.stringify(saved));
 }
 function loadBetaPlanChecks() {
-  var saved = JSON.parse(localStorage.getItem('tc_beta_plan_checks')||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_beta_plan_checks')||'[]');
   var cbs = document.querySelectorAll('.bp-cb');
   cbs.forEach(function(cb,i){ cb.checked = saved[i]||false; });
 }
@@ -3643,7 +3643,7 @@ function loadBeta() {
   document.getElementById('beta-days').textContent = diff;
   document.getElementById('beta-days').style.color = diff <= 1 ? '#ff5252' : diff <= 2 ? '#ffab40' : '#00e676';
   // Load saved state
-  var state = JSON.parse(localStorage.getItem('tc_beta_state') || '{"count":0,"friends":0,"reddit":0,"platforms":0,"campus":0}');
+  var state = JSON.parse(localStorage.getItem('tt_beta_state') || '{"count":0,"friends":0,"reddit":0,"platforms":0,"campus":0}');
   document.getElementById('beta-count').textContent = state.count;
   updateBetaBar(state.count);
   ['friends','reddit','platforms','campus'].forEach(function(ch){
@@ -3664,9 +3664,9 @@ function updateBetaBar(count) {
 function updateBetaCount() {
   var val = parseInt(document.getElementById('beta-input').value);
   if(isNaN(val) || val < 0) { toast('Enter a valid number','red'); return; }
-  var state = JSON.parse(localStorage.getItem('tc_beta_state') || '{"count":0,"friends":0,"reddit":0,"platforms":0,"campus":0}');
+  var state = JSON.parse(localStorage.getItem('tt_beta_state') || '{"count":0,"friends":0,"reddit":0,"platforms":0,"campus":0}');
   state.count = val;
-  localStorage.setItem('tc_beta_state', JSON.stringify(state));
+  localStorage.setItem('tt_beta_state', JSON.stringify(state));
   document.getElementById('beta-count').textContent = val;
   updateBetaBar(val);
   document.getElementById('beta-input').value = '';
@@ -3675,10 +3675,10 @@ function updateBetaCount() {
 }
 function bumpChannel(ch, target, delta) {
   delta = delta || 1;
-  var state = JSON.parse(localStorage.getItem('tc_beta_state') || '{"count":0,"friends":0,"reddit":0,"platforms":0,"campus":0}');
+  var state = JSON.parse(localStorage.getItem('tt_beta_state') || '{"count":0,"friends":0,"reddit":0,"platforms":0,"campus":0}');
   state[ch] = Math.max(0, (state[ch]||0) + delta);
   state.count = (state.friends||0) + (state.reddit||0) + (state.platforms||0) + (state.campus||0);
-  localStorage.setItem('tc_beta_state', JSON.stringify(state));
+  localStorage.setItem('tt_beta_state', JSON.stringify(state));
   document.getElementById('ch-'+ch).textContent = state[ch];
   document.getElementById('beta-count').textContent = state.count;
   updateBetaBar(state.count);
@@ -3688,16 +3688,16 @@ function bumpChannel(ch, target, delta) {
   else if(delta > 0) toast(ch+' signup: '+state[ch]+'/'+target,'grn');
 }
 function bumpChannelReach(ch, delta) {
-  var state = JSON.parse(localStorage.getItem('tc_beta_reach') || '{}');
+  var state = JSON.parse(localStorage.getItem('tt_beta_reach') || '{}');
   state[ch] = Math.max(0, (state[ch]||0) + delta);
-  localStorage.setItem('tc_beta_reach', JSON.stringify(state));
+  localStorage.setItem('tt_beta_reach', JSON.stringify(state));
   var el = document.getElementById('ch-'+ch+'-reach');
   if(el) el.textContent = state[ch];
   if(delta > 0) toast(ch+' reach out logged','grn');
 }
 function loadChannelBars() {
-  var state = JSON.parse(localStorage.getItem('tc_beta_state') || '{}');
-  var reach = JSON.parse(localStorage.getItem('tc_beta_reach') || '{}');
+  var state = JSON.parse(localStorage.getItem('tt_beta_state') || '{}');
+  var reach = JSON.parse(localStorage.getItem('tt_beta_reach') || '{}');
   var targets = {friends:15,reddit:15,platforms:10,campus:10};
   ['friends','reddit','platforms','campus'].forEach(function(ch){
     var bar = document.getElementById('ch-'+ch+'-bar');
@@ -3707,9 +3707,9 @@ function loadChannelBars() {
   });
 }
 function saveRedditCheck(idx, checked) {
-  var checks = JSON.parse(localStorage.getItem('tc_beta_reddit') || '[]');
+  var checks = JSON.parse(localStorage.getItem('tt_beta_reddit') || '[]');
   checks[idx] = checked;
-  localStorage.setItem('tc_beta_reddit', JSON.stringify(checks));
+  localStorage.setItem('tt_beta_reddit', JSON.stringify(checks));
   if(checked) toast('Marked as posted ✓','grn');
 }
 function copyTemplate(idx) {
@@ -3857,7 +3857,7 @@ function renderBetaBattlePlan() {
   var container = document.getElementById('beta-battle-plan');
   if(!container) return;
   container.innerHTML = days.map(function(d,di){
-    var saved = JSON.parse(localStorage.getItem('tc_beta_day_'+di)||'[]');
+    var saved = JSON.parse(localStorage.getItem('tt_beta_day_'+di)||'[]');
     var doneCount = saved.filter(function(v){return v;}).length;
     var pct = d.tasks.length ? Math.round((doneCount/d.tasks.length)*100) : 0;
     var tasksHTML = d.tasks.map(function(t,ti){
@@ -3893,9 +3893,9 @@ function toggleBetaTaskExp(di,ti) {
   if(el) el.style.display = el.style.display==='none'?'block':'none';
 }
 function saveBetaDayCheck(di,ti,checked) {
-  var saved = JSON.parse(localStorage.getItem('tc_beta_day_'+di)||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_beta_day_'+di)||'[]');
   saved[ti] = checked;
-  localStorage.setItem('tc_beta_day_'+di, JSON.stringify(saved));
+  localStorage.setItem('tt_beta_day_'+di, JSON.stringify(saved));
   renderBetaBattlePlan();
 }
 
@@ -3915,7 +3915,7 @@ function renderBetaPlatforms() {
     {name:'Product Hunt',cost:'Free',expect:'Save for v3.0 launch',color:'#9c27b0',url:'https://www.producthunt.com/',
       gameplan:'1. DO NOT launch here yet — save for v3.0 full public launch\n2. For now: create a "Coming Soon" page and start collecting followers\n3. Follow other horse racing products and engage with the community\n4. Build up 50+ followers before your launch day\n5. When ready: launch on a Tuesday, get 10 friends to upvote in the first hour'}
   ];
-  var saved = JSON.parse(localStorage.getItem('tc_beta_plat_checks')||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_beta_plat_checks')||'[]');
   var container = document.getElementById('beta-platforms-list');
   if(!container) return;
   container.innerHTML = platforms.map(function(p,i){
@@ -3941,9 +3941,9 @@ function toggleBetaPlatExp(i) {
   if(el) el.style.display = el.style.display==='none'?'block':'none';
 }
 function saveBetaPlatCheck(i,checked) {
-  var saved = JSON.parse(localStorage.getItem('tc_beta_plat_checks')||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_beta_plat_checks')||'[]');
   saved[i] = checked;
-  localStorage.setItem('tc_beta_plat_checks', JSON.stringify(saved));
+  localStorage.setItem('tt_beta_plat_checks', JSON.stringify(saved));
   if(checked) toast('Platform submitted ✓','grn');
 }
 
@@ -3987,7 +3987,7 @@ function renderRedditTargets() {
         'Tired of losing money on the horses? Me too. So I built a dashboard that tells me when NOT to bet.\n\nTrack Triumph Pro — racing picks tracker with AI signals. It literally tells you to stop betting when you\'re on a losing streak.\n\nFree during beta. Not financial advice. 🐴\n\nhttps://maxmcdonough.github.io/track-triumph-pro/'
       ]}
   ];
-  var saved = JSON.parse(localStorage.getItem('tc_beta_reddit')||'[]');
+  var saved = JSON.parse(localStorage.getItem('tt_beta_reddit')||'[]');
   var container = document.getElementById('reddit-targets-list');
   if(!container) return;
   container.innerHTML = subs.map(function(s,i){
@@ -4171,7 +4171,7 @@ function aiAdvise(q) {
   var stats = {new:0,contacted:0,interested:0,converted:0};
   (window._allLeads||SEED_LEADS).forEach(function(l,i){
     var id = l.id||('seed_'+i);
-    var saved = JSON.parse(localStorage.getItem('tc_lead_'+id)||'{}');
+    var saved = JSON.parse(localStorage.getItem('tt_lead_'+id)||'{}');
     var st = saved.status||l.status||'new';
     if(stats[st]!==undefined) stats[st]++;
     else stats['new']++;
@@ -4197,7 +4197,7 @@ function aiAdvise(q) {
   var uncontactedHot = [];
   (window._allLeads||SEED_LEADS).forEach(function(l,i){
     var id = l.id||('seed_'+i);
-    var saved = JSON.parse(localStorage.getItem('tc_lead_'+id)||'{}');
+    var saved = JSON.parse(localStorage.getItem('tt_lead_'+id)||'{}');
     var st = saved.status||l.status||'new';
     if(l.score>=80 && st==='new') uncontactedHot.push({lead:l,idx:i});
   });
@@ -4368,7 +4368,7 @@ function renderLeadsTable(leads) {
   var tierIcon = function(t){return t==='1'?'🔥':t==='2'?'⚡':t==='3'?'🌐':'🎯';};
   tbody.innerHTML = leads.map(function(lead, i) {
     var id = lead.id || 'seed_'+i;
-    var saved = JSON.parse(localStorage.getItem('tc_lead_'+id)||'{}');
+    var saved = JSON.parse(localStorage.getItem('tt_lead_'+id)||'{}');
     var st = saved.status||lead.status||'new';
     var stBadge = st==='converted'?'badge-green':st==='interested'?'badge-yellow':st==='contacted'?'badge-indigo':'badge-indigo';
     var tier = typeof getTier==='function'?getTier(lead):'?';
@@ -4400,7 +4400,7 @@ function applyLeadFilters() {
     if(tierF!=='all' && getTier(l)!==tierF) return false;
     if(sourceF==='Personal Network' && l.source!=='Personal Network') return false;
     if(sourceF==='Seed' && l.source==='Personal Network') return false;
-    var saved = JSON.parse(localStorage.getItem('tc_lead_'+l.id)||'{}');
+    var saved = JSON.parse(localStorage.getItem('tt_lead_'+l.id)||'{}');
     var st = saved.status||l.status||'new';
     if(q && !((l.name||'').toLowerCase().indexOf(q)>=0 || (l.role||'').toLowerCase().indexOf(q)>=0 ||
       (l.location||'').toLowerCase().indexOf(q)>=0 || (l.type||'').toLowerCase().indexOf(q)>=0 ||
@@ -4448,7 +4448,7 @@ function exportLeads() {
   var blob = new Blob([csv], {type:'text/csv'});
   var a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'tc_leads_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.download = 'tt_leads_'+new Date().toISOString().slice(0,10)+'.csv';
   a.click();
   toast('Exported '+allLeads.length+' leads to CSV','grn');
 }
@@ -4481,7 +4481,7 @@ function getLeadData(id) {
     if (isNaN(idx) || !SEED_LEADS[idx]) return null;
     found = Object.assign({}, SEED_LEADS[idx], {id: id});
   }
-  var saved = JSON.parse(localStorage.getItem('tc_lead_'+id) || '{}');
+  var saved = JSON.parse(localStorage.getItem('tt_lead_'+id) || '{}');
   return Object.assign({}, found, saved);
 }
 
@@ -4558,9 +4558,9 @@ function switchTab(tab, btn) {
 
 function saveLead(id, field, value) {
   if (!id) return;
-  const saved = JSON.parse(localStorage.getItem('tc_lead_'+id) || '{}');
+  const saved = JSON.parse(localStorage.getItem('tt_lead_'+id) || '{}');
   saved[field] = value;
-  localStorage.setItem('tc_lead_'+id, JSON.stringify(saved));
+  localStorage.setItem('tt_lead_'+id, JSON.stringify(saved));
   // Update row badge if status changed
   if (field === 'status') {
     const row = document.querySelector('tr[data-id="'+id+'"]');
@@ -4593,11 +4593,11 @@ function markContacted() {
 
 // Activity
 const ACT_ICONS = {dm_sent:'📨',reply:'💬',follow_up:'🔄',call:'📞',meeting:'🤝',note:'📝'};
-function getActs(id) { return JSON.parse(localStorage.getItem('tc_act_'+id)||'[]'); }
+function getActs(id) { return JSON.parse(localStorage.getItem('tt_act_'+id)||'[]'); }
 function addActivity(id,type,note) {
   const acts = getActs(id);
   acts.unshift({type,note,date:new Date().toISOString(),icon:ACT_ICONS[type]||'•'});
-  localStorage.setItem('tc_act_'+id, JSON.stringify(acts));
+  localStorage.setItem('tt_act_'+id, JSON.stringify(acts));
   if (id===currentLead) renderActivity(id);
 }
 function renderActivity(id) {
@@ -4609,7 +4609,7 @@ function renderActivity(id) {
     return '<div class="lp-field" style="display:flex;gap:10px;position:relative"><div style="font-size:16px;flex-shrink:0">'+a.icon+'</div><div style="flex:1"><div style="font-size:12px;font-weight:600;text-transform:capitalize">'+(a.type||'').replace(/_/g,' ')+'</div>'+(a.note?'<div style="font-size:12px;color:var(--t2);margin-top:2px">'+a.note+'</div>':'')+'<div style="font-size:10px;color:var(--t3);margin-top:3px">'+d.toLocaleDateString()+' '+d.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})+'</div></div><button onclick="delAct(\''+id+'\','+i+')" style="position:absolute;top:4px;right:4px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:11px">✕</button></div>';
   }).join('');
 }
-function delAct(id,i) { const a=getActs(id); a.splice(i,1); localStorage.setItem('tc_act_'+id,JSON.stringify(a)); renderActivity(id); }
+function delAct(id,i) { const a=getActs(id); a.splice(i,1); localStorage.setItem('tt_act_'+id,JSON.stringify(a)); renderActivity(id); }
 function submitLog() {
   const type = document.getElementById('log-type').value;
   const note = document.getElementById('log-note').value.trim();
@@ -4619,14 +4619,14 @@ function submitLog() {
 }
 
 // Schedule
-function getScheds(id) { return JSON.parse(localStorage.getItem('tc_sched_'+id)||'[]'); }
+function getScheds(id) { return JSON.parse(localStorage.getItem('tt_sched_'+id)||'[]'); }
 function renderSched(id) {
   const el = document.getElementById('lp-sched');
   const scheds = getScheds(id);
   if (!scheds.length) { el.innerHTML = '<div class="empty-msg">No scheduled actions</div>'; return; }
   el.innerHTML = scheds.map((s,i) => '<div class="lp-field" style="display:flex;gap:10px;position:relative"><div style="flex:1"><div style="font-size:12px;font-weight:600;text-transform:capitalize">'+(s.type||'').replace(/_/g,' ')+'</div><div style="font-size:11px;color:var(--acc);margin-top:2px">'+s.date+'</div>'+(s.note?'<div style="font-size:12px;color:var(--t2);margin-top:2px">'+s.note+'</div>':'')+'</div><button onclick="delSched(\''+id+'\','+i+')" style="position:absolute;top:4px;right:4px;background:none;border:none;color:var(--t3);cursor:pointer;font-size:11px">✕</button></div>').join('');
 }
-function delSched(id,i) { const s=getScheds(id); s.splice(i,1); localStorage.setItem('tc_sched_'+id,JSON.stringify(s)); renderSched(id); }
+function delSched(id,i) { const s=getScheds(id); s.splice(i,1); localStorage.setItem('tt_sched_'+id,JSON.stringify(s)); renderSched(id); }
 function addSched() {
   if (!currentLead) return;
   const type = document.getElementById('sched-type').value;
@@ -4635,7 +4635,7 @@ function addSched() {
   if (!date) { toast('Pick a date','red'); return; }
   const scheds = getScheds(currentLead);
   scheds.push({type,date,note});
-  localStorage.setItem('tc_sched_'+currentLead, JSON.stringify(scheds));
+  localStorage.setItem('tt_sched_'+currentLead, JSON.stringify(scheds));
   renderSched(currentLead);
   document.getElementById('sched-date').value='';
   document.getElementById('sched-note').value='';
@@ -4652,7 +4652,7 @@ function renderFollowups(id) {
     if(btn) btn.style.display='none';
     return;
   }
-  var saved = JSON.parse(localStorage.getItem('tc_fu_'+id)||'{}');
+  var saved = JSON.parse(localStorage.getItem('tt_fu_'+id)||'{}');
   var allSent = true;
   el.innerHTML = lead.followups.map(function(fu,i){
     var sent = saved['fu_'+i];
@@ -4678,10 +4678,10 @@ function renderFollowups(id) {
 function sendFollowup(id, fuIdx) {
   var lead = getLeadData(id);
   if(!lead||!lead.followups||!lead.followups[fuIdx]) return;
-  var saved = JSON.parse(localStorage.getItem('tc_fu_'+id)||'{}');
+  var saved = JSON.parse(localStorage.getItem('tt_fu_'+id)||'{}');
   var now = new Date();
   saved['fu_'+fuIdx] = now.toLocaleDateString()+' '+now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-  localStorage.setItem('tc_fu_'+id, JSON.stringify(saved));
+  localStorage.setItem('tt_fu_'+id, JSON.stringify(saved));
   addActivity(id, 'follow_up', 'Follow-up #'+(fuIdx+1)+' sent');
   renderFollowups(id);
   toast('Follow-up #'+(fuIdx+1)+' marked as sent','grn');
@@ -4705,7 +4705,7 @@ function scheduleFollowup(id, fuIdx) {
   var dateStr = d.toISOString().slice(0,10);
   var scheds = getScheds(id);
   scheds.push({type:'follow_up', date:dateStr, note:'Follow-up #'+(fuIdx+1)+': '+fu.msg.substring(0,80)+'...'});
-  localStorage.setItem('tc_sched_'+id, JSON.stringify(scheds));
+  localStorage.setItem('tt_sched_'+id, JSON.stringify(scheds));
   renderSched(id);
   toast('Follow-up #'+(fuIdx+1)+' scheduled for '+dateStr,'grn');
 }
@@ -4715,7 +4715,7 @@ function scheduleAllFollowups() {
   var idx = parseInt(currentLead.replace('seed_',''));
   var lead = (window._allLeads||SEED_LEADS)[idx];
   if(!lead||!lead.followups) return;
-  var saved = JSON.parse(localStorage.getItem('tc_fu_'+currentLead)||'{}');
+  var saved = JSON.parse(localStorage.getItem('tt_fu_'+currentLead)||'{}');
   var scheduled = 0;
   lead.followups.forEach(function(fu,i){
     if(saved['fu_'+i]) return;
@@ -4724,7 +4724,7 @@ function scheduleAllFollowups() {
     var dateStr = d.toISOString().slice(0,10);
     var scheds = getScheds(currentLead);
     scheds.push({type:'follow_up', date:dateStr, note:'Follow-up #'+(i+1)+': '+fu.msg.substring(0,80)+'...'});
-    localStorage.setItem('tc_sched_'+currentLead, JSON.stringify(scheds));
+    localStorage.setItem('tt_sched_'+currentLead, JSON.stringify(scheds));
     scheduled++;
   });
   renderSched(currentLead);
