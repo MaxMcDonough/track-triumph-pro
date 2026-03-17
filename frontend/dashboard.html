@@ -1,0 +1,2915 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Triumph Pro - Horse Racing Intelligence</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    :root {
+      --bg: #0a0e17;
+      --bg2: #111827;
+      --card: #1a2236;
+      --brd: #2a3550;
+      --t1: #e2e8f0;
+      --t2: #94a3b8;
+      --t3: #64748b;
+      --acc: #3b82f6;
+      --grn: #10b981;
+      --red: #ef4444;
+      --ylw: #f59e0b;
+      --pur: #8b5cf6;
+      --cyn: #06b6d4;
+      --org: #f97316;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--t1);
+      overflow-x: hidden;
+    }
+
+    .login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg) 0%, var(--bg2) 100%);
+    }
+
+    .login-box {
+      background: rgba(26, 34, 54, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--brd);
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .login-box h1 {
+      font-size: 28px;
+      margin-bottom: 8px;
+      text-align: center;
+      background: linear-gradient(135deg, var(--acc), var(--cyn));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .login-box p {
+      text-align: center;
+      color: var(--t2);
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+
+    .login-btn, .google-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .google-btn {
+      background: white;
+      color: #333;
+      font-weight: 600;
+    }
+
+    .google-btn:hover {
+      background: #f5f5f5;
+      transform: translateY(-2px);
+    }
+
+    .login-btn {
+      background: linear-gradient(135deg, var(--acc), var(--cyn));
+      color: white;
+      font-weight: 600;
+    }
+
+    .login-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 20px 0;
+      color: var(--t3);
+      font-size: 13px;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--brd);
+    }
+
+    input[type="email"], input[type="password"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      color: var(--t1);
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    input[type="email"]:focus, input[type="password"]:focus {
+      outline: none;
+      border-color: var(--acc);
+      background: rgba(255, 255, 255, 0.08);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+    }
+
+    .login-links {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-top: 15px;
+    }
+
+    .login-links a {
+      color: var(--acc);
+      text-decoration: none;
+      transition: color 0.3s ease;
+    }
+
+    .login-links a:hover {
+      color: var(--cyn);
+    }
+
+    .error-display {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid var(--red);
+      border-radius: 6px;
+      padding: 10px;
+      margin-bottom: 15px;
+      color: #fca5a5;
+      font-size: 13px;
+      display: none;
+    }
+
+    .error-display.show {
+      display: block;
+    }
+
+    .app-container {
+      display: none;
+      min-height: 100vh;
+      background: var(--bg);
+    }
+
+    .app-container.show {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(17, 24, 39, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--brd);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 70px;
+    }
+
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--acc), var(--cyn));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 220px;
+    }
+
+    .race-ticker {
+      flex: 1;
+      overflow: hidden;
+      margin: 0 20px;
+    }
+
+    .ticker-content {
+      display: flex;
+      gap: 20px;
+      animation: scroll-left 30s linear infinite;
+      white-space: nowrap;
+    }
+
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    .ticker-item {
+      padding: 6px 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--t2);
+      flex-shrink: 0;
+    }
+
+    .ticker-item .time {
+      color: var(--acc);
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--acc), var(--pur));
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 0.3s ease;
+    }
+
+    .avatar:hover {
+      transform: scale(1.1);
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 70px;
+      right: 20px;
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      padding: 8px 0;
+      min-width: 180px;
+      display: none;
+      z-index: 101;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .dropdown-menu.show {
+      display: block;
+    }
+
+    .dropdown-menu button {
+      width: 100%;
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      color: var(--t1);
+      cursor: pointer;
+      text-align: left;
+      font-size: 14px;
+      transition: background 0.2s ease;
+      border-bottom: 1px solid var(--brd);
+    }
+
+    .dropdown-menu button:last-child {
+      border-bottom: none;
+    }
+
+    .dropdown-menu button:hover {
+      background: var(--brd);
+    }
+
+    .dropdown-menu button.logout {
+      color: var(--red);
+    }
+
+    .live-race-banner {
+      position: sticky;
+      top: 70px;
+      z-index: 90;
+      background: rgba(26, 34, 54, 0.8);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--brd);
+      padding: 12px 20px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .race-cards-scroll {
+      display: flex;
+      gap: 12px;
+      min-width: min-content;
+    }
+
+    .race-card {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      min-width: 200px;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .race-card:hover {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: var(--acc);
+      transform: translateY(-2px);
+    }
+
+    .race-card .time {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--acc);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .race-card .track {
+      font-size: 12px;
+      color: var(--t2);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .going-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .race-card .runners {
+      font-size: 11px;
+      color: var(--t3);
+    }
+
+    .live-badge {
+      display: inline-block;
+      background: var(--red);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .tab-nav {
+      display: flex;
+      gap: 0;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--brd);
+      overflow-x: auto;
+      padding: 0 20px;
+      position: sticky;
+      top: 70px;
+      z-index: 80;
+    }
+
+    .tab-btn {
+      padding: 16px 20px;
+      background: none;
+      border: none;
+      color: var(--t2);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: all 0.3s ease;
+      border-bottom: 3px solid transparent;
+    }
+
+    .tab-btn:hover {
+      color: var(--acc);
+    }
+
+    .tab-btn.active {
+      color: var(--acc);
+      border-bottom-color: var(--acc);
+    }
+
+    .tab-content {
+      display: none;
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .demo-banner {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(249, 115, 22, 0.1);
+      border-top: 1px solid var(--org);
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 50;
+      height: 50px;
+    }
+
+    .demo-banner.hide {
+      display: none;
+    }
+
+    .demo-banner button {
+      background: var(--org);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+
+    .demo-banner button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+    }
+
+    .content-wrapper {
+      flex: 1;
+      margin-bottom: 50px;
+    }
+
+    /* RACING TAB */
+    .filters-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    select {
+      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 6px;
+      color: var(--t1);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+
+    select:hover {
+      border-color: var(--acc);
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--acc);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);
+    }
+
+    select option {
+      background: var(--bg);
+      color: var(--t1);
+    }
+
+    input[type="date"] {
+      padding: 10px;
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 6px;
+      color: var(--t1);
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    input[type="date"]:focus {
+      outline: none;
+      border-color: var(--acc);
+    }
+
+    .racing-layout {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      gap: 20px;
+    }
+
+    .racecards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+      gap: 16px;
+    }
+
+    .racecard {
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 10px;
+      padding: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .racecard:hover {
+      border-color: var(--acc);
+      box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+    }
+
+    .race-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--brd);
+    }
+
+    .race-time {
+      font-size: 24px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--acc);
+    }
+
+    .race-meta {
+      font-size: 12px;
+      color: var(--t2);
+      text-align: right;
+    }
+
+    .race-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--t1);
+      margin-bottom: 8px;
+    }
+
+    .race-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--t3);
+      margin-bottom: 12px;
+    }
+
+    .race-details span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .runners-list {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease;
+    }
+
+    .runners-list.expanded {
+      max-height: 500px;
+    }
+
+    .runner {
+      display: grid;
+      grid-template-columns: 30px 1fr 60px 50px 50px;
+      gap: 8px;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 12px;
+      align-items: center;
+    }
+
+    .runner:last-child {
+      border-bottom: none;
+    }
+
+    .silk {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
+
+    .horse-name {
+      color: var(--acc);
+      cursor: pointer;
+      transition: color 0.2s ease;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .horse-name:hover {
+      color: var(--cyn);
+    }
+
+    .form {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--t2);
+      font-size: 11px;
+    }
+
+    .form span {
+      margin-right: 2px;
+      padding: 1px 3px;
+      border-radius: 2px;
+    }
+
+    .form .first { background: var(--grn); color: white; }
+    .form .second { background: var(--cyn); color: white; }
+    .form .third { background: var(--pur); color: white; }
+    .form .other { background: var(--brd); }
+    .form .unplaced { background: var(--red); color: white; }
+
+    .odds {
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--acc);
+    }
+
+    .analyze-btn {
+      padding: 4px 8px;
+      background: var(--acc);
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .analyze-btn:hover {
+      background: var(--cyn);
+      transform: translateY(-1px);
+    }
+
+    .expand-toggle {
+      width: 100%;
+      padding: 10px;
+      background: rgba(59, 130, 246, 0.1);
+      border: none;
+      border-radius: 6px;
+      color: var(--acc);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .expand-toggle:hover {
+      background: rgba(59, 130, 246, 0.2);
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar-card {
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .sidebar-card h3 {
+      font-size: 14px;
+      margin-bottom: 12px;
+      color: var(--t1);
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--brd);
+    }
+
+    .pick {
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .pick:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .pick-horse {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--acc);
+      margin-bottom: 4px;
+    }
+
+    .pick-odds {
+      font-size: 12px;
+      color: var(--t2);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .confidence {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .confidence-bar {
+      flex: 1;
+      height: 4px;
+      background: var(--brd);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .confidence-fill {
+      height: 100%;
+      background: var(--grn);
+      border-radius: 2px;
+    }
+
+    .confidence-text {
+      font-size: 11px;
+      color: var(--t3);
+      min-width: 30px;
+    }
+
+    /* ANALYZER TAB */
+    .search-box {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 12px;
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      color: var(--t1);
+      font-size: 14px;
+    }
+
+    .search-box button {
+      padding: 12px 24px;
+      background: var(--acc);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .search-box button:hover {
+      background: var(--cyn);
+      transform: translateY(-2px);
+    }
+
+    .analyzer-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .score-gauge {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: conic-gradient(var(--grn) 0deg, var(--grn) 252deg, var(--brd) 252deg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      margin: 0 auto 20px;
+    }
+
+    .score-gauge::before {
+      content: '';
+      position: absolute;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: var(--card);
+      z-index: 1;
+    }
+
+    .score-value {
+      position: relative;
+      z-index: 2;
+      text-align: center;
+      font-size: 48px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      background: linear-gradient(135deg, var(--grn), var(--cyn));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .criteria-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .criterion {
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .criterion-name {
+      font-size: 12px;
+      color: var(--t2);
+      min-width: 140px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .criterion-bar {
+      flex: 1;
+      height: 8px;
+      background: var(--brd);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .criterion-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .criterion-score {
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 30px;
+      text-align: right;
+    }
+
+    .recommendation {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid var(--grn);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 20px;
+      text-align: center;
+    }
+
+    .recommendation.good {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: var(--grn);
+    }
+
+    .recommendation.caution {
+      background: rgba(245, 158, 11, 0.1);
+      border-color: var(--ylw);
+    }
+
+    .recommendation.avoid {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--red);
+    }
+
+    .rec-text {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .rec-reason {
+      font-size: 12px;
+      color: var(--t2);
+    }
+
+    .horse-profile {
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 20px;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .profile-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .profile-label {
+      color: var(--t3);
+      font-size: 11px;
+      margin-bottom: 2px;
+    }
+
+    .profile-value {
+      color: var(--t1);
+      font-weight: 500;
+    }
+
+    /* RESULTS TAB */
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card);
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--brd);
+    }
+
+    .results-table thead {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--brd);
+    }
+
+    .results-table th {
+      padding: 12px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--t2);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .results-table td {
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 13px;
+      color: var(--t1);
+    }
+
+    .results-table tbody tr:hover {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .results-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    /* REDDIT TAB */
+    .reddit-layout {
+      display: grid;
+      grid-template-columns: 1fr 250px;
+      gap: 20px;
+    }
+
+    .reddit-filters {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .reddit-filters select {
+      flex: 1;
+    }
+
+    .post-card {
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .post-card:hover {
+      border-color: var(--acc);
+      box-shadow: 0 8px 20px rgba(59, 130, 246, 0.1);
+    }
+
+    .post-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--t1);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .post-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--t3);
+    }
+
+    .post-stats {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--t2);
+      margin-top: 8px;
+    }
+
+    /* NEWS TAB */
+    .news-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+    }
+
+    .news-card {
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 8px;
+      padding: 16px;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .news-card:hover {
+      border-color: var(--acc);
+      transform: translateY(-4px);
+    }
+
+    .news-icon {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+
+    .news-headline {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--t1);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+
+    .news-snippet {
+      font-size: 12px;
+      color: var(--t2);
+      margin-bottom: 12px;
+      flex: 1;
+    }
+
+    .news-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--t3);
+    }
+
+    .breaking-badge {
+      display: inline-block;
+      background: var(--red);
+      color: white;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    /* TOOLS TAB */
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+      gap: 20px;
+    }
+
+    .tool-card {
+      background: var(--card);
+      border: 1px solid var(--brd);
+      border-radius: 10px;
+      padding: 20px;
+    }
+
+    .tool-card h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: var(--t1);
+      border-bottom: 1px solid var(--brd);
+      padding-bottom: 8px;
+    }
+
+    .tool-inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-group label {
+      font-size: 12px;
+      color: var(--t2);
+      margin-bottom: 4px;
+    }
+
+    .input-group input {
+      padding: 10px;
+      background: var(--bg);
+      border: 1px solid var(--brd);
+      border-radius: 6px;
+      color: var(--t1);
+      font-size: 13px;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--acc);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+    }
+
+    .output {
+      background: rgba(59, 130, 246, 0.05);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--acc);
+      font-family: 'JetBrains Mono', monospace;
+      text-align: center;
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      z-index: 999;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    .horse-modal {
+      position: fixed;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 520px;
+      background: var(--card);
+      z-index: 1000;
+      overflow-y: auto;
+      animation: slideIn 0.3s ease;
+      border-left: 1px solid var(--brd);
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: var(--t2);
+      cursor: pointer;
+      font-size: 24px;
+      transition: color 0.2s ease;
+      z-index: 10;
+    }
+
+    .modal-close:hover {
+      color: var(--t1);
+    }
+
+    .modal-content {
+      padding: 40px 20px 20px;
+    }
+
+    .modal-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--brd);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .modal-tab {
+      padding: 12px 16px;
+      background: none;
+      border: none;
+      color: var(--t2);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .modal-tab:hover {
+      color: var(--acc);
+    }
+
+    .modal-tab.active {
+      color: var(--acc);
+      border-bottom-color: var(--acc);
+    }
+
+    .modal-tab-content {
+      display: none;
+    }
+
+    .modal-tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .modal-header {
+      margin-bottom: 20px;
+    }
+
+    .modal-horse-name {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--t1);
+      margin-bottom: 8px;
+    }
+
+    .modal-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      border: 1px solid var(--brd);
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--t3);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--acc);
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 1200px) {
+      .analyzer-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .racing-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .racecards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .reddit-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .tools-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .horse-modal {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .tab-nav {
+        overflow-x: scroll;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .logo {
+        font-size: 16px;
+      }
+
+      .race-ticker {
+        display: none;
+      }
+
+      .filters-row {
+        grid-template-columns: 1fr;
+      }
+
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .runner {
+        grid-template-columns: 25px 1fr;
+      }
+
+      .runner > :nth-child(n+3) {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-box">
+    <h1>🏇 Track Triumph Pro</h1>
+    <p>Horse Racing Intelligence Platform</p>
+    
+    <button class="google-btn" id="googleSignIn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+      </svg>
+      Sign in with Google
+    </button>
+
+    <div class="divider">or use email</div>
+
+    <div class="error-display" id="errorDisplay"></div>
+
+    <input type="email" id="emailInput" placeholder="Email" value="max.mcdonough123@gmail.com">
+    <input type="password" id="passwordInput" placeholder="Password" value="demo123456">
+    <button class="login-btn" id="emailSignIn">Sign In</button>
+
+    <div class="login-links">
+      <a href="#" onclick="forgotPassword();return false">Forgot password?</a>
+      <a href="#" onclick="createAccount();return false">Create account</a>
+    </div>
+
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--brd)">
+      <button class="login-btn" id="demoBtn" style="background:var(--card);border:1px solid var(--brd);color:var(--t2)">Continue in Demo Mode</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP CONTAINER -->
+<div id="appContainer" class="app-container">
+  
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="logo">🏇 Track Triumph Pro</div>
+    <div class="race-ticker">
+      <div class="ticker-content">
+        <div class="ticker-item"><span class="time">14:30</span> Ascot - The Gold Cup</div>
+        <div class="ticker-item"><span class="time">15:05</span> Cheltenham - Novice Chase</div>
+        <div class="ticker-item"><span class="time">15:40</span> Newmarket - Classic Trial</div>
+        <div class="ticker-item"><span class="time">16:15</span> Kempton - Hurdle</div>
+        <div class="ticker-item"><span class="time">16:50</span> York - Fillies' Stakes</div>
+        <div class="ticker-item"><span class="time">17:25</span> Doncaster - Chase</div>
+      </div>
+    </div>
+    <div class="user-menu">
+      <div class="avatar" id="userAvatar">M</div>
+      <div class="dropdown-menu" id="userDropdown">
+        <button id="profileBtn">Profile</button>
+        <button id="settingsBtn">Settings</button>
+        <button id="logoutBtn" class="logout">Logout</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LIVE RACE BANNER -->
+  <div class="live-race-banner">
+    <div class="race-cards-scroll" id="raceCardScroll">
+      <!-- Populated by JS -->
+    </div>
+  </div>
+
+  <!-- TAB NAVIGATION -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="racing">Racing</button>
+    <button class="tab-btn" data-tab="analyzer">Analyzer</button>
+    <button class="tab-btn" data-tab="results">Results</button>
+    <button class="tab-btn" data-tab="reddit">Reddit</button>
+    <button class="tab-btn" data-tab="news">News</button>
+    <button class="tab-btn" data-tab="briefings">Briefings</button>
+    <button class="tab-btn" data-tab="racing101">Racing 101</button>
+    <button class="tab-btn" data-tab="tools">Tools</button>
+    <button class="tab-btn" data-tab="settings">Settings</button>
+  </div>
+
+  <!-- CONTENT WRAPPER -->
+  <div class="content-wrapper">
+
+    <!-- TAB 1: RACING -->
+    <div id="racing" class="tab-content active">
+      <div class="filters-row">
+        <select id="regionFilter">
+          <option value="">All Regions</option>
+          <option value="UK">UK</option>
+          <option value="Ireland">Ireland</option>
+          <option value="France">France</option>
+          <option value="USA">USA</option>
+          <option value="Australia">Australia</option>
+        </select>
+        <select id="trackFilter">
+          <option value="">All Tracks</option>
+          <option value="ascot">Ascot</option>
+          <option value="cheltenham">Cheltenham</option>
+          <option value="newmarket">Newmarket</option>
+          <option value="kempton">Kempton</option>
+          <option value="york">York</option>
+          <option value="doncaster">Doncaster</option>
+          <option value="epsom">Epsom</option>
+          <option value="aintree">Aintree</option>
+        </select>
+        <input type="date" id="dateFilter">
+        <select id="raceTypeFilter">
+          <option value="">All Types</option>
+          <option value="flat">Flat</option>
+          <option value="chase">Chase</option>
+          <option value="hurdle">Hurdle</option>
+          <option value="nhflat">NH Flat</option>
+          <option value="aw">AW</option>
+        </select>
+      </div>
+
+      <div class="racing-layout">
+        <div>
+          <div class="racecards-grid" id="racecardsGrid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+        <div class="sidebar">
+          <div class="sidebar-card">
+            <h3>🎯 AI Picks</h3>
+            <div class="pick">
+              <div class="pick-horse">Kauto Star</div>
+              <div class="pick-odds">3/1</div>
+              <div class="confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 88%;"></div></div>
+                <div class="confidence-text">88%</div>
+              </div>
+            </div>
+            <div class="pick">
+              <div class="pick-horse">Denman</div>
+              <div class="pick-odds">5/2</div>
+              <div class="confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 75%;"></div></div>
+                <div class="confidence-text">75%</div>
+              </div>
+            </div>
+            <div class="pick">
+              <div class="pick-horse">Arkle</div>
+              <div class="pick-odds">7/4</div>
+              <div class="confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 82%;"></div></div>
+                <div class="confidence-text">82%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-card">
+            <h3>💰 E/W Suggestions</h3>
+            <div class="pick">
+              <div class="pick-horse">Desert Orchid</div>
+              <div class="pick-odds">9/2 (1/4)</div>
+              <div class="confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 71%;"></div></div>
+                <div class="confidence-text">71%</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-card">
+            <h3>📊 Accumulator</h3>
+            <div class="pick">
+              <div class="pick-horse">Multi-leg Bet</div>
+              <div class="pick-odds">12/1</div>
+              <div class="confidence">
+                <div class="confidence-bar"><div class="confidence-fill" style="width: 65%;"></div></div>
+                <div class="confidence-text">65%</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: ANALYZER -->
+    <div id="analyzer" class="tab-content">
+      <div class="search-box">
+        <input type="text" id="horseSearch" placeholder="Search for a horse...">
+        <button onclick="analyzeHorse()">Analyze</button>
+      </div>
+
+      <div class="analyzer-layout" id="analyzerResults" style="display: none;">
+        <div>
+          <div class="score-gauge">
+            <div class="score-value" id="compositeScore">78</div>
+          </div>
+          <div style="text-align: center; color: var(--t2); font-size: 13px;">Composite Score</div>
+        </div>
+
+        <div>
+          <div class="criteria-grid" id="criteriaGrid">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <div id="analyzerResults" style="display: none; margin-top: 20px;">
+        <div class="recommendation good" id="recommendation">
+          <div class="rec-text">Strong Bet</div>
+          <div class="rec-reason">Excellent form and track record suggest high probability</div>
+        </div>
+
+        <div class="horse-profile">
+          <div class="modal-horse-name" id="horseProfileName">Horse Name</div>
+          <div class="profile-grid">
+            <div class="profile-item">
+              <div class="profile-label">Age</div>
+              <div class="profile-value" id="profileAge">5</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-label">Sex</div>
+              <div class="profile-value">Colt</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-label">Color</div>
+              <div class="profile-value">Bay</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-label">Trainer</div>
+              <div class="profile-value" id="profileTrainer">-</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-label">Jockey</div>
+              <div class="profile-value" id="profileJockey">-</div>
+            </div>
+            <div class="profile-item">
+              <div class="profile-label">Wins/Runs</div>
+              <div class="profile-value" id="profileWinRate">-</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="horse-profile" style="margin-top: 16px;">
+          <h3 style="margin-bottom: 12px;">Recent Form (Last 10 Races)</h3>
+          <div class="results-table">
+            <table style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Track</th>
+                  <th>Distance</th>
+                  <th>Position</th>
+                  <th>Comment</th>
+                </tr>
+              </thead>
+              <tbody id="formTableBody">
+                <!-- Populated by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: RESULTS -->
+    <div id="results" class="tab-content">
+      <div class="filters-row">
+        <input type="date" id="resultsDateFilter">
+        <select id="resultsTrackFilter">
+          <option value="">All Tracks</option>
+          <option value="ascot">Ascot</option>
+          <option value="cheltenham">Cheltenham</option>
+          <option value="newmarket">Newmarket</option>
+        </select>
+      </div>
+
+      <div class="results-table">
+        <table style="width: 100%;">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Track</th>
+              <th>Race</th>
+              <th>Distance</th>
+              <th>Going</th>
+              <th>1st Place</th>
+              <th>2nd Place</th>
+              <th>Margin</th>
+              <th>SP</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: REDDIT -->
+    <div id="reddit" class="tab-content">
+      <div class="reddit-filters">
+        <select id="redditSubreddit">
+          <option value="horseracing">r/horseracing</option>
+          <option value="horseracinguk">r/HorseRacingUK</option>
+          <option value="gambling">r/gambling</option>
+        </select>
+        <select>
+          <option value="hot">Hot</option>
+          <option value="new">New</option>
+          <option value="top">Top</option>
+        </select>
+      </div>
+
+      <div class="reddit-layout">
+        <div id="redditPostsContainer">
+          <!-- Populated by JS -->
+        </div>
+        <div class="sidebar">
+          <div class="sidebar-card">
+            <h3>🔥 Trending</h3>
+            <div class="pick" style="cursor: pointer;">
+              <div class="pick-horse">#GrandNational2026</div>
+              <div class="pick-odds">2.3K posts</div>
+            </div>
+            <div class="pick" style="cursor: pointer;">
+              <div class="pick-horse">#CheltenhamFestival</div>
+              <div class="pick-odds">1.8K posts</div>
+            </div>
+            <div class="pick" style="cursor: pointer;">
+              <div class="pick-horse">#RoyalAscot</div>
+              <div class="pick-odds">1.2K posts</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 5: NEWS -->
+    <div id="news" class="tab-content">
+      <div class="filters-row">
+        <select id="newsCategory">
+          <option value="">All News</option>
+          <option value="uk">UK Racing</option>
+          <option value="irish">Irish Racing</option>
+          <option value="international">International</option>
+          <option value="trainer">Trainer/Jockey</option>
+          <option value="betting">Betting</option>
+        </select>
+      </div>
+
+      <div class="news-grid" id="newsGrid">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- TAB 6: BRIEFINGS -->
+    <div id="briefings" class="tab-content">
+      <div class="sidebar-card">
+        <h3>📋 Today's Racing Overview</h3>
+        <div class="profile-grid">
+          <div class="profile-item">
+            <div class="profile-label">Total Meetings</div>
+            <div class="profile-value">8</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Total Races</div>
+            <div class="profile-value">64</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Total Prize Money</div>
+            <div class="profile-value">£2.4M</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>🌦️ Going Report</h3>
+        <div class="pick">
+          <div class="pick-horse">Ascot</div>
+          <div class="pick-odds">Good to Firm</div>
+        </div>
+        <div class="pick">
+          <div class="pick-horse">Cheltenham</div>
+          <div class="pick-odds">Good to Soft</div>
+        </div>
+        <div class="pick">
+          <div class="pick-horse">Newmarket</div>
+          <div class="pick-odds">Firm</div>
+        </div>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>⚠️ Key Withdrawals</h3>
+        <div class="pick">
+          <div class="pick-horse">Kauto Star</div>
+          <div class="pick-odds">Injury</div>
+        </div>
+        <div class="pick">
+          <div class="pick-horse">Sea Pigeon</div>
+          <div class="pick-odds">Lame</div>
+        </div>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>📊 Statistical Trends</h3>
+        <div class="pick">
+          <div class="pick-horse">Trainer Form</div>
+          <div class="pick-odds">Up 15%</div>
+        </div>
+        <div class="pick">
+          <div class="pick-horse">Jockey Form</div>
+          <div class="pick-odds">Stable</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 7: RACING 101 -->
+    <div id="racing101" class="tab-content">
+      <div class="sidebar-card">
+        <h3>📖 How to Read Form</h3>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          Form strings show a horse's last 6 race results. Numbers 1-9 indicate finishing positions. 0 means unplaced (10th or worse). F = fell, P = pulled up, U = unseated, R = refused, B = brought down. Recent races are listed left to right, with the most recent on the left.
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6;">
+          For example, "124056" means 1st, 2nd, 4th, fell, 5th, 6th in the horse's last 6 races. Excellent recent form would look like "111223".
+        </p>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>🎯 Understanding Odds</h3>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          Fractional odds (5/2): For every £2 wagered, you win £5 plus your stake back. Decimal odds (3.5): Multiply your stake by 3.5 to get total return. American odds (-110): Negative numbers show stake needed to win £100; positive show winnings on £100.
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6;">
+          Implied probability is calculated as: (1 ÷ decimal odds) × 100. For 3.5 odds, that's 28.6% implied chance of winning.
+        </p>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>🏁 Race Types & Classes</h3>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          <strong>Flat Racing:</strong> Horses race on level ground without obstacles. Divided into Classes 1-7, with Class 1 being the highest level (Group races).
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          <strong>National Hunt:</strong> Includes jumps (hurdles and chases) and is divided into Novice (for inexperienced jumpers), Handicaps, and Grade 1-3 races.
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6;">
+          <strong>All Weather (AW):</strong> Races on artificial surfaces that operate year-round, unaffected by weather conditions.
+        </p>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>🌍 Going Descriptions</h3>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          <strong>Hard/Firm:</strong> Dry track, favors fast runners. <strong>Good:</strong> Ideal conditions. <strong>Good to Soft:</strong> Wet but still firm underneath. <strong>Soft:</strong> Very wet, tiring. <strong>Heavy:</strong> Very deep mud, exhausting.
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6;">
+          Some horses excel on quick ground while others prefer softer conditions. Track watering also affects ground conditions intentionally.
+        </p>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>⚖️ Weight & Handicapping</h3>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          In handicap races, top horses carry more weight to level the playing field. Weights are assigned by the handicapper based on form. Penalties add weight for recent wins; allowances reduce weight for young or less experienced horses.
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6;">
+          A 5lb difference can mean the difference between winning and losing, especially over longer distances.
+        </p>
+      </div>
+
+      <div class="sidebar-card" style="margin-top: 16px;">
+        <h3>💡 Betting Strategies</h3>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          <strong>Value Betting:</strong> Find odds higher than a horse's true probability. <strong>Each-Way:</strong> Two bets (win and place) for lower risk. <strong>Dutching:</strong> Bet multiple selections to guarantee profit.
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6; margin-bottom: 12px;">
+          <strong>Bankroll Management:</strong> Never bet more than 5% of your bankroll on a single race. Set daily stop-losses to protect capital. Track all bets to measure ROI.
+        </p>
+        <p style="font-size: 13px; color: var(--t2); line-height: 1.6;">
+          Long-term success comes from consistent value identification, not home-run betting.
+        </p>
+      </div>
+    </div>
+
+    <!-- TAB 8: TOOLS -->
+    <div id="tools" class="tab-content">
+      <div class="tools-grid">
+        <!-- Bankroll Calculator -->
+        <div class="tool-card">
+          <h3>💰 Bankroll Calculator</h3>
+          <div class="tool-inputs">
+            <div class="input-group">
+              <label>Starting Bankroll (£)</label>
+              <input type="number" id="startingBankroll" value="1000" min="0">
+            </div>
+            <div class="input-group">
+              <label>Daily Stop Loss (%)</label>
+              <input type="number" id="dailyStopLoss" value="10" min="0" max="100">
+            </div>
+            <div class="input-group">
+              <label>Max Bet Size (%)</label>
+              <input type="number" id="maxBetPercent" value="5" min="0" max="50">
+            </div>
+            <button class="login-btn" onclick="calculateBankroll()">Calculate</button>
+            <div class="output" id="bankrollOutput">Enter values to calculate</div>
+          </div>
+        </div>
+
+        <!-- Odds Converter -->
+        <div class="tool-card">
+          <h3>🔄 Odds Converter</h3>
+          <div class="tool-inputs">
+            <div class="input-group">
+              <label>Enter Odds</label>
+              <input type="text" id="oddsInput" placeholder="e.g., 3/1 or 4.0">
+            </div>
+            <div class="input-group">
+              <label>Format</label>
+              <select id="oddsFormat">
+                <option value="fractional">Fractional (3/1)</option>
+                <option value="decimal">Decimal (4.0)</option>
+                <option value="american">American (-250)</option>
+              </select>
+            </div>
+            <button class="login-btn" onclick="convertOdds()">Convert</button>
+            <div class="output" id="oddsOutput">Enter odds to convert</div>
+          </div>
+        </div>
+
+        <!-- Dutching Calculator -->
+        <div class="tool-card">
+          <h3>🎲 Dutching Calculator</h3>
+          <div class="tool-inputs">
+            <div class="input-group">
+              <label>Target Profit (£)</label>
+              <input type="number" id="dutchProfit" value="100" min="0">
+            </div>
+            <div class="input-group">
+              <label>Selection 1 Odds</label>
+              <input type="text" id="dutch1Odds" placeholder="3/1">
+            </div>
+            <div class="input-group">
+              <label>Selection 2 Odds</label>
+              <input type="text" id="dutch2Odds" placeholder="5/2">
+            </div>
+            <button class="login-btn" onclick="calculateDutching()">Calculate Stakes</button>
+            <div class="output" id="dutchOutput">Enter selections to calculate</div>
+          </div>
+        </div>
+
+        <!-- Each-Way Calculator -->
+        <div class="tool-card">
+          <h3>🏆 Each-Way Calculator</h3>
+          <div class="tool-inputs">
+            <div class="input-group">
+              <label>Win Odds</label>
+              <input type="text" id="ewOdds" placeholder="5/2">
+            </div>
+            <div class="input-group">
+              <label>Stake (£)</label>
+              <input type="number" id="ewStake" value="10" min="0">
+            </div>
+            <div class="input-group">
+              <label>Place Terms</label>
+              <select id="placeTerms">
+                <option value="1/4">1/4</option>
+                <option value="1/5">1/5</option>
+              </select>
+            </div>
+            <button class="login-btn" onclick="calculateEachWay()">Calculate</button>
+            <div class="output" id="ewOutput">Enter odds and stake to calculate</div>
+          </div>
+        </div>
+
+        <!-- Value Bet Finder -->
+        <div class="tool-card">
+          <h3>💎 Value Bet Finder</h3>
+          <div class="tool-inputs">
+            <div class="input-group">
+              <label>Your Estimated Probability (%)</label>
+              <input type="number" id="yourProb" value="35" min="0" max="100">
+            </div>
+            <div class="input-group">
+              <label>Bookmaker Odds</label>
+              <input type="text" id="bookOdds" placeholder="3/1">
+            </div>
+            <button class="login-btn" onclick="findValueBet()">Calculate</button>
+            <div class="output" id="valueOutput">Enter probability and odds to find value</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 9: SETTINGS -->
+    <div id="settings" class="tab-content">
+      <div class="racing-layout">
+        <div>
+          <div class="sidebar-card">
+            <h3>👤 Profile</h3>
+            <div class="profile-grid">
+              <div class="profile-item">
+                <div class="profile-label">Name</div>
+                <input type="text" value="Max McDonough" style="width: 100%; padding: 6px; background: var(--bg); border: 1px solid var(--brd); border-radius: 4px; color: var(--t1);">
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Email</div>
+                <input type="email" value="max.mcdonough123@gmail.com" style="width: 100%; padding: 6px; background: var(--bg); border: 1px solid var(--brd); border-radius: 4px; color: var(--t1);">
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-card" style="margin-top: 16px;">
+            <h3>⚙️ Preferences</h3>
+            <div class="profile-grid">
+              <div class="profile-item">
+                <div class="profile-label">Currency</div>
+                <select style="width: 100%; padding: 6px; background: var(--bg); border: 1px solid var(--brd); border-radius: 4px; color: var(--t1);">
+                  <option>GBP £</option>
+                  <option>EUR €</option>
+                  <option>USD $</option>
+                </select>
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Timezone</div>
+                <select style="width: 100%; padding: 6px; background: var(--bg); border: 1px solid var(--brd); border-radius: 4px; color: var(--t1);">
+                  <option>GMT</option>
+                  <option>GMT+1</option>
+                  <option>GMT-5</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-card" style="margin-top: 16px;">
+            <h3>💳 Subscription</h3>
+            <div class="profile-grid">
+              <div class="profile-item">
+                <div class="profile-label">Current Plan</div>
+                <div class="profile-value" style="color: var(--grn);">Pro - $49/month</div>
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Next Renewal</div>
+                <div class="profile-value">April 16, 2026</div>
+              </div>
+            </div>
+            <button class="login-btn" style="margin-top: 12px; width: 100%;">Manage Subscription</button>
+          </div>
+
+          <div class="sidebar-card" style="margin-top: 16px;">
+            <h3>⚠️ Danger Zone</h3>
+            <button class="login-btn" style="margin-top: 8px; width: 100%; background: var(--red);">Delete Account</button>
+            <button class="login-btn" style="margin-top: 8px; width: 100%; background: var(--brd); color: var(--t1);">Export Data</button>
+          </div>
+        </div>
+
+        <div class="sidebar">
+          <div class="sidebar-card">
+            <h3>📊 Bankroll Settings</h3>
+            <div class="profile-grid">
+              <div class="profile-item">
+                <div class="profile-label">Starting Bankroll</div>
+                <input type="number" value="1000" style="width: 100%; padding: 6px; background: var(--bg); border: 1px solid var(--brd); border-radius: 4px; color: var(--t1);">
+              </div>
+              <div class="profile-item">
+                <div class="profile-label">Daily Stop Loss %</div>
+                <input type="number" value="10" style="width: 100%; padding: 6px; background: var(--bg); border: 1px solid var(--brd); border-radius: 4px; color: var(--t1);">
+              </div>
+            </div>
+          </div>
+
+          <div class="sidebar-card" style="margin-top: 16px;">
+            <h3>🔔 Notifications</h3>
+            <div class="profile-item" style="margin-bottom: 12px;">
+              <input type="checkbox" checked> Race Alerts
+            </div>
+            <div class="profile-item" style="margin-bottom: 12px;">
+              <input type="checkbox" checked> Results Updates
+            </div>
+            <div class="profile-item">
+              <input type="checkbox" checked> Tip Alerts
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HORSE DETAIL MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="horse-modal" id="horseModal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-horse-name" id="modalHorseName">Horse Name</div>
+        <div class="modal-stats-grid">
+          <div class="stat-box">
+            <div class="stat-label">Age</div>
+            <div class="stat-value" id="modalAge">5</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Sex</div>
+            <div class="stat-value" id="modalSex">Colt</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Color</div>
+            <div class="stat-value" id="modalColor">Bay</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-tabs">
+        <button class="modal-tab active" onclick="switchModalTab('overview')">Overview</button>
+        <button class="modal-tab" onclick="switchModalTab('form')">Form</button>
+        <button class="modal-tab" onclick="switchModalTab('stats')">Stats</button>
+        <button class="modal-tab" onclick="switchModalTab('connections')">Connections</button>
+      </div>
+
+      <div class="modal-tab-content active" id="overviewTab">
+        <div class="profile-grid">
+          <div class="profile-item">
+            <div class="profile-label">Trainer</div>
+            <div class="profile-value" id="modalTrainer">-</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Jockey</div>
+            <div class="profile-value" id="modalJockey">-</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Owner</div>
+            <div class="profile-value" id="modalOwner">-</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Wins</div>
+            <div class="profile-value" id="modalWins">-</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Runs</div>
+            <div class="profile-value" id="modalRuns">-</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Win %</div>
+            <div class="profile-value" id="modalWinPercent">-</div>
+          </div>
+        </div>
+        <div style="margin-top: 16px; padding: 12px; background: rgba(59, 130, 246, 0.05); border-radius: 6px;">
+          <div style="font-size: 12px; color: var(--t2); margin-bottom: 8px;">Recent Form</div>
+          <div style="font-family: 'JetBrains Mono', monospace; font-size: 16px; color: var(--acc);" id="modalForm">1-2-3-4-5-6</div>
+        </div>
+      </div>
+
+      <div class="modal-tab-content" id="formTab">
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Track</th>
+              <th>Distance</th>
+              <th>Position</th>
+              <th>Comment</th>
+            </tr>
+          </thead>
+          <tbody id="modalFormTable">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-tab-content" id="statsTab">
+        <div class="criteria-grid">
+          <div style="background: var(--bg); padding: 12px; border-radius: 6px; border: 1px solid var(--brd);">
+            <div style="font-size: 12px; color: var(--t2); margin-bottom: 8px;">Win Rate by Going</div>
+            <div style="display: grid; grid-template-columns: 1fr 60px; gap: 8px;">
+              <div style="font-size: 12px;">Hard</div>
+              <div style="text-align: right; color: var(--acc); font-weight: 600;">35%</div>
+              <div style="font-size: 12px;">Firm</div>
+              <div style="text-align: right; color: var(--acc); font-weight: 600;">42%</div>
+              <div style="font-size: 12px;">Good</div>
+              <div style="text-align: right; color: var(--acc); font-weight: 600;">38%</div>
+              <div style="font-size: 12px;">Soft</div>
+              <div style="text-align: right; color: var(--acc); font-weight: 600;">22%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-tab-content" id="connectionsTab">
+        <div class="profile-grid">
+          <div class="profile-item">
+            <div class="profile-label">Trainer Recent Form</div>
+            <div class="profile-value" id="modalTrainerForm">35%</div>
+          </div>
+          <div class="profile-item">
+            <div class="profile-label">Jockey Strike Rate</div>
+            <div class="profile-value" id="modalJockeyForm">28%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DEMO BANNER -->
+<div class="demo-banner" id="demoBanner">
+  <span>Upgrade to Pro for unlimited access</span>
+  <button onclick="upgradePlan()">Upgrade Now</button>
+</div>
+
+<script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyAwFPWCs-gryIaIZa7Jznunhvxx0uiJ36A",
+  authDomain: "tradecommand-pro.firebaseapp.com",
+  projectId: "tradecommand-pro",
+  storageBucket: "tradecommand-pro.firebasestorage.app",
+  messagingSenderId: "1068820115443",
+  appId: "1:1068820115443:web:a132300a23f41c519d6c86"
+};
+
+// Initialize Firebase
+let app, auth, db;
+let firebaseReady = false;
+try {
+  app = firebase.initializeApp(firebaseConfig);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  firebaseReady = true;
+
+  // Listen for auth state changes
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      showApp(user);
+    }
+  });
+} catch (e) {
+  console.log('Firebase init error:', e);
+  firebaseReady = false;
+}
+
+// Demo data
+const demoRaces = [
+  {
+    id: 1,
+    time: '14:30',
+    track: 'Ascot',
+    trackCode: 'ascot',
+    name: 'The Gold Cup',
+    type: 'Chase',
+    class: 'Grade 1',
+    distance: '3m 2f',
+    going: 'good',
+    prize: '£250,000',
+    runners: [
+      { name: 'Kauto Star', silk: '#F00', silk_text: 'KS', jockey: 'J. Geraghty', trainer: 'Paul Nicholls', weight: '11-4', odds: '3/1', form: '121432' },
+      { name: 'Denman', silk: '#00F', silk_text: 'D', jockey: 'S. Dalton', trainer: 'Paul Nicholls', weight: '11-0', odds: '9/2', form: '213541' },
+      { name: 'Arkle', silk: '#0F0', silk_text: 'A', jockey: 'R. Barry', trainer: 'Tom Dreaper', weight: '10-10', odds: '7/4', form: '112342' },
+      { name: 'Midnight Court', silk: '#FF0', silk_text: 'MC', jockey: 'T. Carberry', trainer: 'Tom Dreaper', weight: '10-8', odds: '5/1', form: '321251' },
+      { name: 'Desert Orchid', silk: '#0FF', silk_text: 'DO', jockey: 'S. Sherwood', trainer: 'David Elsworth', weight: '10-6', odds: '8/1', form: '422311' },
+      { name: 'Wayward Lad', silk: '#F0F', silk_text: 'WL', jockey: 'J. Francome', trainer: 'Fred Winter', weight: '10-4', odds: '10/1', form: '513422' },
+      { name: 'Bregawn', silk: '#FFF', silk_text: 'B', jockey: 'G. Thornton', trainer: 'Michael Dickinson', weight: '10-2', odds: '12/1', form: '642153' },
+      { name: 'Try My Best', silk: '#800', silk_text: 'TMB', jockey: 'P. Tuck', trainer: 'Colin Tinkler', weight: '9-12', odds: '20/1', form: '7543210' }
+    ]
+  },
+  {
+    id: 2,
+    time: '15:05',
+    track: 'Cheltenham',
+    trackCode: 'cheltenham',
+    name: 'Novice Chase',
+    type: 'Chase',
+    class: 'Novice',
+    distance: '2m 5f',
+    going: 'good-soft',
+    prize: '£45,000',
+    runners: [
+      { name: 'Menaldos', silk: '#F0F', silk_text: 'M', jockey: 'L. Aspell', trainer: 'Kim Bailey', weight: '11-2', odds: '7/2', form: '123451' },
+      { name: 'Give And Take', silk: '#FF8', silk_text: 'GAT', jockey: 'R. Greene', trainer: 'Tom George', weight: '11-0', odds: '4/1', form: '212341' },
+      { name: 'Red Bandit', silk: '#F00', silk_text: 'RB', jockey: 'C. Deutsch', trainer: 'Nigel Twiston-Davies', weight: '10-12', odds: '11/2', form: '321245' }
+    ]
+  },
+  {
+    id: 3,
+    time: '15:40',
+    track: 'Newmarket',
+    trackCode: 'newmarket',
+    name: 'Classic Trial',
+    type: 'Flat',
+    class: 'Group 2',
+    distance: '1m 2f',
+    going: 'firm',
+    prize: '£100,000',
+    runners: [
+      { name: 'Hello Youmzain', silk: '#000', silk_text: 'HY', jockey: 'R. Hughes', trainer: 'Andrew Balding', weight: '9-2', odds: '5/2', form: '11342' },
+      { name: 'Projected', silk: '#00F', silk_text: 'P', jockey: 'J. Spencer', trainer: 'John Gosden', weight: '9-0', odds: '3/1', form: '21453' }
+    ]
+  },
+  {
+    id: 4,
+    time: '16:15',
+    track: 'Kempton',
+    trackCode: 'kempton',
+    name: 'Hurdle',
+    type: 'Hurdle',
+    class: 'Handicap',
+    distance: '2m',
+    going: 'soft',
+    prize: '£30,000',
+    runners: [
+      { name: 'Epatante', silk: '#F60', silk_text: 'E', jockey: 'J. Thornton', trainer: 'Dan Skelton', weight: '11-8', odds: '7/4', form: '112341' },
+      { name: 'Sharjah', silk: '#0F0', silk_text: 'S', jockey: 'A. Heskin', trainer: 'Denise Foster', weight: '11-5', odds: '9/4', form: '213452' }
+    ]
+  },
+  {
+    id: 5,
+    time: '16:50',
+    track: 'York',
+    trackCode: 'york',
+    name: 'Fillies\' Stakes',
+    type: 'Flat',
+    class: 'Group 3',
+    distance: '1m',
+    going: 'good',
+    prize: '£80,000',
+    runners: [
+      { name: 'Coronet', silk: '#F0F', silk_text: 'C', jockey: 'R. Havlin', trainer: 'William Haggas', weight: '9-0', odds: '9/2', form: '12341' },
+      { name: 'Laburnum', silk: '#FF0', silk_text: 'L', jockey: 'D. Tudhope', trainer: 'Hugo Palmer', weight: '8-13', odds: '5/1', form: '23145' }
+    ]
+  },
+  {
+    id: 6,
+    time: '17:25',
+    track: 'Doncaster',
+    trackCode: 'doncaster',
+    name: 'Chase',
+    type: 'Chase',
+    class: 'Handicap',
+    distance: '2m 4f',
+    going: 'good',
+    prize: '£55,000',
+    runners: [
+      { name: 'Talkischeap', silk: '#0FF', silk_text: 'TC', jockey: 'N. Fehily', trainer: 'Brian Ellison', weight: '11-7', odds: '5/2', form: '112341' }
+    ]
+  }
+];
+
+const demoResults = [
+  { time: '12:00', track: 'Ascot', race: 'Gold Cup', distance: '3m 2f', going: 'Good', first: 'Kauto Star', second: 'Denman', third: 'Arkle', margin: '2½ lengths', sp: '3/1' },
+  { time: '12:35', track: 'Cheltenham', race: 'Novice Chase', distance: '2m 5f', going: 'Good to Soft', first: 'Menaldos', second: 'Give And Take', third: 'Red Bandit', margin: '1 length', sp: '7/2' },
+  { time: '13:10', track: 'Newmarket', race: 'Classic Trial', distance: '1m 2f', going: 'Firm', first: 'Hello Youmzain', second: 'Projected', third: 'Dangerous Mist', margin: '¾ length', sp: '5/2' },
+  { time: '13:45', track: 'York', race: 'Handicap', distance: '1m 4f', going: 'Good', first: 'Coronet', second: 'Royal Rebel', third: 'Mystical Storm', margin: '1¾ lengths', sp: '7/1' },
+  { time: '14:20', track: 'Kempton', race: 'Hurdle', distance: '2m', going: 'Soft', first: 'Epatante', second: 'Sharjah', third: 'Silver Birch', margin: '½ length', sp: '7/4' },
+  { time: '14:55', track: 'Doncaster', race: 'Chase', distance: '2m 4f', going: 'Good', first: 'Talkischeap', second: 'Broken Dreams', third: 'Midnight Express', margin: '3 lengths', sp: '5/2' },
+  { time: '15:30', track: 'Epsom', race: 'Oaks', distance: '1m 4f', going: 'Good to Firm', first: 'Estimate', second: 'Music Box', third: 'Highland Reel', margin: '2 lengths', sp: '4/1' },
+  { time: '16:05', track: 'Aintree', race: 'Grand National Trial', distance: '3m 2f', going: 'Good', first: 'Many Clouds', second: 'Coneygree', third: 'Native River', margin: '4 lengths', sp: '11/2' }
+];
+
+const demoRedditPosts = [
+  { title: 'Kauto Star\'s incredible career - Greatest steeplechaser ever?', subreddit: 'r/horseracing', author: 'racing_fan_uk', score: 2850, comments: 342, timeAgo: '2h' },
+  { title: 'Today\'s picks - Who\'s got the Golden touch? Share your tips', subreddit: 'r/HorseRacingUK', author: 'betting_pro', score: 1240, comments: 156, timeAgo: '4h' },
+  { title: 'Desert Orchid - The horse that transcended racing', subreddit: 'r/horseracing', author: 'old_school_racing', score: 892, comments: 89, timeAgo: '1d' },
+  { title: 'Cheltenham Festival 2026 - Initial thoughts and predictions', subreddit: 'r/HorseRacingUK', author: 'festival_chaser', score: 1563, comments: 234, timeAgo: '6h' },
+  { title: 'Betting gone wrong - Lost £500 today, need advice', subreddit: 'r/gambling', author: 'worried_gambler', score: 542, comments: 123, timeAgo: '3h' },
+  { title: 'Best horse racing documentaries you\'ve watched?', subreddit: 'r/horseracing', author: 'doc_lover', score: 645, comments: 78, timeAgo: '8h' },
+  { title: 'Grand National 2026 - Who\'s your dark horse?', subreddit: 'r/HorseRacingUK', author: 'national_hunter', score: 1089, comments: 201, timeAgo: '5h' },
+  { title: 'Bookmakers adjusting odds - What\'s behind the movements?', subreddit: 'r/gambling', author: 'sharp_bettor', score: 734, comments: 167, timeAgo: '2h' },
+  { title: 'Arkle vs Kauto Star - The ultimate debate', subreddit: 'r/horseracing', author: 'history_buff', score: 1726, comments: 289, timeAgo: '12h' },
+  { title: 'Form reading guide - Help a beginner understand the symbols', subreddit: 'r/HorseRacingUK', author: 'newbie_racer', score: 456, comments: 92, timeAgo: '1d' }
+];
+
+const demoNewsArticles = [
+  { icon: '🏆', headline: 'Kauto Star Makes Winning Return to Ascot', snippet: 'The legendary steeplechaser puts in impressive performance...', source: 'Racing Post', date: 'Today', readTime: '3 min', breaking: true },
+  { icon: '⚡', headline: 'Weather Affects Going at Major Tracks', snippet: 'Heavy rain expected to soften ground significantly...', source: 'At The Races', date: 'Today', readTime: '2 min', breaking: false },
+  { icon: '📊', headline: 'Betting Trends: Which Trainers Are Hot Right Now?', snippet: 'Latest analysis shows surprise form from smaller yards...', source: 'Betfair Blog', date: '2h ago', readTime: '5 min', breaking: false },
+  { icon: '🎯', headline: 'Jockey Interview: Sean Bowen on his Grand National Plans', snippet: 'Exclusive chat about his mount and championship hopes...', source: 'Equestrian World', date: '4h ago', readTime: '4 min', breaking: false },
+  { icon: '🏥', headline: 'Injury Update: Several Top Horses Sidelined', snippet: 'Multiple high-profile withdrawals shake up the markets...', source: 'Racing Calendar', date: '6h ago', readTime: '3 min', breaking: false },
+  { icon: '💷', headline: 'Grand National Prize Money Increased for 2026', snippet: 'Record purse announced for iconic handicap chase...', source: 'Aintree News', date: 'Yesterday', readTime: '2 min', breaking: false },
+  { icon: '🌍', headline: 'International Racing: Dubai World Cup Preview', snippet: 'Elite field gathering for richest horse race on earth...', source: 'Global Racing', date: 'Yesterday', readTime: '6 min', breaking: false },
+  { icon: '👨‍⚖️', headline: 'New Rules: Changes to Handicapping System Announced', snippet: 'Racing Commission unveils reformed weighting system...', source: 'Official Racing', date: '2 days ago', readTime: '4 min', breaking: false },
+  { icon: '📈', headline: 'Betting Markets: Americans Discovering UK Racing', snippet: 'International interest surges in British flat season...', source: 'Betting Industry', date: '2 days ago', readTime: '3 min', breaking: false },
+  { icon: '🏅', headline: 'Record Attendance at Cheltenham Festival 2025', snippet: 'Irish course celebrates biggest crowd in history...', source: 'Turf News', date: '3 days ago', readTime: '2 min', breaking: false },
+  { icon: '🎪', headline: 'Royal Ascot 2026: Dress Code Guidelines Released', snippet: 'New rules for badges and enclosure attendance...', source: 'Ascot Official', date: '3 days ago', readTime: '2 min', breaking: false },
+  { icon: '🔮', headline: 'Predictions: Who Will Win the Triple Crown of Steeplechasing?', snippet: 'Experts weigh in on potential champions for 2026...', source: 'Racing Analysis', date: '4 days ago', readTime: '5 min', breaking: false }
+];
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', () => {
+  const dateFilter = document.getElementById('dateFilter');
+  const today = new Date().toISOString().split('T')[0];
+  dateFilter.value = today;
+  document.getElementById('resultsDateFilter').value = today;
+
+  renderRaceCards();
+  renderLiveRaces();
+  renderResults();
+  renderRedditPosts();
+  renderNews();
+
+  // Tab switching
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      e.target.classList.add('active');
+      document.getElementById(e.target.dataset.tab).classList.add('active');
+    });
+  });
+
+  // User menu
+  document.getElementById('userAvatar').addEventListener('click', () => {
+    document.getElementById('userDropdown').classList.toggle('show');
+  });
+
+  document.getElementById('logoutBtn').addEventListener('click', logout);
+
+  // Firebase auth state
+  if (auth) {
+    auth.onAuthStateChanged(user => {
+      if (user) {
+        showApp(user);
+      } else {
+        showLogin();
+      }
+    });
+  } else {
+    showLogin();
+  }
+});
+
+function renderRaceCards() {
+  const grid = document.getElementById('racecardsGrid');
+  grid.innerHTML = demoRaces.map(race => `
+    <div class="racecard">
+      <div class="race-header">
+        <div class="race-time">${race.time}</div>
+        <div class="race-meta">
+          <div>${race.track}</div>
+          <div style="font-size: 11px;">${race.prize}</div>
+        </div>
+      </div>
+      <div class="race-name">${race.name}</div>
+      <div class="race-details">
+        <span>${race.type}</span>
+        <span>${race.distance}</span>
+        <span style="display: flex; align-items: center; gap: 4px;">
+          <div class="going-dot" style="background: ${race.going === 'firm' ? '#0F0' : race.going === 'good' ? '#0F0' : race.going === 'good-soft' ? '#FF0' : '#F00'};"></div>
+          ${race.going}
+        </span>
+      </div>
+      <div class="runners-list" id="runners-${race.id}">
+        ${race.runners.map((r, idx) => `
+          <div class="runner">
+            <div class="silk" style="background: ${r.silk};">${r.silk_text}</div>
+            <div class="horse-name" onclick="openModal('${r.name}')">${r.name}</div>
+            <div class="form">${r.form.split('').map(f => {
+              let cls = 'other';
+              if (f === '1') cls = 'first';
+              else if (f === '2') cls = 'second';
+              else if (f === '3') cls = 'third';
+              else if (f === '0' || f === 'F' || f === 'P' || f === 'U') cls = 'unplaced';
+              return `<span class="${cls}">${f}</span>`;
+            }).join('')}</div>
+            <div class="odds">${r.odds}</div>
+            <button class="analyze-btn" onclick="analyzeHorse('${r.name}')">Analyze</button>
+          </div>
+        `).join('')}
+      </div>
+      <button class="expand-toggle" onclick="toggleRunners(${race.id})">
+        <span id="toggle-text-${race.id}">Expand Runners</span>
+      </button>
+    </div>
+  `).join('');
+}
+
+function toggleRunners(raceId) {
+  const list = document.getElementById(`runners-${raceId}`);
+  const btn = event.target.closest('.expand-toggle');
+  list.classList.toggle('expanded');
+  btn.querySelector('#toggle-text-' + raceId).textContent = 
+    list.classList.contains('expanded') ? 'Hide Runners' : 'Expand Runners';
+}
+
+function renderLiveRaces() {
+  const scroll = document.getElementById('raceCardScroll');
+  scroll.innerHTML = demoRaces.map(race => `
+    <div class="race-card" onclick="document.querySelector('[data-tab=racing]').click()">
+      <div class="time">${race.time}</div>
+      <div class="track">${race.track}</div>
+      <div class="runners">${race.runners.length} runners</div>
+    </div>
+  `).join('');
+}
+
+function renderResults() {
+  const table = document.getElementById('resultsTableBody');
+  table.innerHTML = demoResults.map(r => `
+    <tr>
+      <td>${r.time}</td>
+      <td>${r.track}</td>
+      <td onclick="openModal('${r.first}')" style="cursor: pointer; color: var(--acc);">${r.race}</td>
+      <td>${r.distance}</td>
+      <td>${r.going}</td>
+      <td onclick="openModal('${r.first}')" style="cursor: pointer; color: var(--acc);">${r.first}</td>
+      <td onclick="openModal('${r.second}')" style="cursor: pointer; color: var(--acc);">${r.second}</td>
+      <td>${r.margin}</td>
+      <td style="font-family: 'JetBrains Mono', monospace; font-weight: 600;">${r.sp}</td>
+    </tr>
+  `).join('');
+}
+
+function renderRedditPosts() {
+  const container = document.getElementById('redditPostsContainer');
+  container.innerHTML = demoRedditPosts.map(post => `
+    <div class="post-card">
+      <div class="post-title">${post.title}</div>
+      <div class="post-meta">
+        <span>${post.subreddit}</span>
+        <span>by ${post.author}</span>
+        <span>${post.timeAgo}</span>
+      </div>
+      <div class="post-stats">
+        <span>👍 ${post.score}</span>
+        <span>💬 ${post.comments} comments</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderNews() {
+  const grid = document.getElementById('newsGrid');
+  grid.innerHTML = demoNewsArticles.map(article => `
+    <div class="news-card">
+      ${article.breaking ? '<div class="breaking-badge">BREAKING</div>' : ''}
+      <div class="news-icon">${article.icon}</div>
+      <div class="news-headline">${article.headline}</div>
+      <div class="news-snippet">${article.snippet}</div>
+      <div class="news-footer">
+        <span>${article.source}</span>
+        <span>${article.readTime}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function analyzeHorse(horseName = null) {
+  const name = horseName || document.getElementById('horseSearch').value;
+  if (!name) return;
+
+  const horse = demoRaces.flatMap(r => r.runners).find(h => h.name.toLowerCase() === name.toLowerCase());
+  if (!horse) {
+    alert('Horse not found');
+    return;
+  }
+
+  // Calculate criteria scores
+  const scores = {
+    'Recent Form': 7 + Math.random() * 3,
+    'Class Level': 6.5 + Math.random() * 3.5,
+    'Speed Rating': 7.5 + Math.random() * 2.5,
+    'Track Record': 6 + Math.random() * 4,
+    'Jockey Form': 6.5 + Math.random() * 3.5,
+    'Trainer Form': 7 + Math.random() * 3,
+    'Distance Suitability': 6.8 + Math.random() * 3.2,
+    'Going Preference': 6.2 + Math.random() * 3.8
+  };
+
+  const weights = {
+    'Recent Form': 0.20,
+    'Class Level': 0.15,
+    'Speed Rating': 0.15,
+    'Track Record': 0.10,
+    'Jockey Form': 0.10,
+    'Trainer Form': 0.10,
+    'Distance Suitability': 0.10,
+    'Going Preference': 0.10
+  };
+
+  let compositeScore = 0;
+  for (const criterion in scores) {
+    compositeScore += scores[criterion] * weights[criterion];
+  }
+
+  document.getElementById('compositeScore').textContent = Math.round(compositeScore);
+
+  const grid = document.getElementById('criteriaGrid');
+  grid.innerHTML = Object.entries(scores).map(([criterion, score]) => {
+    const pct = (score / 10) * 100;
+    let color = score < 4 ? 'var(--red)' : score < 6 ? 'var(--ylw)' : score < 9 ? 'var(--grn)' : 'var(--cyn)';
+    return `
+      <div class="criterion">
+        <div class="criterion-name">${criterion}<span>${weights[criterion] * 100}%</span></div>
+        <div class="criterion-bar">
+          <div class="criterion-bar-fill" style="width: ${pct}%; background: ${color};"></div>
+        </div>
+        <div class="criterion-score">${score.toFixed(1)}</div>
+      </div>
+    `;
+  }).join('');
+
+  const rec = document.getElementById('recommendation');
+  if (compositeScore >= 8) {
+    rec.innerHTML = '<div class="rec-text" style="color: var(--grn);">Strong Bet</div><div class="rec-reason">Excellent form and track record suggest high probability</div>';
+    rec.className = 'recommendation good';
+  } else if (compositeScore >= 6) {
+    rec.innerHTML = '<div class="rec-text" style="color: var(--ylw);">Good Value</div><div class="rec-reason">Decent chances with reasonable odds expected</div>';
+    rec.className = 'recommendation good';
+  } else if (compositeScore >= 4) {
+    rec.innerHTML = '<div class="rec-text" style="color: var(--ylw);">Caution</div><div class="rec-reason">Inconsistent form, approach with care</div>';
+    rec.className = 'recommendation caution';
+  } else {
+    rec.innerHTML = '<div class="rec-text" style="color: var(--red);">Avoid</div><div class="rec-reason">Poor recent form and track record</div>';
+    rec.className = 'recommendation avoid';
+  }
+
+  document.getElementById('horseProfileName').textContent = horse.name;
+  document.getElementById('profileAge').textContent = Math.floor(Math.random() * 5) + 3;
+  document.getElementById('profileTrainer').textContent = horse.trainer;
+  document.getElementById('profileJockey').textContent = horse.jockey;
+  document.getElementById('profileWinRate').textContent = Math.floor(Math.random() * 15) + 20 + '%';
+  document.getElementById('profileWins').textContent = Math.floor(Math.random() * 12) + 4;
+  document.getElementById('profileRuns').textContent = Math.floor(Math.random() * 40) + 15;
+
+  document.getElementById('analyzerResults').style.display = 'block';
+}
+
+function openModal(horseName) {
+  const horse = demoRaces.flatMap(r => r.runners).find(h => h.name.toLowerCase() === horseName.toLowerCase());
+  if (!horse) return;
+
+  document.getElementById('modalHorseName').textContent = horse.name;
+  document.getElementById('modalAge').textContent = Math.floor(Math.random() * 5) + 3;
+  document.getElementById('modalTrainer').textContent = horse.trainer;
+  document.getElementById('modalJockey').textContent = horse.jockey;
+  document.getElementById('modalOwner').textContent = 'Racing Syndicate #' + Math.floor(Math.random() * 100);
+  document.getElementById('modalWins').textContent = Math.floor(Math.random() * 12) + 4;
+  document.getElementById('modalRuns').textContent = Math.floor(Math.random() * 40) + 15;
+  document.getElementById('modalWinPercent').textContent = (Math.random() * 40 + 20).toFixed(1) + '%';
+  document.getElementById('modalForm').textContent = horse.form;
+
+  const formTable = document.getElementById('modalFormTable');
+  formTable.innerHTML = Array(10).fill(0).map((_, i) => `
+    <tr>
+      <td>${new Date(Date.now() - i * 7 * 24 * 60 * 60 * 1000).toLocaleDateString()}</td>
+      <td>Various</td>
+      <td>${1.5 + Math.random() * 1}m</td>
+      <td>${Math.floor(Math.random() * 8) + 1}</td>
+      <td>Good run</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('modalBackdrop').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('show');
+}
+
+function switchModalTab(tab) {
+  document.querySelectorAll('.modal-tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.modal-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(tab + 'Tab').classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Auth functions
+function showLogin() {
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('appContainer').classList.remove('show');
+}
+
+function showApp(user) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appContainer').classList.add('show');
+  document.getElementById('userAvatar').textContent = user.email[0].toUpperCase();
+}
+
+document.getElementById('googleSignIn')?.addEventListener('click', () => {
+  if (!firebaseReady) {
+    enterDemoMode();
+    return;
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(result => {
+    showApp(result.user);
+  }).catch(e => {
+    console.log('Google auth error:', e.message);
+    const errDisplay = document.getElementById('errorDisplay');
+    if (e.code === 'auth/popup-blocked') {
+      errDisplay.textContent = 'Popup blocked — please allow popups for this site';
+    } else if (e.code === 'auth/unauthorized-domain') {
+      errDisplay.textContent = 'This domain is not authorized. Serve from localhost:3000 or use Demo Mode.';
+    } else {
+      errDisplay.textContent = e.message;
+    }
+    errDisplay.classList.add('show');
+  });
+});
+
+document.getElementById('emailSignIn')?.addEventListener('click', () => {
+  const email = document.getElementById('emailInput').value;
+  const password = document.getElementById('passwordInput').value;
+
+  if (!firebaseReady) {
+    enterDemoMode();
+    return;
+  }
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then(result => showApp(result.user))
+    .catch(e => {
+      // If sign in fails, try creating the account
+      if (e.code === 'auth/user-not-found') {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(result => showApp(result.user))
+          .catch(e2 => {
+            document.getElementById('errorDisplay').textContent = e2.message;
+            document.getElementById('errorDisplay').classList.add('show');
+          });
+      } else {
+        document.getElementById('errorDisplay').textContent = e.message;
+        document.getElementById('errorDisplay').classList.add('show');
+      }
+    });
+});
+
+document.getElementById('demoBtn')?.addEventListener('click', () => {
+  enterDemoMode();
+});
+
+function enterDemoMode() {
+  showApp({ email: 'demo@tracktriumphpro.com', displayName: 'Demo User', uid: 'demo' });
+}
+
+function forgotPassword() {
+  const email = document.getElementById('emailInput').value;
+  if (!firebaseReady || !email) {
+    document.getElementById('errorDisplay').textContent = 'Enter your email above first';
+    document.getElementById('errorDisplay').classList.add('show');
+    return;
+  }
+  auth.sendPasswordResetEmail(email).then(() => {
+    document.getElementById('errorDisplay').textContent = 'Password reset email sent!';
+    document.getElementById('errorDisplay').style.color = 'var(--grn)';
+    document.getElementById('errorDisplay').classList.add('show');
+  }).catch(e => {
+    document.getElementById('errorDisplay').textContent = e.message;
+    document.getElementById('errorDisplay').classList.add('show');
+  });
+}
+
+function createAccount() {
+  const email = document.getElementById('emailInput').value;
+  const password = document.getElementById('passwordInput').value;
+  if (!firebaseReady) { enterDemoMode(); return; }
+  auth.createUserWithEmailAndPassword(email, password)
+    .then(result => showApp(result.user))
+    .catch(e => {
+      document.getElementById('errorDisplay').textContent = e.message;
+      document.getElementById('errorDisplay').classList.add('show');
+    });
+}
+
+function logout() {
+  if (auth) auth.signOut();
+  showLogin();
+}
+
+function upgradePlan() {
+  alert('Upgrade options:\n• Starter: $19/month\n• Pro: $49/month\n• Elite: $99/month');
+}
+
+function calculateBankroll() {
+  const starting = parseFloat(document.getElementById('startingBankroll').value) || 0;
+  const stopLoss = parseFloat(document.getElementById('dailyStopLoss').value) || 0;
+  const maxBet = parseFloat(document.getElementById('maxBetPercent').value) || 0;
+
+  const dailyLimit = starting * (stopLoss / 100);
+  const maxSingleBet = starting * (maxBet / 100);
+
+  document.getElementById('bankrollOutput').innerHTML = `
+    <div>Daily Limit: £${dailyLimit.toFixed(2)}</div>
+    <div>Max Bet: £${maxSingleBet.toFixed(2)}</div>
+  `;
+}
+
+function convertOdds() {
+  const input = document.getElementById('oddsInput').value;
+  const format = document.getElementById('oddsFormat').value;
+  
+  let decimal;
+  if (format === 'fractional') {
+    const [num, den] = input.split('/').map(Number);
+    decimal = 1 + (num / den);
+  } else if (format === 'decimal') {
+    decimal = parseFloat(input);
+  } else {
+    const odds = parseFloat(input);
+    decimal = odds > 0 ? 1 + (100 / odds) : 1 + (-odds / 100);
+  }
+
+  const fractional = decimal - 1;
+  const american = fractional >= 1 ? fractional * 100 : -100 / fractional;
+  const implied = (1 / decimal) * 100;
+
+  document.getElementById('oddsOutput').innerHTML = `
+    <div>Decimal: ${decimal.toFixed(2)}</div>
+    <div>Fractional: ${fractional.toFixed(2)}/1</div>
+    <div>American: ${american.toFixed(0)}</div>
+    <div>Implied Probability: ${implied.toFixed(1)}%</div>
+  `;
+}
+
+function calculateDutching() {
+  const profit = parseFloat(document.getElementById('dutchProfit').value) || 100;
+  const odds1 = document.getElementById('dutch1Odds').value;
+  const odds2 = document.getElementById('dutch2Odds').value;
+
+  if (!odds1 || !odds2) {
+    document.getElementById('dutchOutput').textContent = 'Enter odds for both selections';
+    return;
+  }
+
+  const [n1, d1] = odds1.split('/').map(Number);
+  const [n2, d2] = odds2.split('/').map(Number);
+  const dec1 = 1 + (n1 / d1);
+  const dec2 = 1 + (n2 / d2);
+
+  const totalOdds = (1 / dec1) + (1 / dec2);
+  const stake1 = profit / ((dec1 - 1) / totalOdds);
+  const stake2 = profit / ((dec2 - 1) / totalOdds);
+  const total = stake1 + stake2;
+
+  document.getElementById('dutchOutput').innerHTML = `
+    <div>Stake 1: £${stake1.toFixed(2)}</div>
+    <div>Stake 2: £${stake2.toFixed(2)}</div>
+    <div>Total Outlay: £${total.toFixed(2)}</div>
+  `;
+}
+
+function calculateEachWay() {
+  const odds = document.getElementById('ewOdds').value;
+  const stake = parseFloat(document.getElementById('ewStake').value) || 10;
+  const terms = document.getElementById('placeTerms').value;
+
+  if (!odds) {
+    document.getElementById('ewOutput').textContent = 'Enter odds';
+    return;
+  }
+
+  const [num, den] = odds.split('/').map(Number);
+  const decimal = 1 + (num / den);
+  const [termNum, termDen] = terms.split('/').map(Number);
+  const placeOdds = 1 + (num / den / termDen);
+
+  const winReturn = stake * decimal;
+  const placeReturn = stake * placeOdds;
+  const totalReturn = winReturn + placeReturn;
+  const profit = totalReturn - (stake * 2);
+
+  document.getElementById('ewOutput').innerHTML = `
+    <div>Total Stake: £${(stake * 2).toFixed(2)}</div>
+    <div>Win Return: £${winReturn.toFixed(2)}</div>
+    <div>Place Return: £${placeReturn.toFixed(2)}</div>
+    <div>Total Return: £${totalReturn.toFixed(2)}</div>
+    <div>Profit: £${profit.toFixed(2)}</div>
+  `;
+}
+
+function findValueBet() {
+  const yourProb = parseFloat(document.getElementById('yourProb').value) || 35;
+  const odds = document.getElementById('bookOdds').value;
+
+  if (!odds) {
+    document.getElementById('valueOutput').textContent = 'Enter odds';
+    return;
+  }
+
+  const [num, den] = odds.split('/').map(Number);
+  const decimal = 1 + (num / den);
+  const impliedProb = (1 / decimal) * 100;
+  const ev = (yourProb / 100) * decimal - 1;
+
+  let recommendation = 'Skip this bet';
+  if (ev > 0.15) recommendation = '✓ Strong Value';
+  else if (ev > 0.05) recommendation = '✓ Good Value';
+  else if (ev > 0) recommendation = '~ Minor Value';
+
+  document.getElementById('valueOutput').innerHTML = `
+    <div>Your Probability: ${yourProb}%</div>
+    <div>Implied Probability: ${impliedProb.toFixed(1)}%</div>
+    <div>Expected Value: ${(ev * 100).toFixed(2)}%</div>
+    <div>${recommendation}</div>
+  `;
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key >= '1' && e.key <= '9') {
+    const tabNum = parseInt(e.key);
+    const tabs = document.querySelectorAll('.tab-btn');
+    if (tabs[tabNum - 1]) {
+      tabs[tabNum - 1].click();
+    }
+  }
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.user-menu')) {
+    document.getElementById('userDropdown').classList.remove('show');
+  }
+});
+
+// Close modal on backdrop click
+document.getElementById('modalBackdrop')?.addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) {
+    closeModal();
+  }
+});
+
+// Auto-refresh racecards every 60 seconds
+setInterval(() => {
+  renderRaceCards();
+}, 60000);
+</script>
+
+</body>
+</html>

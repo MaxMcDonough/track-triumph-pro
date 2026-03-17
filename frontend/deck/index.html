@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Triumph Pro - Pitch Deck</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #08090f;
+            --text: #ffffff;
+            --accent-blue: #00d4ff;
+            --accent-cyan: #00f0ff;
+            --accent-dark: #001a2e;
+            --primary: #0066ff;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            scroll-snap-type: y mandatory;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+        }
+
+        .slide {
+            width: 100vw;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: start;
+            position: relative;
+            padding: 2rem;
+        }
+
+        .slide::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 240, 255, 0.02) 100%);
+            pointer-events: none;
+        }
+
+        .slide-content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            text-align: center;
+        }
+
+        /* Slide 1: Title */
+        .slide-1 {
+            background: linear-gradient(180deg, #08090f 0%, #0a1630 100%);
+        }
+
+        .slide-1 .slide-content h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide-1 .slide-content p {
+            font-size: 2rem;
+            color: var(--accent-blue);
+            margin-bottom: 2rem;
+            font-weight: 300;
+        }
+
+        .slide-1 .slide-content .year {
+            font-size: 1.25rem;
+            color: #888;
+            letter-spacing: 0.1em;
+        }
+
+        /* General slide styling */
+        .slide h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            margin-bottom: 2rem;
+            color: var(--accent-blue);
+        }
+
+        .slide h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-cyan);
+        }
+
+        .slide p, .slide li {
+            font-size: 1.25rem;
+            line-height: 1.8;
+            margin-bottom: 1.5rem;
+            color: #ccc;
+        }
+
+        .slide ul {
+            list-style: none;
+            text-align: left;
+            display: inline-block;
+        }
+
+        .slide li {
+            margin-bottom: 1.25rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .slide li:before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        /* Feature grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .feature-item {
+            padding: 1.5rem;
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            background: rgba(0, 212, 255, 0.03);
+        }
+
+        .feature-item h4 {
+            color: var(--accent-blue);
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature-item p {
+            font-size: 1rem;
+            color: #aaa;
+            margin-bottom: 0;
+        }
+
+        /* Comparison table */
+        .comparison-table {
+            width: 100%;
+            margin: 2rem 0;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th, .comparison-table td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+            text-align: left;
+        }
+
+        .comparison-table th {
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        .comparison-table tr:nth-child(even) {
+            background: rgba(0, 212, 255, 0.02);
+        }
+
+        /* Metrics display */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .metric-box {
+            padding: 2rem;
+            border: 2px solid var(--accent-blue);
+            border-radius: 8px;
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .metric-value {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--accent-cyan);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: fixed;
+            right: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .nav-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--accent-blue);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: transparent;
+        }
+
+        .nav-dot.active {
+            background: var(--accent-blue);
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .slide {
+                padding: 1rem;
+            }
+
+            .slide h2 {
+                font-size: 2rem;
+            }
+
+            .slide-1 .slide-content h1 {
+                font-size: 2.5rem;
+            }
+
+            .slide-1 .slide-content p {
+                font-size: 1.25rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-dots {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Slide 1: Title -->
+    <section class="slide slide-1">
+        <div class="slide-content">
+            <h1>Track Triumph Pro</h1>
+            <p>The Future of Horse Racing Intelligence</p>
+            <div class="year">Founded 2026</div>
+        </div>
+    </section>
+
+    <!-- Slide 2: Problem -->
+    <section class="slide slide-2">
+        <div class="slide-content">
+            <h2>The Problem</h2>
+            <ul>
+                <li>Racing bettors lack data-driven analysis tools</li>
+                <li>Manual form study is time-consuming and error-prone</li>
+                <li>No comprehensive analytics platform for everyday punters</li>
+                <li>Decision-making relies on intuition rather than data</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Slide 3: Solution -->
+    <section class="slide slide-3">
+        <div class="slide-content">
+            <h2>The Solution</h2>
+            <p>An AI-powered racing analysis platform that delivers:</p>
+            <ul>
+                <li>Real-time race data and analytics</li>
+                <li>Advanced scoring algorithms</li>
+                <li>Bankroll management tools</li>
+                <li>Multi-region coverage and insights</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Slide 4: Product -->
+    <section class="slide slide-4">
+        <div class="slide-content">
+            <h2>The Product</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h4>8-Criteria Scoring</h4>
+                    <p>Comprehensive horse and jockey analysis algorithm</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Live Racecards</h4>
+                    <p>Real-time race information and updates</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Bankroll Tools</h4>
+                    <p>Smart stake management and ROI tracking</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Multi-Region</h4>
+                    <p>Coverage across major racing jurisdictions</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 5: Market -->
+    <section class="slide slide-5">
+        <div class="slide-content">
+            <h2>The Market</h2>
+            <ul>
+                <li>$300B+ global horse racing market</li>
+                <li>Growing digital betting adoption</li>
+                <li>Underserved analytics segment for retail bettors</li>
+                <li>Demand for data-driven decision tools</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Slide 6: Business Model -->
+    <section class="slide slide-6">
+        <div class="slide-content">
+            <h2>Business Model</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h4>SaaS Subscriptions</h4>
+                    <p>Starter $19/mo • Pro $49/mo • Elite $99/mo</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Data Licensing</h4>
+                    <p>Racing insights to third-party platforms</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Affiliate Partnerships</h4>
+                    <p>Bookmaker and platform commissions</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Premium Picks</h4>
+                    <p>Curated expert picks and analysis</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 7: Traction -->
+    <section class="slide slide-7">
+        <div class="slide-content">
+            <h2>Traction</h2>
+            <div class="metrics-grid">
+                <div class="metric-box">
+                    <div class="metric-value">1.2K+</div>
+                    <div class="metric-label">Active Users</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">$12K</div>
+                    <div class="metric-label">Monthly Recurring Revenue</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">250+</div>
+                    <div class="metric-label">Tracks Covered</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-value">5K+</div>
+                    <div class="metric-label">Daily Analyses</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 8: Technology -->
+    <section class="slide slide-8">
+        <div class="slide-content">
+            <h2>Technology Stack</h2>
+            <div class="features-grid">
+                <div class="feature-item">
+                    <h4>The Racing API</h4>
+                    <p>Real-time race data integration</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Firebase</h4>
+                    <p>Backend infrastructure and database</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Custom Scoring Algorithm</h4>
+                    <p>Proprietary racing analysis engine</p>
+                </div>
+                <div class="feature-item">
+                    <h4>Real-time Data Pipeline</h4>
+                    <p>Live streaming and processing</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Slide 9: Team -->
+    <section class="slide slide-9">
+        <div class="slide-content">
+            <h2>Our Team</h2>
+            <h3>Max McDonough</h3>
+            <p>Founder & Developer</p>
+            <p style="color: #999; margin-top: 2rem; font-size: 1rem;">Full-stack engineer with expertise in data analysis and racing domain knowledge</p>
+        </div>
+    </section>
+
+    <!-- Slide 10: Roadmap -->
+    <section class="slide slide-10">
+        <div class="slide-content">
+            <h2>Roadmap</h2>
+            <ul>
+                <li><strong>Q2 2026:</strong> Platform Launch with core features</li>
+                <li><strong>Q3 2026:</strong> Mobile App (iOS & Android)</li>
+                <li><strong>Q4 2026:</strong> AI-Powered Pick Recommendations</li>
+                <li><strong>2027:</strong> International Expansion</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Slide 11: The Ask -->
+    <section class="slide slide-11">
+        <div class="slide-content">
+            <h2>The Ask</h2>
+            <ul>
+                <li>Strategic investment to accelerate growth</li>
+                <li>Funding for mobile development and team expansion</li>
+                <li>Marketing and user acquisition efforts</li>
+                <li>International market penetration</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Slide 12: Contact -->
+    <section class="slide slide-12">
+        <div class="slide-content">
+            <h2>Let's Connect</h2>
+            <p style="font-size: 1.5rem; margin: 2rem 0;">max.mcdonough123@gmail.com</p>
+            <p style="font-size: 1.5rem;">tracktriumphpro.com</p>
+        </div>
+    </section>
+
+    <div class="nav-dots">
+        <button class="nav-dot active" data-slide="1"></button>
+        <button class="nav-dot" data-slide="2"></button>
+        <button class="nav-dot" data-slide="3"></button>
+        <button class="nav-dot" data-slide="4"></button>
+        <button class="nav-dot" data-slide="5"></button>
+        <button class="nav-dot" data-slide="6"></button>
+        <button class="nav-dot" data-slide="7"></button>
+        <button class="nav-dot" data-slide="8"></button>
+        <button class="nav-dot" data-slide="9"></button>
+        <button class="nav-dot" data-slide="10"></button>
+        <button class="nav-dot" data-slide="11"></button>
+        <button class="nav-dot" data-slide="12"></button>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        const navDots = document.querySelectorAll('.nav-dot');
+        
+        function updateActiveDot(index) {
+            navDots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === index);
+            });
+        }
+
+        window.addEventListener('scroll', () => {
+            const scrollPosition = window.scrollY + window.innerHeight / 2;
+            slides.forEach((slide, index) => {
+                const slideTop = slide.offsetTop;
+                const slideBottom = slideTop + slide.offsetHeight;
+                if (scrollPosition >= slideTop && scrollPosition < slideBottom) {
+                    updateActiveDot(index);
+                }
+            });
+        });
+
+        navDots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                slides[index].scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+    </script>
+</body>
+</html>

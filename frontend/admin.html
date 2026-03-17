@@ -1,0 +1,1686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TT Pro Admin</title>
+<meta name="description" content="Track Triumph Pro admin dashboard — manage bettors, bets, racing analytics, leads, and growth planning.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tracktriumphpro.com/admin.html">
+<meta property="og:title" content="Track Triumph Pro — Admin Dashboard">
+<meta property="og:description" content="Professional horse racing intelligence platform. Manage bettors, bets, racing analytics, and growth planning.">
+<meta property="og:image" content="https://tracktriumphpro.com/social-preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="Track Triumph Pro">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Track Triumph Pro — Admin Dashboard">
+<meta name="twitter:description" content="Professional horse racing intelligence platform. Manage bettors, bets, racing analytics, and growth planning.">
+<meta name="twitter:image" content="https://tracktriumphpro.com/social-preview.png">
+<meta name="twitter:site" content="@tracktriumphpro">
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0d1117;--bg2:#161b22;--card:#1c2333;--brd:#30363d;--t1:#f0f6fc;--t2:#8b949e;--t3:#484f58;--acc:#6366f1;--grn:#10b981;--red:#ef4444;--ylw:#f59e0b}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t1);line-height:1.5}
+a{color:var(--acc);text-decoration:none}
+input,select,textarea,button{font-family:inherit}
+
+/* Login */
+#login-screen{display:flex;align-items:center;justify-content:center;height:100vh;background:var(--bg)}
+.login-box{background:var(--bg2);border:1px solid var(--brd);border-radius:16px;padding:40px;width:380px;text-align:center}
+.login-box h1{font-size:24px;margin-bottom:8px}
+.login-box p{color:var(--t2);font-size:13px;margin-bottom:24px}
+.login-box input{width:100%;padding:10px 14px;margin-bottom:12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:14px}
+.login-box button{width:100%;padding:10px;background:var(--acc);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer}
+.login-box button:hover{opacity:.9}
+#login-error{color:var(--red);font-size:12px;margin-top:8px;min-height:18px}
+
+/* Layout */
+#app{display:none;height:100vh;overflow:hidden}
+.app-wrap{display:flex;height:100%}
+.sidebar{width:220px;background:var(--bg);border-right:1px solid var(--brd);overflow-y:auto;flex-shrink:0;padding:16px 0}
+.sidebar-brand{padding:12px 20px;font-size:16px;font-weight:800;border-bottom:1px solid var(--brd);margin-bottom:8px}
+.sidebar-label{font-size:10px;font-weight:700;color:var(--acc);text-transform:uppercase;letter-spacing:.1em;padding:16px 20px 6px}
+.nav-item{padding:9px 20px;font-size:13px;color:var(--t2);cursor:pointer;transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{color:var(--t1);background:rgba(99,102,241,.06)}
+.nav-item.active{color:var(--acc);background:rgba(99,102,241,.1);border-left-color:var(--acc);font-weight:600}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{padding:16px 28px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center;background:var(--bg2);flex-shrink:0}
+.header h2{font-size:16px;font-weight:700}
+.header button{background:var(--red);color:#fff;border:none;border-radius:6px;padding:6px 16px;font-size:12px;cursor:pointer;font-weight:600}
+.content{flex:1;overflow-y:auto;padding:28px}
+
+/* Pages */
+.page{display:none}
+.page.active{display:block}
+
+/* Components */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:20px}
+.stat-label{font-size:11px;color:var(--t2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.stat-val{font-size:24px;font-weight:800}
+.card{background:var(--card);border:1px solid var(--brd);border-radius:12px;padding:20px;margin-bottom:16px}
+.card h3{font-size:14px;font-weight:700;margin-bottom:12px}
+table{width:100%;border-collapse:collapse}
+th{padding:10px 16px;text-align:left;font-size:11px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--brd)}
+td{padding:10px 16px;font-size:13px;border-bottom:1px solid rgba(255,255,255,.04)}
+.badge{font-size:11px;padding:2px 8px;border-radius:10px;font-weight:600}
+.badge-indigo{background:rgba(99,102,241,.15);color:#818cf8}
+.badge-green{background:rgba(16,185,129,.15);color:#10b981}
+.badge-yellow{background:rgba(245,158,11,.15);color:#f59e0b}
+.badge-red{background:rgba(239,68,68,.15);color:#ef4444}
+.btn{padding:6px 14px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--acc);color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-ghost{background:rgba(255,255,255,.06);color:var(--t2);border:1px solid var(--brd)}
+.search-box{padding:8px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px;width:220px}
+.table-wrap{background:var(--card);border:1px solid var(--brd);border-radius:12px;overflow:hidden}
+.table-bar{padding:14px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--brd)}
+.table-bar h3{font-size:14px;font-weight:700}
+.empty-msg{text-align:center;padding:40px;color:var(--t3);font-size:13px}
+
+/* Toast */
+#toast{position:fixed;top:20px;right:20px;z-index:99999;display:none;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;color:#fff;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+
+/* Lead Panel */
+#lead-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9998;backdrop-filter:blur(2px)}
+#lead-panel{position:fixed;top:0;right:0;width:520px;max-width:100vw;height:100vh;background:var(--bg);border-left:1px solid rgba(99,102,241,.3);z-index:9999;overflow-y:auto;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:-12px 0 40px rgba(0,0,0,.6);display:flex;flex-direction:column}
+.lp-header{padding:20px 24px;border-bottom:1px solid var(--brd);display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;background:linear-gradient(135deg,rgba(99,102,241,.1),rgba(16,185,129,.05))}
+.lp-tabs{display:flex;border-bottom:1px solid var(--brd);flex-shrink:0}
+.lp-tab{flex:1;padding:10px;font-size:12px;font-weight:600;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--t3);cursor:pointer}
+.lp-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.lp-tab-content{display:none;padding:20px 24px;flex:1}
+.lp-tab-content.active{display:block}
+.lp-field{padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px}
+.lp-field-label{font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+
+/* User Panel */
+#user-panel{position:fixed;top:0;right:0;width:400px;max-width:100vw;height:100vh;background:var(--bg);border-left:1px solid var(--brd);z-index:9998;transform:translateX(100%);transition:transform .28s ease;overflow-y:auto;box-shadow:-8px 0 30px rgba(0,0,0,.4)}
+
+/* User Modal */
+#user-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9997;backdrop-filter:blur(2px)}
+#user-modal{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--card);border:1px solid var(--brd);border-radius:16px;width:620px;max-width:90vw;max-height:80vh;overflow-y:auto;z-index:9998;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.um-header{padding:20px 28px;border-bottom:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center}
+.um-header h2{font-size:16px;font-weight:700}
+.um-header button{background:none;border:1px solid var(--brd);color:var(--t2);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:16px}
+.um-tabs{display:flex;border-bottom:1px solid var(--brd)}
+.um-tab{flex:1;padding:10px;text-align:center;font-size:12px;font-weight:600;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--t3);cursor:pointer}
+.um-tab.active{color:var(--acc);border-bottom-color:var(--acc)}
+.um-content{padding:20px 28px}
+.um-tab-pane{display:none}
+.um-tab-pane.active{display:block}
+
+/* Kanban */
+.kanban{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kanban-col{background:var(--bg2);border:1px solid var(--brd);border-radius:10px;padding:12px;min-height:300px}
+.kanban-col h4{font-size:12px;font-weight:700;color:var(--t2);text-transform:uppercase;margin-bottom:10px;letter-spacing:.04em}
+.kanban-card{background:var(--card);border:1px solid var(--brd);border-radius:8px;padding:12px;margin-bottom:8px}
+.kanban-card .name{font-size:13px;font-weight:600;color:var(--t1)}
+.kanban-card .meta{font-size:11px;color:var(--t2);margin-top:4px}
+
+/* Loading skeleton */
+.skeleton{background:linear-gradient(90deg,var(--brd) 25%,rgba(99,102,241,.1) 50%,var(--brd) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;border-radius:4px;display:inline-block;min-width:40px;color:transparent}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Fade in */
+.page{animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Stat hover */
+.stat{transition:border-color .2s,transform .15s}
+.stat:hover{border-color:var(--acc);transform:translateY(-2px)}
+
+/* Card hover */
+.card{transition:border-color .2s}
+.card:hover{border-color:rgba(99,102,241,.2)}
+
+/* Table row highlight */
+tr{transition:background .15s}
+tbody tr:hover{background:rgba(99,102,241,.04)}
+
+/* Kanban card hover */
+.kanban-card{transition:transform .15s,border-color .15s;cursor:pointer}
+.kanban-card:hover{transform:translateY(-2px);border-color:var(--acc)}
+
+/* Live pulse */
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.pulse{animation:pulse 2s ease-in-out infinite}
+
+/* Button hover */
+.btn{transition:transform .1s,box-shadow .15s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.btn:active{transform:translateY(0)}
+
+/* Scrollbar styling */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--brd);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(99,102,241,.3)}
+
+@media(max-width:768px){
+  .sidebar{position:fixed;left:-220px;z-index:999;height:100%;transition:left .2s}
+  .sidebar.open{left:0}
+  .kanban{grid-template-columns:1fr 1fr}
+  .stats{grid-template-columns:1fr 1fr}
+  #lead-panel{width:100vw}
+  #user-modal{width:95vw}
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>🏇 TT Pro Admin</h1>
+    <p>Sign in to manage Track Triumph Pro</p>
+    <button onclick="doGoogleLogin()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px;margin-bottom:12px;background:#fff;color:#333;border:1px solid #ddd;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 019.5 24c0-1.59.28-3.14.76-4.59l-7.98-6.19A23.9 23.9 0 000 24c0 3.77.9 7.35 2.56 10.53l7.97-5.94z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 5.94C6.51 42.62 14.62 48 24 48z"/></svg>
+      Sign in with Google
+    </button>
+    <div style="display:flex;align-items:center;gap:12px;margin:8px 0 12px"><div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div><span style="font-size:11px;color:var(--t3)">or use email</span><div style="flex:1;height:1px;background:rgba(255,255,255,.1)"></div></div>
+    <input type="email" id="login-email" placeholder="Email" value="max.mcdonough123@gmail.com">
+    <input type="password" id="login-pass" placeholder="Password">
+    <button onclick="doLogin()">Sign In</button>
+    <div id="login-error"></div>
+    <a href="#" onclick="doResetPassword();return false" style="display:block;text-align:center;margin-top:10px;font-size:12px;color:var(--acc);text-decoration:none">Forgot password? Reset it</a>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--brd)">
+      <button onclick="enterDemoAdmin()" style="width:100%;padding:10px;background:var(--card);color:var(--t2);border:1px solid var(--brd);border-radius:8px;font-size:13px;cursor:pointer">Continue in Demo Mode</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+<div class="app-wrap">
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">🏇 TT Pro Admin</div>
+  <div class="nav-item active" data-page="dashboard">📊 Dashboard</div>
+  <div class="nav-item" data-page="bettors">👥 Bettors</div>
+  <div class="nav-item" data-page="analytics">📈 Analytics</div>
+  <div class="nav-item" data-page="newsletters">📧 Newsletters</div>
+  <div class="nav-item" data-page="subscriptions">💳 Subscriptions</div>
+  <div class="nav-item" data-page="promos">🎁 Promos</div>
+  <div class="nav-item" data-page="settings">⚙️ Settings</div>
+  <div class="nav-item" data-page="changelog">📋 Changelog</div>
+  <div class="sidebar-label">Business Hub</div>
+  <div class="nav-item" data-page="biz-dashboard">📊 Biz Dashboard</div>
+  <div class="nav-item" data-page="biz-crm">🎯 CRM &amp; Pipeline</div>
+  <div class="nav-item" data-page="biz-prospecting">🔍 Prospecting</div>
+  <div class="nav-item" data-page="biz-leads">👥 Leads</div>
+  <div class="nav-item" data-page="biz-marketing">📣 Marketing</div>
+  <div class="nav-item" data-page="biz-campaigns">📢 Campaigns</div>
+  <div class="nav-item" data-page="biz-revenue">💰 Revenue</div>
+  <div class="nav-item" data-page="biz-analytics">📈 Biz Analytics</div>
+  <div class="nav-item" data-page="biz-ai">🤖 AI Advisor</div>
+  <div class="nav-item" data-page="biz-scheduled">⏰ Scheduled</div>
+  <div class="nav-item" data-page="biz-launch">🚀 Beta Launch</div>
+  <div class="nav-item" data-page="biz-growth">📈 Growth Plan</div>
+  <div class="nav-item" data-page="biz-templates">📝 Email Templates</div>
+  <div class="nav-item" data-page="biz-files">📁 Files</div>
+  <div class="nav-item" data-page="biz-settings">⚙️ Biz Settings</div>
+</div>
+
+<!-- Main -->
+<div class="main">
+  <div class="header">
+    <h2 id="page-title">Dashboard</h2>
+    <button onclick="doLogout()">Logout</button>
+  </div>
+  <div class="content">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard" class="page active">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Total Bettors</div>
+      <div class="stat-val" id="stat-bettors">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Active Subscriptions</div>
+      <div class="stat-val" id="stat-active-subs">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">MRR</div>
+      <div class="stat-val" id="stat-mrr">$0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Leads Pipeline</div>
+      <div class="stat-val" id="stat-leads">0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Quick Actions</h3>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary" onclick="showModal('Create Newsletter','Enter newsletter title','NewsletterTitle')">Create Newsletter</button>
+      <button class="btn btn-primary" onclick="showModal('Create Promo','Enter promo code','PromoCode')">Create Promo</button>
+      <button class="btn btn-primary" onclick="gotoPage('bettors')">View All Bettors</button>
+      <button class="btn btn-primary" onclick="gotoPage('biz-leads')">View Leads</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <h3>Revenue Overview</h3>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px">Starter ($19/mo)</span>
+          <span style="font-size:12px;color:var(--grn)" id="rev-starter">$0</span>
+        </div>
+        <div style="background:var(--bg);height:6px;border-radius:3px;overflow:hidden">
+          <div style="background:var(--grn);height:100%;width:0%" id="rev-starter-bar"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px">Pro ($49/mo)</span>
+          <span style="font-size:12px;color:var(--acc)" id="rev-pro">$0</span>
+        </div>
+        <div style="background:var(--bg);height:6px;border-radius:3px;overflow:hidden">
+          <div style="background:var(--acc);height:100%;width:0%" id="rev-pro-bar"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px">Elite ($99/mo)</span>
+          <span style="font-size:12px;color:var(--ylw)" id="rev-elite">$0</span>
+        </div>
+        <div style="background:var(--bg);height:6px;border-radius:3px;overflow:hidden">
+          <div style="background:var(--ylw);height:100%;width:0%" id="rev-elite-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>System Status</h3>
+      <div style="font-size:13px;line-height:1.8">
+        <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--grn)">●</span> Racing API: Connected</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--grn)">●</span> Firebase Auth: Ready</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--grn)">●</span> Firestore: Synced</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px"><span style="color:var(--grn)">●</span> Email Service: Active</div>
+        <div style="display:flex;gap:8px"><span style="color:var(--grn)">●</span> All Systems Operational</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Recent Activity</h3>
+    <div class="table-wrap">
+      <table id="recent-activity-table">
+        <thead>
+          <tr><th>Date</th><th>Event</th><th>Details</th></tr>
+        </thead>
+        <tbody id="activity-list">
+          <tr><td colspan="3" style="text-align:center;padding:20px;color:var(--t3)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Recent Bettors</h3>
+    <div class="table-wrap">
+      <table id="recent-bettors-table">
+        <thead>
+          <tr><th>Email</th><th>Name</th><th>Plan</th><th>Joined</th><th>Last Active</th><th>Action</th></tr>
+        </thead>
+        <tbody id="bettors-list">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">Loading bettors...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BETTORS ═══ -->
+<div id="bettors" class="page">
+  <div style="display:flex;gap:8px;margin-bottom:16px">
+    <input type="text" id="bettors-search" class="search-box" placeholder="Search bettors..." onkeyup="filterBettors()">
+    <select id="bettors-plan-filter" style="padding:8px 12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px" onchange="filterBettors()">
+      <option value="">All Plans</option>
+      <option value="starter">Starter</option>
+      <option value="pro">Pro</option>
+      <option value="elite">Elite</option>
+    </select>
+    <button class="btn btn-ghost" onclick="exportBettersCSV()">Export CSV</button>
+  </div>
+
+  <div class="card">
+    <h3>All Bettors</h3>
+    <div class="table-wrap">
+      <table id="bettors-table">
+        <thead>
+          <tr><th>Email</th><th>Name</th><th>Plan</th><th>Region</th><th>Joined</th><th>Last Active</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="bettors-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t3)">Loading bettors...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ANALYTICS ═══ -->
+<div id="analytics" class="page">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Total Bets Placed</div>
+      <div class="stat-val" id="analytics-total-bets">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg Bet Size</div>
+      <div class="stat-val" id="analytics-avg-bet">$0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Win Rate</div>
+      <div class="stat-val" id="analytics-win-rate">0%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Peak Hours</div>
+      <div class="stat-val" id="analytics-peak">—</div>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <h3>Bets by Track</h3>
+      <div id="analytics-track-chart" style="display:flex;align-items:flex-end;gap:8px;height:200px">
+        <div style="flex:1;background:var(--acc);opacity:.8;border-radius:4px 4px 0 0" title="Churchill Downs"></div>
+        <div style="flex:1;background:var(--acc);opacity:.6;border-radius:4px 4px 0 0" title="Belmont"></div>
+        <div style="flex:1;background:var(--acc);opacity:.7;border-radius:4px 4px 0 0" title="Pimlico"></div>
+        <div style="flex:1;background:var(--acc);opacity:.5;border-radius:4px 4px 0 0" title="Saratoga"></div>
+        <div style="flex:1;background:var(--acc);opacity:.9;border-radius:4px 4px 0 0" title="Keeneland"></div>
+      </div>
+      <div style="display:flex;gap:12px;margin-top:12px;font-size:11px">
+        <div>Churchill, Belmont, Pimlico, Saratoga, Keeneland</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Conversion Rate by Source</h3>
+      <div style="font-size:13px;line-height:2">
+        <div style="display:flex;justify-content:space-between"><span>Organic</span><span style="color:var(--grn)">18%</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Paid Ads</span><span style="color:var(--acc)">12%</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Email</span><span style="color:var(--ylw)">24%</span></div>
+        <div style="display:flex;justify-content:space-between"><span>Referral</span><span style="color:var(--grn)">31%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Peak Betting Hours</h3>
+    <div id="peak-hours-chart" style="display:flex;align-items:flex-end;gap:4px;height:180px">
+      <div style="flex:1;background:rgba(99,102,241,.4);border-radius:2px 2px 0 0" title="6am"></div>
+      <div style="flex:1;background:rgba(99,102,241,.3);border-radius:2px 2px 0 0" title="9am"></div>
+      <div style="flex:1;background:rgba(99,102,241,.5);border-radius:2px 2px 0 0" title="12pm"></div>
+      <div style="flex:1;background:rgba(99,102,241,.9);border-radius:2px 2px 0 0" title="3pm"></div>
+      <div style="flex:1;background:rgba(99,102,241,1);border-radius:2px 2px 0 0" title="6pm"></div>
+      <div style="flex:1;background:rgba(99,102,241,.8);border-radius:2px 2px 0 0" title="9pm"></div>
+      <div style="flex:1;background:rgba(99,102,241,.2);border-radius:2px 2px 0 0" title="12am"></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:space-between;margin-top:12px;font-size:10px;color:var(--t3)">
+      <span>6am</span><span>12pm</span><span>6pm</span><span>12am</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NEWSLETTERS ═══ -->
+<div id="newsletters" class="page">
+  <div style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="showNewsletterModal()">Create Newsletter</button>
+  </div>
+
+  <div class="card">
+    <h3>Newsletters</h3>
+    <div class="table-wrap">
+      <table id="newsletters-table">
+        <thead>
+          <tr><th>Title</th><th>Subject</th><th>Recipients</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="newsletters-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No newsletters yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SUBSCRIPTIONS ═══ -->
+<div id="subscriptions" class="page">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Starter ($19/mo)</div>
+      <div class="stat-val" id="sub-starter-count">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pro ($49/mo)</div>
+      <div class="stat-val" id="sub-pro-count">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Elite ($99/mo)</div>
+      <div class="stat-val" id="sub-elite-count">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total MRR</div>
+      <div class="stat-val" id="sub-total-mrr">$0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Subscriptions Management</h3>
+    <div class="table-wrap">
+      <table id="subscriptions-table">
+        <thead>
+          <tr><th>Bettor Email</th><th>Plan</th><th>Amount</th><th>Billing Cycle</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="subscriptions-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">Loading subscriptions...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROMOS ═══ -->
+<div id="promos" class="page">
+  <div style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="showPromoModal()">Create Promo Code</button>
+  </div>
+
+  <div class="card">
+    <h3>Active Promo Codes</h3>
+    <div class="table-wrap">
+      <table id="promos-table">
+        <thead>
+          <tr><th>Code</th><th>Discount</th><th>Uses</th><th>Max Uses</th><th>Expiry</th><th>Status</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="promos-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t3)">No promos created yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS ═══ -->
+<div id="settings" class="page">
+  <div class="card">
+    <h3>Platform Settings</h3>
+    <div style="display:grid;gap:16px">
+      <div>
+        <label style="display:block;font-size:12px;color:var(--t2);margin-bottom:6px">Platform Name</label>
+        <input type="text" value="Track Triumph Pro" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--t2);margin-bottom:6px">Support Email</label>
+        <input type="email" value="support@tracktriumph.com" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>API Keys</h3>
+    <div style="display:grid;gap:12px">
+      <div>
+        <label style="display:block;font-size:12px;color:var(--t2);margin-bottom:6px">Racing API Key</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="password" id="api-racing" value="****************************" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
+          <button class="btn btn-ghost" onclick="toggleAPIKey('api-racing')">Show</button>
+        </div>
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--t2);margin-bottom:6px">Stripe Secret Key</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="password" id="api-stripe" value="****************************" style="flex:1;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
+          <button class="btn btn-ghost" onclick="toggleAPIKey('api-stripe')">Show</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Integrations</h3>
+    <div style="display:grid;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <div>
+          <div style="font-size:13px;font-weight:600">Racing Data Provider</div>
+          <div style="font-size:12px;color:var(--t2)">Live race data and odds</div>
+        </div>
+        <span class="badge badge-green">Connected</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <div>
+          <div style="font-size:13px;font-weight:600">Payment Processing</div>
+          <div style="font-size:12px;color:var(--t2)">Stripe integration</div>
+        </div>
+        <span class="badge badge-green">Connected</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <div>
+          <div style="font-size:13px;font-weight:600">Email Service</div>
+          <div style="font-size:12px;color:var(--t2)">SendGrid for newsletters</div>
+        </div>
+        <span class="badge badge-green">Connected</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CHANGELOG ═══ -->
+<div id="changelog" class="page">
+  <div class="card">
+    <h3>Version History</h3>
+    <div style="border-left:2px solid var(--acc);padding-left:20px;margin-left:10px">
+      <div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;margin-bottom:8px">
+          <div style="width:12px;height:12px;background:var(--acc);border-radius:50%;margin-left:-26px;margin-right:16px"></div>
+          <div style="font-weight:600;font-size:13px">v2.1.0 - Racing Analytics Suite</div>
+          <span style="color:var(--t3);font-size:11px;margin-left:8px">Mar 15, 2026</span>
+        </div>
+        <div style="font-size:12px;color:var(--t2)">Added advanced betting analytics with track performance breakdowns and peak hours analysis</div>
+      </div>
+      <div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;margin-bottom:8px">
+          <div style="width:12px;height:12px;background:var(--acc);border-radius:50%;margin-left:-26px;margin-right:16px"></div>
+          <div style="font-weight:600;font-size:13px">v2.0.5 - Bettor Management</div>
+          <span style="color:var(--t3);font-size:11px;margin-left:8px">Mar 10, 2026</span>
+        </div>
+        <div style="font-size:12px;color:var(--t2)">Improved bettor profile pages with detailed betting history and performance metrics</div>
+      </div>
+      <div style="margin-bottom:28px">
+        <div style="display:flex;align-items:center;margin-bottom:8px">
+          <div style="width:12px;height:12px;background:var(--acc);border-radius:50%;margin-left:-26px;margin-right:16px"></div>
+          <div style="font-weight:600;font-size:13px">v2.0.0 - Initial Release</div>
+          <span style="color:var(--t3);font-size:11px;margin-left:8px">Mar 1, 2026</span>
+        </div>
+        <div style="font-size:12px;color:var(--t2)">Launched Track Triumph Pro admin dashboard with core features</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BIZ DASHBOARD ═══ -->
+<div id="biz-dashboard" class="page">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Active Leads</div>
+      <div class="stat-val" id="bizdash-leads">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Pipeline Value</div>
+      <div class="stat-val" id="bizdash-pipeline">$0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Close Rate</div>
+      <div class="stat-val" id="bizdash-close">0%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Avg Deal Size</div>
+      <div class="stat-val" id="bizdash-deal">$0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Business Overview</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:8px">Monthly Growth</div>
+        <div style="font-size:20px;font-weight:700;color:var(--grn)">+12.5%</div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--t2);margin-bottom:8px">Avg Deal Cycle</div>
+        <div style="font-size:20px;font-weight:700">23 days</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CRM & PIPELINE ═══ -->
+<div id="biz-crm" class="page">
+  <div class="card">
+    <h3>Sales Pipeline - Kanban View</h3>
+    <div class="kanban" id="kanban-board">
+      <div class="kanban-col">
+        <h4>Lead</h4>
+        <div class="kanban-card"><div class="name">TechCorp Inc</div><div class="meta">B2B SaaS • $50k ARR</div></div>
+        <div class="kanban-card"><div class="name">Finance Solutions</div><div class="meta">Fintech • $75k ARR</div></div>
+      </div>
+      <div class="kanban-col">
+        <h4>Qualified</h4>
+        <div class="kanban-card"><div class="name">Global Trading</div><div class="meta">Trading • $120k ARR</div></div>
+      </div>
+      <div class="kanban-col">
+        <h4>Demo</h4>
+        <div class="kanban-card"><div class="name">Racing Analytics Co</div><div class="meta">Sports Analytics • $200k ARR</div></div>
+        <div class="kanban-card"><div class="name">Equine Insights</div><div class="meta">Horse Racing • $85k ARR</div></div>
+      </div>
+      <div class="kanban-col">
+        <h4>Won</h4>
+        <div class="kanban-card"><div class="name">Premium Bettors LLC</div><div class="meta">Sports Betting • $300k ARR</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PROSPECTING ═══ -->
+<div id="biz-prospecting" class="page">
+  <div style="margin-bottom:16px">
+    <input type="text" id="prospect-search" class="search-box" placeholder="Search companies or people...">
+  </div>
+
+  <div class="card">
+    <h3>Prospecting Search</h3>
+    <div class="table-wrap">
+      <table id="prospect-table">
+        <thead>
+          <tr><th>Name</th><th>Industry</th><th>Size</th><th>Location</th><th>Contact</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="prospect-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">Enter search terms to find prospects</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ LEADS ═══ -->
+<div id="biz-leads" class="page">
+  <div style="margin-bottom:16px;display:flex;gap:8px">
+    <select id="leads-tier-filter" style="padding:8px 12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px" onchange="filterLeads()">
+      <option value="">All Tiers</option>
+      <option value="hot">Hot</option>
+      <option value="warm">Warm</option>
+      <option value="cold">Cold</option>
+    </select>
+    <input type="text" id="leads-search" class="search-box" placeholder="Search leads..." onkeyup="filterLeads()">
+    <button class="btn btn-ghost" onclick="showLeadFilters()">More Filters</button>
+  </div>
+
+  <div class="card">
+    <h3>All Leads</h3>
+    <div class="table-wrap">
+      <table id="leads-table">
+        <thead>
+          <tr><th>Company</th><th>Contact</th><th>Tier</th><th>Score</th><th>Status</th><th>Source</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="leads-tbody">
+          <tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t3)">Loading leads...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MARKETING ═══ -->
+<div id="biz-marketing" class="page">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Campaign Performance</div>
+      <div class="stat-val" id="marketing-campaigns">0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Open Rate</div>
+      <div class="stat-val" id="marketing-open">0%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Click Rate</div>
+      <div class="stat-val" id="marketing-click">0%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Conversions</div>
+      <div class="stat-val" id="marketing-conversions">0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Recent Campaigns</h3>
+    <div class="table-wrap">
+      <table id="marketing-table">
+        <thead>
+          <tr><th>Campaign</th><th>Sent</th><th>Opened</th><th>Clicked</th><th>Converted</th><th>Status</th></tr>
+        </thead>
+        <tbody id="marketing-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No campaigns yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ CAMPAIGNS ═══ -->
+<div id="biz-campaigns" class="page">
+  <div style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="gotoPage('biz-templates')">Create Campaign</button>
+  </div>
+
+  <div class="card">
+    <h3>Email Campaigns</h3>
+    <div class="table-wrap">
+      <table id="campaigns-table">
+        <thead>
+          <tr><th>Name</th><th>Recipients</th><th>Status</th><th>Open Rate</th><th>Created</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="campaigns-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No campaigns created yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ REVENUE ═══ -->
+<div id="biz-revenue" class="page">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Total Revenue</div>
+      <div class="stat-val" id="revenue-total">$0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Total Expenses</div>
+      <div class="stat-val" id="revenue-expenses">$0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Gross Margin</div>
+      <div class="stat-val" id="revenue-margin">0%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Net Income</div>
+      <div class="stat-val" id="revenue-net">$0</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Revenue Breakdown</h3>
+    <div style="display:flex;gap:20px;flex-direction:column">
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px">Subscriptions</span>
+          <span style="font-size:12px;font-weight:600">$24,550</span>
+        </div>
+        <div style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden">
+          <div style="background:var(--grn);height:100%;width:85%"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-size:12px">Premium Features</span>
+          <span style="font-size:12px;font-weight:600">$4,200</span>
+        </div>
+        <div style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden">
+          <div style="background:var(--acc);height:100%;width:15%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BIZ ANALYTICS ═══ -->
+<div id="biz-analytics" class="page">
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-label">Cohort Retention</div>
+      <div class="stat-val" id="analytics-retention">0%</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">CAC</div>
+      <div class="stat-val" id="analytics-cac">$0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">LTV</div>
+      <div class="stat-val" id="analytics-ltv">$0</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">LTV:CAC</div>
+      <div class="stat-val" id="analytics-ratio">0:1</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Cohort Analysis</h3>
+    <div class="table-wrap">
+      <table id="cohort-table">
+        <thead>
+          <tr><th>Cohort</th><th>Size</th><th>M1</th><th>M2</th><th>M3</th><th>M6</th><th>M12</th></tr>
+        </thead>
+        <tbody id="cohort-tbody">
+          <tr><td>Mar 2026</td><td>45</td><td>100%</td><td>92%</td><td>85%</td><td>72%</td><td>61%</td></tr>
+          <tr><td>Feb 2026</td><td>38</td><td>100%</td><td>89%</td><td>81%</td><td>68%</td><td>—</td></tr>
+          <tr><td>Jan 2026</td><td>52</td><td>100%</td><td>86%</td><td>78%</td><td>—</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ AI ADVISOR ═══ -->
+<div id="biz-ai" class="page">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div class="card">
+      <h3>Business Health Score</h3>
+      <div style="display:flex;align-items:center;justify-content:center;margin:20px 0">
+        <div style="width:120px;height:120px;border-radius:50%;background:conic-gradient(var(--grn) 0% 72%,var(--brd) 72%);display:flex;align-items:center;justify-content:center">
+          <div style="width:108px;height:108px;border-radius:50%;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="font-size:32px;font-weight:800">72</div>
+            <div style="font-size:11px;color:var(--t2)">Healthy</div>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.8">
+        <div>✓ Strong revenue growth</div>
+        <div>✓ Healthy unit economics</div>
+        <div>✓ Good retention rates</div>
+        <div>⚠ Optimize CAC spend</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>AI Recommendations</h3>
+      <div style="display:grid;gap:12px;font-size:12px">
+        <div style="padding:12px;background:rgba(16,185,129,.1);border-left:3px solid var(--grn);border-radius:4px">
+          <div style="font-weight:600;color:var(--grn)">Increase email frequency</div>
+          <div style="color:var(--t2);margin-top:4px">Cohort data shows +8% retention with weekly emails</div>
+        </div>
+        <div style="padding:12px;background:rgba(99,102,241,.1);border-left:3px solid var(--acc);border-radius:4px">
+          <div style="font-weight:600;color:var(--acc)">Focus on hot leads</div>
+          <div style="color:var(--t2);margin-top:4px">Hot leads have 3.5x higher conversion rate</div>
+        </div>
+        <div style="padding:12px;background:rgba(245,158,11,.1);border-left:3px solid var(--ylw);border-radius:4px">
+          <div style="font-weight:600;color:var(--ylw)">Optimize pricing</div>
+          <div style="color:var(--t2);margin-top:4px">Pro plan shows highest margin potential</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCHEDULED ═══ -->
+<div id="biz-scheduled" class="page">
+  <div style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="showModal('Create Task','Enter task description','TaskDesc')">Schedule Task</button>
+  </div>
+
+  <div class="card">
+    <h3>Scheduled Tasks &amp; Automations</h3>
+    <div class="table-wrap">
+      <table id="scheduled-table">
+        <thead>
+          <tr><th>Task</th><th>Schedule</th><th>Status</th><th>Last Run</th><th>Next Run</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="scheduled-tbody">
+          <tr><td colspan="6" style="text-align:center;padding:20px;color:var(--t3)">No scheduled tasks</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BETA LAUNCH ═══ -->
+<div id="biz-launch" class="page">
+  <div class="card">
+    <h3>Beta Launch Checklist</h3>
+    <div style="display:grid;gap:12px">
+      <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <input type="checkbox" checked style="width:16px;height:16px;cursor:pointer">
+        <span style="flex:1">Platform infrastructure ready</span>
+        <span class="badge badge-green">Done</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <input type="checkbox" checked style="width:16px;height:16px;cursor:pointer">
+        <span style="flex:1">Beta user recruitment</span>
+        <span class="badge badge-green">Done</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <input type="checkbox" checked style="width:16px;height:16px;cursor:pointer">
+        <span style="flex:1">Core features implemented</span>
+        <span class="badge badge-green">Done</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <input type="checkbox" style="width:16px;height:16px;cursor:pointer">
+        <span style="flex:1">Public feedback collection</span>
+        <span class="badge badge-yellow">In Progress</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <input type="checkbox" style="width:16px;height:16px;cursor:pointer">
+        <span style="flex:1">Stability & performance testing</span>
+        <span class="badge badge-yellow">In Progress</span>
+      </div>
+      <div style="display:flex;gap:12px;align-items:center;padding:12px;background:var(--bg);border-radius:8px">
+        <input type="checkbox" style="width:16px;height:16px;cursor:pointer">
+        <span style="flex:1">General availability launch</span>
+        <span class="badge badge-indigo">Pending</span>
+      </div>
+    </div>
+    <div style="margin-top:20px;padding:12px;background:rgba(16,185,129,.1);border-radius:8px;border-left:3px solid var(--grn)">
+      <div style="font-weight:600;color:var(--grn);margin-bottom:4px">Progress: 67%</div>
+      <div style="height:8px;background:var(--bg);border-radius:4px;overflow:hidden">
+        <div style="background:var(--grn);height:100%;width:67%"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GROWTH PLAN ═══ -->
+<div id="biz-growth" class="page">
+  <div class="card">
+    <h3>Q2 2026 Growth Goals</h3>
+    <div style="display:grid;gap:16px">
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-weight:600">User Growth</span>
+          <span style="font-size:12px;color:var(--t2)">450 / 500 users</span>
+        </div>
+        <div style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden">
+          <div style="background:var(--acc);height:100%;width:90%"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-weight:600">MRR Target</span>
+          <span style="font-size:12px;color:var(--t2)">$28,750 / $35,000</span>
+        </div>
+        <div style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden">
+          <div style="background:var(--grn);height:100%;width:82%"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-weight:600">Feature Releases</span>
+          <span style="font-size:12px;color:var(--t2)">4 / 6 features</span>
+        </div>
+        <div style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden">
+          <div style="background:var(--ylw);height:100%;width:67%"></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <span style="font-weight:600">Retention Rate</span>
+          <span style="font-size:12px;color:var(--t2)">78% / 85%</span>
+        </div>
+        <div style="background:var(--bg);height:8px;border-radius:4px;overflow:hidden">
+          <div style="background:var(--grn);height:100%;width:92%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Key Milestones</h3>
+    <div style="border-left:2px solid var(--acc);padding-left:20px;margin-left:10px">
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;margin-bottom:6px">
+          <div style="width:12px;height:12px;background:var(--grn);border-radius:50%;margin-left:-26px;margin-right:16px"></div>
+          <div style="font-weight:600;font-size:13px">Reached 400 active bettors</div>
+        </div>
+        <div style="font-size:12px;color:var(--t2)">Achieved on Mar 10, 2026</div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;margin-bottom:6px">
+          <div style="width:12px;height:12px;background:var(--acc);border-radius:50%;margin-left:-26px;margin-right:16px"></div>
+          <div style="font-weight:600;font-size:13px">Hit $25k MRR</div>
+        </div>
+        <div style="font-size:12px;color:var(--t2)">Target: Mar 20, 2026</div>
+      </div>
+      <div style="margin-bottom:20px">
+        <div style="display:flex;align-items:center;margin-bottom:6px">
+          <div style="width:12px;height:12px;background:rgba(99,102,241,.4);border-radius:50%;margin-left:-26px;margin-right:16px"></div>
+          <div style="font-weight:600;font-size:13px">Advanced analytics v2</div>
+        </div>
+        <div style="font-size:12px;color:var(--t2)">Target: Apr 15, 2026</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ EMAIL TEMPLATES ═══ -->
+<div id="biz-templates" class="page">
+  <div style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="showModal('Create Template','Enter template name','TemplateName')">Create Template</button>
+  </div>
+
+  <div class="card">
+    <h3>Email Templates</h3>
+    <div class="table-wrap">
+      <table id="templates-table">
+        <thead>
+          <tr><th>Name</th><th>Type</th><th>Created</th><th>Used</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="templates-tbody">
+          <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No templates yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FILES ═══ -->
+<div id="biz-files" class="page">
+  <div style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="uploadFile()">Upload File</button>
+  </div>
+
+  <div class="card">
+    <h3>Documents &amp; Assets</h3>
+    <div class="table-wrap">
+      <table id="files-table">
+        <thead>
+          <tr><th>Name</th><th>Type</th><th>Size</th><th>Uploaded</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="files-tbody">
+          <tr><td colspan="5" style="text-align:center;padding:20px;color:var(--t3)">No files uploaded yet</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BIZ SETTINGS ═══ -->
+<div id="biz-settings" class="page">
+  <div class="card">
+    <h3>Business Configuration</h3>
+    <div style="display:grid;gap:16px">
+      <div>
+        <label style="display:block;font-size:12px;color:var(--t2);margin-bottom:6px">Business Name</label>
+        <input type="text" value="Track Triumph Pro" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--t2);margin-bottom:6px">Business Email</label>
+        <input type="email" value="business@tracktriumph.com" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
+      </div>
+      <div>
+        <label style="display:block;font-size:12px;color:var(--t2);margin-bottom:6px">Website</label>
+        <input type="url" value="https://tracktriumphpro.com" style="width:100%;padding:10px 14px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Notification Preferences</h3>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px">New bettor signups</span>
+        <input type="checkbox" checked style="width:18px;height:18px;cursor:pointer">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px">New lead added</span>
+        <input type="checkbox" checked style="width:18px;height:18px;cursor:pointer">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px">Daily analytics summary</span>
+        <input type="checkbox" style="width:18px;height:18px;cursor:pointer">
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:13px">Weekly revenue report</span>
+        <input type="checkbox" checked style="width:18px;height:18px;cursor:pointer">
+      </div>
+    </div>
+  </div>
+</div>
+
+  </div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div id="toast"></div>
+
+<!-- ═══ LEAD PANEL ═══ -->
+<div id="lead-overlay" onclick="closeLeadPanel()"></div>
+<div id="lead-panel">
+  <div class="lp-header">
+    <div>
+      <div style="font-size:14px;font-weight:700" id="lp-company">Company Name</div>
+      <div style="font-size:12px;color:var(--t2);margin-top:4px" id="lp-contact">Contact Name</div>
+    </div>
+    <button onclick="closeLeadPanel()" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:6px;padding:4px 8px;cursor:pointer">✕</button>
+  </div>
+  <div class="lp-tabs">
+    <button class="lp-tab active" onclick="switchLPTab('overview')">Overview</button>
+    <button class="lp-tab" onclick="switchLPTab('notes')">Notes</button>
+    <button class="lp-tab" onclick="switchLPTab('activity')">Activity</button>
+  </div>
+  <div class="lp-tab-content active" id="lp-overview">
+    <div style="display:grid;gap:12px;font-size:12px">
+      <div class="lp-field">
+        <div class="lp-field-label">Email</div>
+        <div id="lp-email" style="color:var(--t1)">—</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label">Phone</div>
+        <div id="lp-phone" style="color:var(--t1)">—</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label">Company</div>
+        <div id="lp-company-detail" style="color:var(--t1)">—</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label">Industry</div>
+        <div id="lp-industry" style="color:var(--t1)">—</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label">Score</div>
+        <div id="lp-score" style="color:var(--t1)">—</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label">Status</div>
+        <div id="lp-status" style="color:var(--t1)">—</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label">Source</div>
+        <div id="lp-source" style="color:var(--t1)">—</div>
+      </div>
+      <div class="lp-field">
+        <div class="lp-field-label">Created</div>
+        <div id="lp-created" style="color:var(--t1)">—</div>
+      </div>
+    </div>
+  </div>
+  <div class="lp-tab-content" id="lp-notes">
+    <textarea id="lp-notes-text" style="width:100%;padding:12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px;min-height:300px;font-family:inherit;resize:vertical"></textarea>
+  </div>
+  <div class="lp-tab-content" id="lp-activity">
+    <div id="lp-activity-list" style="display:grid;gap:8px;font-size:12px">
+      <div style="padding:12px;background:rgba(99,102,241,.06);border-left:2px solid var(--acc);border-radius:4px">
+        <div style="font-weight:600">Lead viewed</div>
+        <div style="color:var(--t3);margin-top:2px">2 hours ago</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ USER MODAL ═══ -->
+<div id="user-modal-overlay" onclick="closeUserModal()"></div>
+<div id="user-modal">
+  <div class="um-header">
+    <h2 id="um-title">User Details</h2>
+    <button onclick="closeUserModal()" style="background:none;border:1px solid var(--brd);color:var(--t2);border-radius:6px;padding:4px 8px;cursor:pointer;font-size:18px">✕</button>
+  </div>
+  <div class="um-tabs">
+    <button class="um-tab active" onclick="switchUMTab('details')">Details</button>
+    <button class="um-tab" onclick="switchUMTab('bets')">Bets</button>
+    <button class="um-tab" onclick="switchUMTab('activity')">Activity</button>
+  </div>
+  <div class="um-content">
+    <div class="um-tab-pane active" id="um-details">
+      <div style="display:grid;gap:14px;font-size:13px">
+        <div>
+          <div style="font-size:11px;color:var(--t2);text-transform:uppercase;margin-bottom:4px">Email</div>
+          <div id="um-email" style="color:var(--t1)">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--t2);text-transform:uppercase;margin-bottom:4px">Name</div>
+          <div id="um-name" style="color:var(--t1)">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--t2);text-transform:uppercase;margin-bottom:4px">Plan</div>
+          <div id="um-plan" style="color:var(--t1)">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--t2);text-transform:uppercase;margin-bottom:4px">Region</div>
+          <div id="um-region" style="color:var(--t1)">—</div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--t2);text-transform:uppercase;margin-bottom:4px">Joined</div>
+          <div id="um-joined" style="color:var(--t1)">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="um-tab-pane" id="um-bets">
+      <div style="font-size:13px;color:var(--t3);text-align:center;padding:20px">Recent bets will appear here</div>
+    </div>
+    <div class="um-tab-pane" id="um-activity">
+      <div style="font-size:13px;color:var(--t3);text-align:center;padding:20px">Activity log will appear here</div>
+    </div>
+  </div>
+</div>
+
+</body>
+<script>
+// ═══ FIREBASE CONFIG ═══
+const firebaseConfig={apiKey:"AIzaSyAwFPWCs-gryIaIZa7Jznunhvxx0uiJ36A",authDomain:"tradecommand-pro.firebaseapp.com",projectId:"tradecommand-pro",storageBucket:"tradecommand-pro.firebasestorage.app",messagingSenderId:"1068820115443",appId:"1:1068820115443:web:a132300a23f41c519d6c86"};
+
+let auth, db, firebaseReady=false;
+try {
+  firebase.initializeApp(firebaseConfig);
+  auth=firebase.auth();
+  db=firebase.firestore();
+  firebaseReady=true;
+} catch(e) {
+  console.log('Firebase init error:',e);
+}
+
+// ═══ STATE ═══
+let currentUser=null;
+let allBettors=[];
+let allLeads=[];
+let allPromos=[];
+
+function enterApp(user){
+  currentUser=user;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='flex';
+  loadDashboard();
+}
+
+function enterDemoAdmin(){
+  enterApp({email:'max.mcdonough123@gmail.com',displayName:'Max (Demo)',uid:'demo-admin'});
+}
+
+// ═══ INIT ═══
+window.addEventListener('DOMContentLoaded',()=>{
+  if(firebaseReady){
+    auth.onAuthStateChanged(user=>{
+      if(user){
+        enterApp(user);
+      }else{
+        document.getElementById('login-screen').style.display='flex';
+        document.getElementById('app').style.display='none';
+      }
+    });
+  }
+  document.querySelectorAll('.nav-item').forEach(item=>{
+    item.addEventListener('click',()=>{
+      const page=item.getAttribute('data-page');
+      gotoPage(page);
+    });
+  });
+});
+
+// ═══ AUTH ═══
+function doGoogleLogin(){
+  if(!firebaseReady){enterDemoAdmin();return;}
+  const provider=new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).then(r=>enterApp(r.user)).catch(e=>{
+    if(e.code==='auth/unauthorized-domain'){
+      showError('Domain not authorized. Serve from localhost:3000 or click Demo Mode below.');
+    } else {
+      showError(e.message);
+    }
+  });
+}
+
+function doLogin(){
+  const email=document.getElementById('login-email').value;
+  const pass=document.getElementById('login-pass').value;
+  if(!email||!pass)return showError('Enter email and password');
+  if(!firebaseReady){enterDemoAdmin();return;}
+  auth.signInWithEmailAndPassword(email,pass).then(r=>enterApp(r.user)).catch(e=>{
+    if(e.code==='auth/user-not-found'){
+      auth.createUserWithEmailAndPassword(email,pass).then(r=>enterApp(r.user)).catch(e2=>showError(e2.message));
+    } else {
+      showError(e.message);
+    }
+  });
+}
+
+function doResetPassword(){
+  const email=prompt('Enter your email:');
+  if(!email)return;
+  if(!firebaseReady){showError('Not available in demo mode');return;}
+  auth.sendPasswordResetEmail(email).then(()=>showError('Reset email sent!')).catch(e=>showError(e.message));
+}
+
+function doLogout(){
+  if(firebaseReady) auth.signOut();
+  currentUser=null;
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('app').style.display='none';
+}
+
+function showError(msg){
+  document.getElementById('login-error').textContent=msg;
+}
+
+// ═══ NAVIGATION ═══
+function gotoPage(pageId){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+  const titles={'dashboard':'Dashboard','bettors':'Bettors','analytics':'Analytics','newsletters':'Newsletters','subscriptions':'Subscriptions','promos':'Promos','settings':'Settings','changelog':'Changelog','biz-dashboard':'Business Dashboard','biz-crm':'CRM & Pipeline','biz-prospecting':'Prospecting','biz-leads':'Leads','biz-marketing':'Marketing','biz-campaigns':'Campaigns','biz-revenue':'Revenue','biz-analytics':'Business Analytics','biz-ai':'AI Advisor','biz-scheduled':'Scheduled Tasks','biz-launch':'Beta Launch','biz-growth':'Growth Plan','biz-templates':'Email Templates','biz-files':'Files','biz-settings':'Business Settings'};
+  document.getElementById('page-title').textContent=titles[pageId]||'Page';
+  window.scrollTo(0,0);
+}
+
+// ═══ DASHBOARD ═══
+async function loadDashboard(){
+  try{
+    const bettorsSnap=await db.collection('bettors').get();
+    const leadsSnap=await db.collection('leads').where('status','!=','lost').get();
+    const subsSnap=await db.collection('subscriptions').get();
+    
+    allBettors=bettorsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    allLeads=leadsSnap.docs.map(d=>({id:d.id,...d.data()}));
+    
+    const starterCount=allBettors.filter(b=>b.plan==='starter').length;
+    const proCount=allBettors.filter(b=>b.plan==='pro').length;
+    const eliteCount=allBettors.filter(b=>b.plan==='elite').length;
+    
+    const startMRR=starterCount*19;
+    const proMRR=proCount*49;
+    const eliteMRR=eliteCount*99;
+    const totalMRR=startMRR+proMRR+eliteMRR;
+    
+    document.getElementById('stat-bettors').textContent=allBettors.length;
+    document.getElementById('stat-active-subs').textContent=allBettors.filter(b=>b.active).length;
+    document.getElementById('stat-mrr').textContent='$'+totalMRR.toLocaleString();
+    document.getElementById('stat-leads').textContent=allLeads.length;
+    
+    document.getElementById('rev-starter').textContent='$'+startMRR;
+    document.getElementById('rev-pro').textContent='$'+proMRR;
+    document.getElementById('rev-elite').textContent='$'+eliteMRR;
+    const maxRev=Math.max(startMRR,proMRR,eliteMRR)||1;
+    document.getElementById('rev-starter-bar').style.width=(startMRR/maxRev*100)+'%';
+    document.getElementById('rev-pro-bar').style.width=(proMRR/maxRev*100)+'%';
+    document.getElementById('rev-elite-bar').style.width=(eliteMRR/maxRev*100)+'%';
+    
+    loadRecentActivity();
+    loadRecentBettors();
+    loadBettorsTable();
+  }catch(e){
+    console.error(e);
+  }
+}
+
+async function loadRecentActivity(){
+  try{
+    const snap=await db.collection('activity').orderBy('timestamp','desc').limit(10).get();
+    const list=document.getElementById('activity-list');
+    list.innerHTML=snap.empty?'<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--t3)">No recent activity</td></tr>':'';
+    snap.forEach(doc=>{
+      const data=doc.data();
+      const row=list.insertRow();
+      row.innerHTML=`<td>${new Date(data.timestamp).toLocaleDateString()}</td><td>${data.event}</td><td>${data.details||'—'}</td>`;
+    });
+  }catch(e){
+    console.error(e);
+  }
+}
+
+async function loadRecentBettors(){
+  try{
+    const snap=await db.collection('bettors').orderBy('createdAt','desc').limit(5).get();
+    const list=document.getElementById('bettors-list');
+    list.innerHTML='';
+    snap.forEach(doc=>{
+      const data=doc.data();
+      const row=list.insertRow();
+      row.innerHTML=`<td>${data.email}</td><td>${data.name||'—'}</td><td><span class="badge ${data.plan==='starter'?'badge-indigo':data.plan==='pro'?'badge-green':'badge-yellow'}">${data.plan||'—'}</span></td><td>${new Date(data.createdAt).toLocaleDateString()}</td><td>${data.lastActive?new Date(data.lastActive).toLocaleDateString():'—'}</td><td><button class="btn btn-ghost" onclick="showUserModal('${doc.id}')">View</button></td>`;
+    });
+  }catch(e){
+    console.error(e);
+  }
+}
+
+// ═══ BETTORS ═══
+async function loadBettorsTable(){
+  try{
+    const snap=await db.collection('bettors').get();
+    allBettors=snap.docs.map(d=>({id:d.id,...d.data()}));
+    displayBettors(allBettors);
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function displayBettors(list){
+  const tbody=document.getElementById('bettors-tbody');
+  tbody.innerHTML='';
+  if(list.length===0){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t3)">No bettors found</td></tr>';
+    return;
+  }
+  list.forEach(b=>{
+    const row=tbody.insertRow();
+    row.innerHTML=`<td>${b.email}</td><td>${b.name||'—'}</td><td><span class="badge ${b.plan==='starter'?'badge-indigo':b.plan==='pro'?'badge-green':'badge-yellow'}">${b.plan||'—'}</span></td><td>${b.region||'—'}</td><td>${b.createdAt?new Date(b.createdAt).toLocaleDateString():'—'}</td><td>${b.lastActive?new Date(b.lastActive).toLocaleDateString():'—'}</td><td><button class="btn btn-ghost" onclick="showUserModal('${b.id}')">Details</button></td>`;
+  });
+}
+
+function filterBettors(){
+  const search=document.getElementById('bettors-search').value.toLowerCase();
+  const plan=document.getElementById('bettors-plan-filter').value;
+  const filtered=allBettors.filter(b=>(b.email.includes(search)||b.name?.toLowerCase().includes(search))&&(!plan||b.plan===plan));
+  displayBettors(filtered);
+}
+
+function exportBettersCSV(){
+  let csv='Email,Name,Plan,Region,Joined,Last Active\n';
+  allBettors.forEach(b=>{
+    csv+=`"${b.email}","${b.name||''}","${b.plan||''}","${b.region||''}","${b.createdAt?new Date(b.createdAt).toLocaleDateString():''}","${b.lastActive?new Date(b.lastActive).toLocaleDateString():''}"\n`;
+  });
+  const link=document.createElement('a');
+  link.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  link.download='bettors.csv';
+  link.click();
+  showToast('CSV exported');
+}
+
+// ═══ USER MODAL ═══
+async function showUserModal(userId){
+  try{
+    const doc=await db.collection('bettors').doc(userId).get();
+    if(!doc.exists)return;
+    const data=doc.data();
+    document.getElementById('um-email').textContent=data.email;
+    document.getElementById('um-name').textContent=data.name||'—';
+    document.getElementById('um-plan').textContent=data.plan||'—';
+    document.getElementById('um-region').textContent=data.region||'—';
+    document.getElementById('um-joined').textContent=data.createdAt?new Date(data.createdAt).toLocaleDateString():'—';
+    document.getElementById('user-modal-overlay').style.display='block';
+    document.getElementById('user-modal').style.display='block';
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function closeUserModal(){
+  document.getElementById('user-modal-overlay').style.display='none';
+  document.getElementById('user-modal').style.display='none';
+}
+
+function switchUMTab(tab){
+  document.querySelectorAll('.um-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.um-tab-pane').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`.um-tab[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById(`um-${tab}`).classList.add('active');
+}
+
+// ═══ LEADS ═══
+async function loadLeads(){
+  try{
+    const snap=await db.collection('leads').get();
+    allLeads=snap.docs.map(d=>({id:d.id,...d.data()}));
+    displayLeads(allLeads);
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function displayLeads(list){
+  const tbody=document.getElementById('leads-tbody');
+  tbody.innerHTML='';
+  if(list.length===0){
+    tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--t3)">No leads found</td></tr>';
+    return;
+  }
+  list.forEach(l=>{
+    const row=tbody.insertRow();
+    const tierClass=l.tier==='hot'?'badge-red':l.tier==='warm'?'badge-yellow':'badge-indigo';
+    row.innerHTML=`<td>${l.company}</td><td>${l.contact}</td><td><span class="badge ${tierClass}">${l.tier||'cold'}</span></td><td>${l.score||0}</td><td><span class="badge badge-green">${l.status||'new'}</span></td><td>${l.source||'—'}</td><td><button class="btn btn-ghost" onclick="openLeadPanel('${l.id}')">View</button></td>`;
+  });
+}
+
+function filterLeads(){
+  const search=document.getElementById('leads-search').value.toLowerCase();
+  const tier=document.getElementById('leads-tier-filter').value;
+  const filtered=allLeads.filter(l=>(l.company?.toLowerCase().includes(search)||l.contact?.toLowerCase().includes(search))&&(!tier||l.tier===tier));
+  displayLeads(filtered);
+}
+
+// ═══ LEAD PANEL ═══
+async function openLeadPanel(leadId){
+  try{
+    const doc=await db.collection('leads').doc(leadId).get();
+    if(!doc.exists)return;
+    const data=doc.data();
+    document.getElementById('lp-company').textContent=data.company;
+    document.getElementById('lp-contact').textContent=data.contact;
+    document.getElementById('lp-email').textContent=data.email||'—';
+    document.getElementById('lp-phone').textContent=data.phone||'—';
+    document.getElementById('lp-company-detail').textContent=data.company;
+    document.getElementById('lp-industry').textContent=data.industry||'—';
+    document.getElementById('lp-score').textContent=data.score||0;
+    document.getElementById('lp-status').textContent=data.status||'new';
+    document.getElementById('lp-source').textContent=data.source||'—';
+    document.getElementById('lp-created').textContent=data.createdAt?new Date(data.createdAt).toLocaleDateString():'—';
+    document.getElementById('lp-notes-text').value=data.notes||'';
+    document.getElementById('lead-overlay').style.display='block';
+    document.getElementById('lead-panel').style.transform='translateX(0)';
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function closeLeadPanel(){
+  document.getElementById('lead-overlay').style.display='none';
+  document.getElementById('lead-panel').style.transform='translateX(100%)';
+}
+
+function switchLPTab(tab){
+  document.querySelectorAll('.lp-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.lp-tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelector(`.lp-tab[onclick*="${tab}"]`).classList.add('active');
+  document.getElementById(`lp-${tab}`).classList.add('active');
+}
+
+// ═══ PROMOS ═══
+function showPromoModal(){
+  document.getElementById('pm-id').value='';
+  document.getElementById('pm-code').value='';
+  document.getElementById('pm-discount').value='';
+  document.getElementById('pm-max').value='';
+  document.getElementById('pm-modal-title').textContent='Create Promo Code';
+  document.getElementById('promo-modal-overlay').style.display='block';
+  document.getElementById('promo-modal').style.display='block';
+}
+
+function savePromo(){
+  const code=document.getElementById('pm-code').value;
+  const discount=parseInt(document.getElementById('pm-discount').value);
+  const maxUses=parseInt(document.getElementById('pm-max').value)||0;
+  if(!code||!discount)return showToast('Fill all fields');
+  const promo={code,discount,maxUses,uses:0,createdAt:new Date()};
+  db.collection('promos').add(promo).then(()=>{
+    closePromoModal();
+    loadPromos();
+    showToast('Promo created');
+  }).catch(e=>showToast(e.message));
+}
+
+async function loadPromos(){
+  try{
+    const snap=await db.collection('promos').orderBy('createdAt','desc').get();
+    allPromos=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const tbody=document.getElementById('promos-tbody');
+    tbody.innerHTML='';
+    allPromos.forEach(p=>{
+      const row=tbody.insertRow();
+      const expired=p.expiryDate&&new Date(p.expiryDate)<new Date();
+      row.innerHTML=`<td>${p.code}</td><td>${p.discount}%</td><td>${p.uses||0}</td><td>${p.maxUses||'∞'}</td><td>${p.expiryDate?new Date(p.expiryDate).toLocaleDateString():'—'}</td><td><span class="badge ${expired?'badge-red':'badge-green'}">${expired?'Expired':'Active'}</span></td><td><button class="btn btn-danger btn-sm" onclick="deletePromo('${p.id}')">Delete</button></td>`;
+    });
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function deletePromo(id){
+  if(!confirm('Delete this promo?'))return;
+  db.collection('promos').doc(id).delete().then(()=>{
+    loadPromos();
+    showToast('Promo deleted');
+  }).catch(e=>showToast(e.message));
+}
+
+function closePromoModal(){
+  document.getElementById('promo-modal-overlay').style.display='none';
+  document.getElementById('promo-modal').style.display='none';
+}
+
+// ═══ UTILITIES ═══
+function showToast(msg){
+  const toast=document.getElementById('toast');
+  toast.textContent=msg;
+  toast.style.display='block';
+  toast.style.background=msg.includes('Error')||msg.includes('failed')?'var(--red)':'var(--grn)';
+  setTimeout(()=>toast.style.display='none',3000);
+}
+
+function showModal(title,prompt,inputId){
+  const value=window.prompt(title+'\n\n'+prompt);
+  if(value){
+    showToast(title+' created');
+  }
+}
+
+function showNewsletterModal(){
+  const title=window.prompt('Newsletter title:');
+  if(!title)return;
+  const subject=window.prompt('Email subject:');
+  if(!subject)return;
+  const newsletter={title,subject,createdAt:new Date(),status:'draft'};
+  db.collection('newsletters').add(newsletter).then(()=>{
+    loadNewsletters();
+    showToast('Newsletter created');
+  }).catch(e=>showToast(e.message));
+}
+
+async function loadNewsletters(){
+  try{
+    const snap=await db.collection('newsletters').orderBy('createdAt','desc').get();
+    const tbody=document.getElementById('newsletters-tbody');
+    tbody.innerHTML='';
+    snap.forEach(doc=>{
+      const d=doc.data();
+      const row=tbody.insertRow();
+      row.innerHTML=`<td>${d.title}</td><td>${d.subject}</td><td>0</td><td><span class="badge badge-indigo">${d.status}</span></td><td>${new Date(d.createdAt).toLocaleDateString()}</td><td><button class="btn btn-ghost" onclick="editNewsletter('${doc.id}')">Edit</button></td>`;
+    });
+  }catch(e){
+    console.error(e);
+  }
+}
+
+function editNewsletter(id){
+  showToast('Opening editor...');
+}
+
+function showLeadFilters(){
+  showToast('Advanced filters panel');
+}
+
+function toggleAPIKey(id){
+  const input=document.getElementById(id);
+  input.type=input.type==='password'?'text':'password';
+}
+
+function uploadFile(){
+  showToast('File upload dialog');
+}
+
+// ═══ LOAD DATA ═══
+setTimeout(()=>{
+  if(currentUser){
+    loadLeads();
+    loadPromos();
+    loadNewsletters();
+  }
+},1000);
+</script>
+</html>

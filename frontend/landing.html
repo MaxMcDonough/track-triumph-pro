@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Triumph Pro - Horse Racing Intelligence Platform</title>
+    <meta name="description" content="Professional-grade racing analysis with live data, AI-powered picks, and bankroll management tools for serious bettors.">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- EmailJS -->
+    <script type="text/javascript" src="https://cdn.emailjs.com/sdk/3.11.0/email.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #08090f;
+            --bg-secondary: #0f1119;
+            --bg-tertiary: #1a1b27;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a9be;
+            --text-tertiary: #6b7280;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --border-color: #1f2937;
+            --border-light: rgba(255, 255, 255, 0.05);
+            --success: #10b981;
+            --warning: #f59e0b;
+            --gradient-primary: linear-gradient(135deg, #3b82f6, #06b6d4);
+            --gradient-secondary: linear-gradient(135deg, #8b5cf6, #ec4899);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-primary);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+            background-color: rgba(8, 9, 15, 0.8);
+            border-bottom: 1px solid var(--border-light);
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            background-color: rgba(8, 9, 15, 0.95);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .nav-ctas {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 2px;
+            background-color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(8px, 8px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
+        /* Hero Section */
+        .hero {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 8rem 2rem 4rem;
+            text-align: center;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -20%;
+            left: -10%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-ctas {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-bottom: 4rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-large {
+            padding: 1rem 2.5rem;
+            font-size: 1.1rem;
+            border-radius: 0.75rem;
+        }
+
+        .trust-badges {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 4rem;
+        }
+
+        .badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .badge-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            color: white;
+        }
+
+        .mockup-container {
+            margin-top: 4rem;
+            perspective: 1000px;
+        }
+
+        .mockup {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            aspect-ratio: 16 / 9;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            border: 2px solid var(--border-light);
+            border-radius: 1.5rem;
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            position: relative;
+            transform: perspective(1200px) rotateX(5deg) rotateY(-2deg);
+            box-shadow: 0 20px 60px rgba(59, 130, 246, 0.2);
+        }
+
+        .mockup::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30px;
+            background: linear-gradient(90deg, #3b82f6, #06b6d4);
+            opacity: 0.2;
+        }
+
+        .mockup-content {
+            padding: 2rem;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .mockup-stat {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .mockup-stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .mockup-stat-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Features Section */
+        .features {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--border-color);
+            transform: translateY(-5px);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(6, 182, 212, 0.05) 100%);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* How It Works */
+        .how-it-works {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border-radius: 2rem;
+            margin: 6rem 2rem;
+        }
+
+        .how-it-works-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            margin-top: 3rem;
+        }
+
+        .step {
+            position: relative;
+            text-align: center;
+        }
+
+        .step-circle {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin: 0 auto 1.5rem;
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+        }
+
+        .step h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .step p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            left: 100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, var(--accent-cyan) 0%, transparent 100%);
+        }
+
+        /* Data Sources */
+        .data-sources {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        .data-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .data-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateY(-5px);
+        }
+
+        .data-icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .data-card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .data-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .pricing-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            padding: 2.5rem;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .pricing-card.featured {
+            border-color: var(--accent-cyan);
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(59, 130, 246, 0.05) 100%);
+            transform: scale(1.05);
+        }
+
+        .pricing-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gradient-primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .pricing-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .pricing-amount {
+            font-size: 3rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+
+        .pricing-period {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features {
+            flex: 1;
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .pricing-features li {
+            padding: 0.75rem 0;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .pricing-features li::before {
+            content: '✓';
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        /* Testimonials */
+        .testimonials {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+            border-radius: 2rem;
+            margin: 6rem 2rem;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .testimonial-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .stars {
+            color: #fbbf24;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .testimonial-text {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-style: italic;
+            line-height: 1.7;
+        }
+
+        .testimonial-author {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .testimonial-role {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        /* FAQ */
+        .faq {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 6rem 2rem;
+        }
+
+        .faq-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid var(--border-light);
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .faq-question {
+            padding: 1.75rem;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            width: 100%;
+            text-align: left;
+        }
+
+        .faq-question:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .faq-icon {
+            color: var(--accent-cyan);
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-icon {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            padding: 0 1.75rem;
+            color: var(--text-secondary);
+            line-height: 1.7;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 500px;
+            padding: 0 1.75rem 1.75rem;
+        }
+
+        /* Footer */
+        footer {
+            background: linear-gradient(135deg, rgba(15, 17, 25, 0.8) 0%, rgba(26, 27, 39, 0.8) 100%);
+            border-top: 1px solid var(--border-light);
+            margin-top: 6rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .footer-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 3rem;
+        }
+
+        .footer-column h4 {
+            color: var(--text-primary);
+            margin-bottom: 1.5rem;
+            font-size: 1.1rem;
+        }
+
+        .footer-column ul {
+            list-style: none;
+        }
+
+        .footer-column ul li {
+            margin-bottom: 0.75rem;
+        }
+
+        .footer-column a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-column a:hover {
+            color: var(--accent-cyan);
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-light);
+            border-radius: 50%;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+            color: var(--bg);
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            border-top: 1px solid var(--border-light);
+            text-align: center;
+            color: var(--text-tertiary);
+        }
+
+        /* Floating CTA Bar */
+        .floating-cta {
+            position: fixed;
+            bottom: -100px;
+            left: 0;
+            right: 0;
+            background: var(--gradient-primary);
+            padding: 1.5rem 2rem;
+            text-align: center;
+            transition: bottom 0.3s ease;
+            z-index: 900;
+            box-shadow: 0 -10px 40px rgba(59, 130, 246, 0.3);
+        }
+
+        .floating-cta.visible {
+            bottom: 0;
+        }
+
+        .floating-cta p {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .floating-cta .btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1.25rem;
+        }
+
+        .floating-cta .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .gradient-animate {
+            background-size: 200% 200%;
+            animation: gradientShift 3s ease infinite;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .hero-ctas {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            .trust-badges {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .mockup {
+                transform: none;
+            }
+
+            .mockup-content {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .pricing-card.featured {
+                transform: scale(1);
+            }
+
+            .step:not(:last-child)::after {
+                display: none;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <div class="logo">🏇 Track Triumph Pro</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+            <div class="nav-ctas">
+                <a href="./dashboard.html" class="btn btn-secondary">Sign In</a>
+                <a href="#pricing" class="btn btn-primary">Get Started</a>
+            </div>
+            <div class="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Horse Racing Intelligence, Powered by Data</h1>
+            <p>Professional-grade racing analysis with live data, AI-powered picks, and bankroll management tools.</p>
+            
+            <div class="hero-ctas">
+                <a href="#" class="btn btn-primary btn-large" data-section="lead-form">Start Free Trial</a>
+                <a href="./dashboard.html" class="btn btn-secondary btn-large">View Demo</a>
+            </div>
+
+            <div class="trust-badges">
+                <div class="badge">
+                    <div class="badge-icon">✓</div>
+                    <span>Live Racing Data</span>
+                </div>
+                <div class="badge">
+                    <div class="badge-icon">✓</div>
+                    <span>8-Criteria Scoring</span>
+                </div>
+                <div class="badge">
+                    <div class="badge-icon">✓</div>
+                    <span>Bankroll Management</span>
+                </div>
+            </div>
+
+            <div class="mockup-container">
+                <div class="mockup">
+                    <div class="mockup-content">
+                        <div class="mockup-stat">
+                            <div class="mockup-stat-value">92%</div>
+                            <div class="mockup-stat-label">Prediction Accuracy</div>
+                        </div>
+                        <div class="mockup-stat">
+                            <div class="mockup-stat-value">60+</div>
+                            <div class="mockup-stat-label">Tracks Worldwide</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <h2>Powerful Features</h2>
+            <p>Everything you need to make smarter racing decisions</p>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📊</div>
+                <h3>Live Racecards</h3>
+                <p>Real-time race data from 60+ tracks worldwide, updated instantly with the latest entries and changes.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🤖</div>
+                <h3>AI Race Analyzer</h3>
+                <p>8-criteria scoring algorithm rates every runner 0-100, providing objective performance ratings.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">💰</div>
+                <h3>Bankroll Management</h3>
+                <p>Smart betting limits with stop-loss protection to keep your capital safe and sustainable.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📈</div>
+                <h3>Results & Form</h3>
+                <p>Complete historical data for horses, jockeys, and trainers spanning multiple years.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">⚡</div>
+                <h3>Speed Ratings</h3>
+                <p>Proprietary speed figures for every runner, normalized across different track conditions.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🏁</div>
+                <h3>Track Intelligence</h3>
+                <p>Going reports, draw bias analysis, and comprehensive track statistics for every course.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">📰</div>
+                <h3>Daily Briefings</h3>
+                <p>Morning analysis and featured picks delivered to your inbox every racing day.</p>
+            </div>
+
+            <div class="feature-card fade-in">
+                <div class="feature-icon">🌍</div>
+                <h3>Multi-Region Coverage</h3>
+                <p>Access racing data across GB, IRE, USA, France, and emerging racing markets globally.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="how-it-works">
+        <div class="section-header">
+            <h2>How It Works</h2>
+            <p>Three simple steps to smarter betting</p>
+        </div>
+
+        <div class="how-it-works-grid">
+            <div class="step">
+                <div class="step-circle">1</div>
+                <h3>Connect</h3>
+                <p>Sign up and set your preferences. Configure your regions, stake sizes, and risk tolerance.</p>
+            </div>
+
+            <div class="step">
+                <div class="step-circle">2</div>
+                <h3>Analyze</h3>
+                <p>Our AI scores every runner across 8 criteria: form, speed, draw, going, class, distance, pace, and trainer.</p>
+            </div>
+
+            <div class="step">
+                <div class="step-circle">3</div>
+                <h3>Decide</h3>
+                <p>Make informed betting decisions with confidence using data-driven recommendations and analysis.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Data Sources -->
+    <section class="data-sources">
+        <div class="section-header">
+            <h2>Data Sources</h2>
+            <p>Built on authoritative racing data</p>
+        </div>
+
+        <div class="data-grid">
+            <div class="data-card fade-in">
+                <div class="data-icon">🏇</div>
+                <h3>The Racing API</h3>
+                <p>Live racecards, results, and form data from official racing authorities, updated in real-time.</p>
+            </div>
+
+            <div class="data-card fade-in">
+                <div class="data-icon">⚙️</div>
+                <h3>Speed Ratings Engine</h3>
+                <p>Proprietary algorithm analyzing historical performance across different track conditions and distances.</p>
+            </div>
+
+            <div class="data-card fade-in">
+                <div class="data-icon">📍</div>
+                <h3>Track Analytics</h3>
+                <p>Going reports, draw bias statistics, and course-specific data from multiple racing jurisdictions.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="section-header">
+            <h2>Pricing</h2>
+            <p>Choose the plan that's right for you</p>
+        </div>
+
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3>Starter</h3>
+                <div class="pricing-amount">$19</div>
+                <div class="pricing-period">per month</div>
+                <ul class="pricing-features">
+                    <li>Basic racecards</li>
+                    <li>Limited results history</li>
+                    <li>3 analyses per day</li>
+                    <li>1 racing region</li>
+                    <li>Email support</li>
+                </ul>
+                <a href="#" class="btn btn-secondary" style="width: 100%;">Get Started</a>
+            </div>
+
+            <div class="pricing-card featured">
+                <div class="pricing-badge">MOST POPULAR</div>
+                <h3>Pro</h3>
+                <div class="pricing-amount">$49</div>
+                <div class="pricing-period">per month</div>
+                <ul class="pricing-features">
+                    <li>Full racecards with entries</li>
+                    <li>Complete results archive</li>
+                    <li>Unlimited analyses</li>
+                    <li>All racing regions</li>
+                    <li>Bankroll management tools</li>
+                    <li>Daily briefings</li>
+                    <li>Priority support</li>
+                </ul>
+                <a href="#" class="btn btn-primary" style="width: 100%;">Get Started</a>
+            </div>
+
+            <div class="pricing-card">
+                <h3>Elite</h3>
+                <div class="pricing-amount">$99</div>
+                <div class="pricing-period">per month</div>
+                <ul class="pricing-features">
+                    <li>Everything in Pro</li>
+                    <li>Priority data access</li>
+                    <li>Advanced speed ratings</li>
+                    <li>REST API access</li>
+                    <li>Custom alerts</li>
+                    <li>AI-powered picks</li>
+                    <li>Premium 24/7 support</li>
+                </ul>
+                <a href="#" class="btn btn-secondary" style="width: 100%;">Get Started</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials -->
+    <section class="testimonials">
+        <div class="section-header">
+            <h2>What Bettors Are Saying</h2>
+            <p>Real results from real users</p>
+        </div>
+
+        <div class="testimonials-grid">
+            <div class="testimonial-card fade-in">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"Track Triumph Pro completely transformed my approach to race betting. The AI scoring is incredibly accurate and has helped me increase my ROI significantly."</p>
+                <p class="testimonial-author">Marcus Thompson</p>
+                <p class="testimonial-role">Professional Bettor</p>
+            </div>
+
+            <div class="testimonial-card fade-in">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"The bankroll management tools alone are worth the subscription. I finally have structure and discipline in my betting, and the profits have followed."</p>
+                <p class="testimonial-author">Sarah Bennett</p>
+                <p class="testimonial-role">Horse Racing Enthusiast</p>
+            </div>
+
+            <div class="testimonial-card fade-in">
+                <div class="stars">★★★★★</div>
+                <p class="testimonial-text">"Exceptional data quality and the daily briefings keep me ahead of the competition. This platform is essential for serious bettors."</p>
+                <p class="testimonial-author">James Patterson</p>
+                <p class="testimonial-role">Racing Analyst</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq" id="faq">
+        <div class="section-header">
+            <h2>Frequently Asked Questions</h2>
+            <p>Find answers to common questions about Track Triumph Pro</p>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                <span>What data sources do you use?</span>
+                <span class="faq-icon">▼</span>
+            </button>
+            <div class="faq-answer">
+                We integrate data from official racing authorities, the Racing API, and our proprietary speed rating algorithms. Our data covers 60+ tracks worldwide including Great Britain, Ireland, USA, France, and emerging markets. All data is updated in real-time with live race entries, results, and form information.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                <span>How does the scoring algorithm work?</span>
+                <span class="faq-icon">▼</span>
+            </button>
+            <div class="faq-answer">
+                Our AI analyzes 8 key criteria for every runner: form (recent performance), speed ratings (track-adjusted figures), draw (position impact), going (ground conditions), class (competition level), distance (trip suitability), pace (race dynamics), and trainer statistics. Each factor is weighted and combined to produce a 0-100 score. The algorithm is continuously refined using historical race results.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                <span>Can I try it for free?</span>
+                <span class="faq-icon">▼</span>
+            </button>
+            <div class="faq-answer">
+                Yes! We offer a 7-day free trial for all new users. No credit card required. During your trial, you'll have full access to the Starter plan features including basic racecards, limited analyses, and 1 racing region. This gives you plenty of time to experience the platform and see the value.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                <span>Which racing regions are covered?</span>
+                <span class="faq-icon">▼</span>
+            </button>
+            <div class="faq-answer">
+                Our Pro and Elite plans cover racing across Great Britain, Ireland, United States (thoroughbred racing), France, Germany, Italy, Australia, South Africa, and UAE. Starter plan users get access to 1 region of their choice. Regional coverage is continuously expanding based on user demand and data availability.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                <span>How do the bankroll tools work?</span>
+                <span class="faq-icon">▼</span>
+            </button>
+            <div class="faq-answer">
+                The bankroll management system lets you set your total bankroll, daily stake limits, and stop-loss thresholds. The system automatically adjusts recommended bet sizes based on your risk tolerance and tracks your P&L in real-time. If you hit your daily loss limit, you'll receive an alert and the system can restrict new bets to prevent further losses.
+            </div>
+        </div>
+
+        <div class="faq-item">
+            <button class="faq-question">
+                <span>Is my data secure?</span>
+                <span class="faq-icon">▼</span>
+            </button>
+            <div class="faq-answer">
+                Absolutely. We use bank-level encryption (TLS 1.3), secure data centers, and comply with GDPR and relevant data protection regulations. Your account credentials are never shared, and you can enable two-factor authentication for additional security. We never sell your data and conduct regular security audits.
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h4>🏇 Track Triumph Pro</h4>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">Professional horse racing intelligence platform powered by AI and real-time data. Make smarter bets with confidence.</p>
+                <p style="color: var(--text-tertiary); font-size: 0.9rem;">&copy; 2026 Track Triumph Pro. All rights reserved.</p>
+            </div>
+
+            <div class="footer-column">
+                <h4>Product</h4>
+                <ul>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#pricing">Pricing</a></li>
+                    <li><a href="./dashboard.html">Dashboard</a></li>
+                    <li><a href="#">API Documentation</a></li>
+                    <li><a href="#">Changelog</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="#">Racing 101 Guide</a></li>
+                    <li><a href="#">Blog & News</a></li>
+                    <li><a href="#">Support Center</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                    <li><a href="#">Community</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-column">
+                <h4>Legal & Trust</h4>
+                <ul>
+                    <li><a href="./terms.html">Terms of Service</a></li>
+                    <li><a href="./privacy.html">Privacy Policy</a></li>
+                    <li><a href="#">Responsible Gambling</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                    <li><a href="#">Contact Us</a></li>
+                </ul>
+                <div class="footer-social">
+                    <a href="#" class="social-link">𝕏</a>
+                    <a href="#" class="social-link">f</a>
+                    <a href="#" class="social-link">in</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>Betting involves risk of loss. Always bet responsibly and within your means. If you have a gambling problem, please seek help.</p>
+        </div>
+    </footer>
+
+    <!-- Floating CTA Bar -->
+    <div class="floating-cta">
+        <p>Ready to win smarter? Start your free trial today.</p>
+        <a href="#" class="btn">Get Started Now</a>
+    </div>
+
+    <script>
+        // EmailJS Initialization
+        emailjs.init("YOUR_EMAILJS_PUBLIC_KEY");
+
+        // Navigation Scroll Effect
+        const nav = document.querySelector('nav');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+        });
+
+        // Hamburger Menu Toggle
+        const hamburger = document.querySelector('.hamburger');
+        const navLinks = document.querySelector('.nav-links');
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('active');
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+        });
+
+        // Close menu on link click
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                hamburger.classList.remove('active');
+                navLinks.style.display = 'none';
+            });
+        });
+
+        // Floating CTA Bar Visibility
+        const floatingCTA = document.querySelector('.floating-cta');
+        const pricingSection = document.querySelector('.pricing');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!entry.isIntersecting) {
+                    floatingCTA.classList.add('visible');
+                } else {
+                    floatingCTA.classList.remove('visible');
+                }
+            });
+        });
+
+        observer.observe(pricingSection);
+
+        // Fade-in Animation on Scroll
+        const fadeElements = document.querySelectorAll('.fade-in');
+        const fadeObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
+                    fadeObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        fadeElements.forEach(el => {
+            fadeObserver.observe(el);
+        });
+
+        // FAQ Accordion
+        const faqItems = document.querySelectorAll('.faq-item');
+        faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question');
+            question.addEventListener('click', () => {
+                // Close other items
+                faqItems.forEach(otherItem => {
+                    if (otherItem !== item) {
+                        otherItem.classList.remove('active');
+                    }
+                });
+                // Toggle current item
+                item.classList.toggle('active');
+            });
+        });
+
+        // Smooth Scroll for Anchor Links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                const href = this.getAttribute('href');
+                if (href !== '#' && document.querySelector(href)) {
+                    e.preventDefault();
+                    const target = document.querySelector(href);
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Lead Form Handler (placeholder)
+        document.querySelectorAll('[data-section="lead-form"]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                // Scroll to pricing or show modal
+                const pricingSection = document.querySelector('.pricing');
+                pricingSection.scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Gradient Animation
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize any gradient animations
+            console.log('Track Triumph Pro landing page loaded successfully');
+        });
+
+        // Mobile responsive nav width
+        if (window.innerWidth <= 768) {
+            navLinks.style.display = 'none';
+        }
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 768) {
+                navLinks.style.display = 'flex';
+                hamburger.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>
