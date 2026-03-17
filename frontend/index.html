@@ -313,26 +313,234 @@
         .hero-visual {
             position: relative;
             height: 500px;
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(6, 182, 212, 0.08) 100%);
             border: 2px solid rgba(59, 130, 246, 0.3);
             border-radius: 1.5rem;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             justify-content: center;
             overflow: hidden;
             box-shadow: inset 0 0 60px rgba(59, 130, 246, 0.1), 0 0 40px rgba(59, 130, 246, 0.2);
         }
 
-        .hero-visual::before {
-            content: '📊';
-            font-size: 10rem;
-            opacity: 0.1;
-            animation: float-icon 6s ease-in-out infinite;
+        /* Race Track */
+        .race-track {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            overflow: hidden;
         }
 
-        @keyframes float-icon {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
+        /* Track surface */
+        .track-ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 55%;
+            background: linear-gradient(180deg,
+                rgba(34, 80, 40, 0.4) 0%,
+                rgba(22, 60, 28, 0.6) 40%,
+                rgba(34, 80, 40, 0.5) 100%);
+            border-top: 2px solid rgba(59, 130, 246, 0.2);
+        }
+
+        /* Track lanes */
+        .track-lane {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Finish line */
+        .finish-line {
+            position: absolute;
+            right: 12%;
+            top: 20%;
+            bottom: 0;
+            width: 6px;
+            background: repeating-linear-gradient(
+                180deg,
+                #fff 0px, #fff 8px,
+                #111 8px, #111 16px
+            );
+            opacity: 0.5;
+            z-index: 10;
+        }
+
+        .finish-flag {
+            position: absolute;
+            right: calc(12% - 8px);
+            top: 14%;
+            font-size: 1.8rem;
+            z-index: 11;
+            animation: flag-wave 1s ease-in-out infinite;
+        }
+
+        @keyframes flag-wave {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* Horse + Jockey */
+        .horse-runner {
+            position: absolute;
+            z-index: 5;
+            transition: none;
+        }
+
+        .horse-body {
+            position: relative;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .horse-svg {
+            width: 90px;
+            height: 60px;
+        }
+
+        /* Jockey silks label */
+        .jockey-label {
+            position: absolute;
+            top: -18px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: white;
+            background: rgba(0,0,0,0.5);
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Dust particles */
+        .dust {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: rgba(180, 160, 130, 0.4);
+            animation: dust-fly 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes dust-fly {
+            0% { opacity: 0.6; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(-20px, -10px) scale(0.3); }
+        }
+
+        /* Race position numbers */
+        .race-positions {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .pos-entry {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: rgba(255,255,255,0.8);
+            background: rgba(0,0,0,0.4);
+            padding: 3px 8px;
+            border-radius: 4px;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        .pos-entry .pos-num {
+            font-weight: 700;
+            min-width: 16px;
+        }
+
+        .pos-entry:first-child {
+            color: #fbbf24;
+        }
+
+        .pos-entry .pos-silk {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* "LIVE" badge */
+        .live-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #ef4444;
+            background: rgba(0,0,0,0.5);
+            padding: 4px 10px;
+            border-radius: 4px;
+            backdrop-filter: blur(4px);
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: live-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes live-pulse {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { opacity: 0.6; box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+        }
+
+        /* Rail lines */
+        .track-rail {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 3px;
+            z-index: 3;
+        }
+
+        .track-rail-top {
+            top: 45%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), rgba(255,255,255,0.15), transparent);
+        }
+
+        .track-rail-bottom {
+            bottom: 8%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), rgba(255,255,255,0.08), transparent);
+        }
+
+        /* Crowd silhouette */
+        .crowd {
+            position: absolute;
+            top: 8%;
+            left: 0;
+            right: 0;
+            height: 38%;
+            background:
+                repeating-linear-gradient(90deg,
+                    transparent 0px, transparent 8px,
+                    rgba(255,255,255,0.02) 8px, rgba(255,255,255,0.02) 10px
+                );
+            opacity: 0.5;
         }
 
         @media (max-width: 768px) {
@@ -341,6 +549,16 @@
             }
             .hero-visual {
                 height: 300px;
+            }
+            .horse-svg {
+                width: 60px;
+                height: 40px;
+            }
+            .jockey-label {
+                font-size: 0.55rem;
+            }
+            .finish-flag {
+                font-size: 1.2rem;
             }
         }
 
@@ -874,7 +1092,35 @@
                         </div>
                     </div>
                 </div>
-                <div class="hero-visual"></div>
+                <div class="hero-visual">
+                    <div class="race-track">
+                        <!-- Crowd background -->
+                        <div class="crowd"></div>
+
+                        <!-- Track rails -->
+                        <div class="track-rail track-rail-top"></div>
+                        <div class="track-rail track-rail-bottom"></div>
+
+                        <!-- Track ground -->
+                        <div class="track-ground">
+                            <div class="track-lane" style="top: 20%"></div>
+                            <div class="track-lane" style="top: 40%"></div>
+                            <div class="track-lane" style="top: 60%"></div>
+                            <div class="track-lane" style="top: 80%"></div>
+                        </div>
+
+                        <!-- Finish line -->
+                        <div class="finish-line"></div>
+                        <div class="finish-flag">🏁</div>
+
+                        <!-- Horses will be injected by JS -->
+                        <div id="horses-container"></div>
+                    </div>
+
+                    <!-- Live positions overlay -->
+                    <div class="race-positions" id="race-positions"></div>
+                    <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+                </div>
             </div>
         </div>
     </section>
@@ -1196,6 +1442,190 @@
     </div>
 
     <script>
+        // ========== HORSE RACING ANIMATION ==========
+        (function() {
+            const horses = [
+                { name: 'Thunderbolt', color: '#ef4444', silks: '#dc2626', lane: 0 },
+                { name: 'Blue Storm', color: '#3b82f6', silks: '#2563eb', lane: 1 },
+                { name: 'Gold Rush', color: '#f59e0b', silks: '#d97706', lane: 2 },
+                { name: 'Emerald Fire', color: '#10b981', silks: '#059669', lane: 3 },
+                { name: 'Purple Reign', color: '#8b5cf6', silks: '#7c3aed', lane: 4 },
+            ];
+
+            const container = document.getElementById('horses-container');
+            const positionsEl = document.getElementById('race-positions');
+            if (!container) return;
+
+            const trackEl = container.parentElement;
+            let animFrame;
+            let raceState = [];
+
+            function createHorseSVG(color, silksColor) {
+                return `<svg class="horse-svg" viewBox="0 0 120 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Body -->
+                    <ellipse cx="55" cy="42" rx="30" ry="16" fill="${color}" opacity="0.9"/>
+                    <!-- Neck -->
+                    <path d="M78 36 Q88 20 92 15 Q94 12 90 14 Q85 18 80 30" fill="${color}" opacity="0.9"/>
+                    <!-- Head -->
+                    <ellipse cx="93" cy="16" rx="10" ry="6" fill="${color}" opacity="0.9" transform="rotate(-20 93 16)"/>
+                    <!-- Ear -->
+                    <path d="M98 10 L101 4 L96 9" fill="${color}" opacity="0.8"/>
+                    <!-- Eye -->
+                    <circle cx="97" cy="14" r="1.5" fill="white"/>
+                    <circle cx="97.5" cy="14" r="0.8" fill="#111"/>
+                    <!-- Nostril -->
+                    <circle cx="102" cy="17" r="1" fill="#111" opacity="0.4"/>
+                    <!-- Mane -->
+                    <path d="M82 28 Q86 22 88 16 Q85 20 82 24 Q84 20 86 15 Q83 18 80 26" fill="#222" opacity="0.5" stroke-width="1.5" stroke="#222" stroke-opacity="0.3"/>
+                    <!-- Jockey -->
+                    <ellipse cx="62" cy="26" rx="5" ry="6" fill="${silksColor}"/>
+                    <circle cx="62" cy="19" r="4" fill="${silksColor}"/>
+                    <!-- Helmet -->
+                    <path d="M58 18 Q62 14 66 18" fill="#222" opacity="0.7"/>
+                    <!-- Front legs (galloping) -->
+                    <g class="front-legs">
+                        <line x1="70" y1="54" x2="78" y2="72" stroke="${color}" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+                        <line x1="65" y1="55" x2="58" y2="72" stroke="${color}" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+                    </g>
+                    <!-- Hind legs -->
+                    <g class="hind-legs">
+                        <line x1="38" y1="54" x2="30" y2="72" stroke="${color}" stroke-width="4" stroke-linecap="round" opacity="0.9"/>
+                        <line x1="42" y1="55" x2="50" y2="72" stroke="${color}" stroke-width="4" stroke-linecap="round" opacity="0.8"/>
+                    </g>
+                    <!-- Tail -->
+                    <path d="M25 38 Q18 32 15 40 Q18 36 22 40" fill="#222" opacity="0.5"/>
+                    <!-- Hooves -->
+                    <circle cx="78" cy="73" r="2" fill="#222" opacity="0.6"/>
+                    <circle cx="58" cy="73" r="2" fill="#222" opacity="0.6"/>
+                    <circle cx="30" cy="73" r="2" fill="#222" opacity="0.6"/>
+                    <circle cx="50" cy="73" r="2" fill="#222" opacity="0.6"/>
+                </svg>`;
+            }
+
+            // Create horse elements
+            horses.forEach((h, i) => {
+                const el = document.createElement('div');
+                el.className = 'horse-runner';
+                el.id = `horse-${i}`;
+                el.innerHTML = `
+                    <div class="horse-body">
+                        <div class="jockey-label" style="background: ${h.color}88">${h.name}</div>
+                        ${createHorseSVG(h.color, h.silks)}
+                    </div>
+                `;
+                container.appendChild(el);
+
+                raceState.push({
+                    x: -100 - (i * 30),
+                    speed: 1.2 + Math.random() * 0.6,
+                    baseSpeed: 1.2 + Math.random() * 0.6,
+                    accel: 0,
+                    lane: i,
+                    bobPhase: Math.random() * Math.PI * 2,
+                    gallopPhase: Math.random() * Math.PI * 2,
+                    name: h.name,
+                    color: h.color,
+                    el: el,
+                });
+            });
+
+            function getTrackDimensions() {
+                const rect = trackEl.getBoundingClientRect();
+                return { w: rect.width, h: rect.height };
+            }
+
+            function updatePositions() {
+                const sorted = [...raceState].sort((a, b) => b.x - a.x);
+                positionsEl.innerHTML = sorted.map((h, i) => `
+                    <div class="pos-entry">
+                        <span class="pos-num">${i + 1}.</span>
+                        <span class="pos-silk" style="background:${h.color}"></span>
+                        <span>${h.name}</span>
+                    </div>
+                `).join('');
+            }
+
+            let lastTime = 0;
+            function animate(timestamp) {
+                if (!lastTime) lastTime = timestamp;
+                const dt = Math.min((timestamp - lastTime) / 16, 3);
+                lastTime = timestamp;
+
+                const { w, h } = getTrackDimensions();
+                const trackBottom = h * 0.45;
+                const laneHeight = (h * 0.42) / horses.length;
+                const resetX = w + 60;
+
+                raceState.forEach((state, i) => {
+                    // Random acceleration changes (horses speed up / slow down)
+                    if (Math.random() < 0.02) {
+                        state.accel = (Math.random() - 0.5) * 0.8;
+                    }
+                    // Occasional burst of speed (overtaking)
+                    if (Math.random() < 0.005) {
+                        state.accel = 1.5 + Math.random();
+                    }
+                    // Occasional slowdown
+                    if (Math.random() < 0.005) {
+                        state.accel = -0.8;
+                    }
+
+                    state.speed += state.accel * 0.02 * dt;
+                    state.speed = Math.max(0.6, Math.min(2.8, state.speed));
+                    // Drift back toward base speed
+                    state.speed += (state.baseSpeed - state.speed) * 0.005 * dt;
+
+                    state.x += state.speed * dt;
+
+                    // Reset when horse goes off right edge
+                    if (state.x > resetX) {
+                        state.x = -120;
+                        state.speed = state.baseSpeed + (Math.random() - 0.5) * 0.4;
+                    }
+
+                    // Bob and gallop animation
+                    state.bobPhase += 0.12 * state.speed * dt;
+                    state.gallopPhase += 0.15 * state.speed * dt;
+                    const bobY = Math.sin(state.bobPhase) * 3;
+                    const leanAngle = Math.sin(state.gallopPhase) * 2;
+
+                    const yBase = trackBottom + (i * laneHeight) + laneHeight * 0.3;
+                    const y = yBase + bobY;
+
+                    state.el.style.transform = `translate(${state.x}px, ${y}px) rotate(${leanAngle}deg)`;
+
+                    // Animate legs via CSS transform on SVG groups
+                    const svg = state.el.querySelector('.horse-svg');
+                    if (svg) {
+                        const fLegs = svg.querySelector('.front-legs');
+                        const hLegs = svg.querySelector('.hind-legs');
+                        const legAngle = Math.sin(state.gallopPhase) * 25;
+                        if (fLegs) fLegs.setAttribute('transform', `rotate(${legAngle} 68 54)`);
+                        if (hLegs) hLegs.setAttribute('transform', `rotate(${-legAngle} 40 54)`);
+                    }
+                });
+
+                // Update leaderboard every ~20 frames
+                if (Math.random() < 0.05) updatePositions();
+
+                animFrame = requestAnimationFrame(animate);
+            }
+
+            // Start animation when visible
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (!animFrame) animFrame = requestAnimationFrame(animate);
+                        updatePositions();
+                    } else {
+                        if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; lastTime = 0; }
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            observer.observe(trackEl);
+        })();
+
         // Animated particles
         function createParticles() {
             const particlesCount = 20;
