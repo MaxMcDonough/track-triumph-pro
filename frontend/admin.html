@@ -247,8 +247,8 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
         <div class="lp-field"><div class="lp-field-label">ARR</div><div style="font-size:20px;font-weight:800;color:var(--acc)" id="d-arr">$0</div></div>
       </div>
       <div style="display:flex;gap:12px;margin-top:12px">
-        <div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Pro ($29/mo)</div><div style="height:8px;background:var(--brd);border-radius:4px;overflow:hidden"><div id="d-pro-bar" style="height:100%;background:var(--acc);border-radius:4px;width:0%;transition:width .5s"></div></div><div style="font-size:11px;color:var(--t2);margin-top:2px" id="d-pro-count">0 users</div></div>
-        <div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Elite ($79/mo)</div><div style="height:8px;background:var(--brd);border-radius:4px;overflow:hidden"><div id="d-elite-bar" style="height:100%;background:var(--grn);border-radius:4px;width:0%;transition:width .5s"></div></div><div style="font-size:11px;color:var(--t2);margin-top:2px" id="d-elite-count">0 users</div></div>
+        <div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Pro ($19/mo)</div><div style="height:8px;background:var(--brd);border-radius:4px;overflow:hidden"><div id="d-pro-bar" style="height:100%;background:var(--acc);border-radius:4px;width:0%;transition:width .5s"></div></div><div style="font-size:11px;color:var(--t2);margin-top:2px" id="d-pro-count">0 users</div></div>
+        <div style="flex:1"><div style="font-size:11px;color:var(--t3);margin-bottom:4px">Elite ($49/mo)</div><div style="height:8px;background:var(--brd);border-radius:4px;overflow:hidden"><div id="d-elite-bar" style="height:100%;background:var(--grn);border-radius:4px;width:0%;transition:width .5s"></div></div><div style="font-size:11px;color:var(--t2);margin-top:2px" id="d-elite-count">0 users</div></div>
       </div>
     </div>
 
@@ -362,7 +362,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
         <input type="text" id="um-name" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px"></div>
       <div><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Plan</label>
         <select id="um-plan" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px">
-          <option value="free">Free</option><option value="trial">Trial</option><option value="pro">Pro ($29/mo)</option><option value="elite">Elite ($79/mo)</option>
+          <option value="free">Free</option><option value="trial">Trial</option><option value="pro">Pro ($19/mo)</option><option value="elite">Elite ($49/mo)</option>
         </select></div>
       <div><label style="font-size:12px;color:var(--t2);display:block;margin-bottom:4px">Location</label>
         <input type="text" id="um-location" style="width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px;color:var(--t1);font-size:13px"></div>
@@ -389,7 +389,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
         <div style="flex:1"><label style="font-size:10px;color:var(--t3)">Odds</label><input type="number" id="um-add-odds" placeholder="1" value="1" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--brd);border-radius:6px;color:var(--t1);font-size:12px"></div>
         <div style="flex:1"><label style="font-size:10px;color:var(--t3)">Stake £</label><input type="number" id="um-add-entry" placeholder="0.00" step="0.01" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--brd);border-radius:6px;color:var(--t1);font-size:12px"></div>
         <div style="flex:1"><label style="font-size:10px;color:var(--t3)">Currency</label><select id="um-add-currency" style="width:100%;padding:6px 10px;background:var(--bg);border:1px solid var(--brd);border-radius:6px;color:var(--t1);font-size:12px"><option>GBP</option><option>USD</option></select></div>
-        <button class="btn btn-primary" onclick="addUserHolding()" style="padding:6px 14px;font-size:12px;white-space:nowrap">+ Add</button>
+        <button class="btn btn-primary" onclick="addUserSelection()" style="padding:6px 14px;font-size:12px;white-space:nowrap">+ Add</button>
       </div>
     </div>
   </div>
@@ -399,7 +399,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
     <div style="border-top:1px solid var(--brd);margin-top:16px;padding-top:16px">
       <div style="display:flex;gap:8px">
         <input type="text" id="um-add-wl" placeholder="Add horse name (e.g. Desert Wind)" style="flex:1;padding:6px 10px;background:var(--bg);border:1px solid var(--brd);border-radius:6px;color:var(--t1);font-size:12px">
-        <button class="btn btn-primary" onclick="addUserWatchlistItem()" style="padding:6px 14px;font-size:12px">+ Add</button>
+        <button class="btn btn-primary" onclick="addUserTrackedHorse()" style="padding:6px 14px;font-size:12px">+ Add</button>
       </div>
     </div>
   </div>
@@ -464,8 +464,8 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
 <div class="page" id="subscriptions-page">
   <div class="stats">
     <div class="stat"><div class="stat-label">Total Paid</div><div class="stat-val" id="sub-total">&mdash;</div></div>
-    <div class="stat"><div class="stat-label">Pro ($29/mo)</div><div class="stat-val" id="sub-pro">&mdash;</div></div>
-    <div class="stat"><div class="stat-label">Elite ($79/mo)</div><div class="stat-val" id="sub-elite">&mdash;</div></div>
+    <div class="stat"><div class="stat-label">Pro ($19/mo)</div><div class="stat-val" id="sub-pro">&mdash;</div></div>
+    <div class="stat"><div class="stat-label">Elite ($49/mo)</div><div class="stat-val" id="sub-elite">&mdash;</div></div>
     <div class="stat"><div class="stat-label">MRR</div><div class="stat-val" id="sub-mrr">&mdash;</div></div>
   </div>
   <div class="table-wrap">
@@ -544,8 +544,8 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   <div class="card">
     <h3>Stripe Configuration</h3>
     <div style="display:flex;flex-direction:column;gap:0">
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Pro Plan</span><span style="font-size:12px;color:var(--t2)">$29/mo &mdash; Stripe Checkout</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Elite Plan</span><span style="font-size:12px;color:var(--t2)">$79/mo &mdash; Stripe Checkout</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Pro Plan</span><span style="font-size:12px;color:var(--t2)">$19/mo &mdash; Stripe Checkout</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Elite Plan</span><span style="font-size:12px;color:var(--t2)">$49/mo &mdash; Stripe Checkout</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)"><span style="font-size:13px;font-weight:600">Stripe Mode</span><span style="font-size:12px;color:var(--t2)">Live</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 0"><span style="font-size:13px;font-weight:600">Webhook Status</span><span style="font-size:12px;color:var(--grn);font-weight:600">Active</span></div>
     </div>
@@ -728,7 +728,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
         + Live analytics &mdash; Firestore onSnapshot listeners<br>
         + Currently Online panel &mdash; users active in last 5 minutes<br>
         + Business Command Centre: URL hash routing<br>
-        ~ Subscription pricing updated: Pro $29/mo, Elite $79/mo
+        ~ Subscription pricing updated: Pro $19/mo, Elite $49/mo
       </div></div>
 
       <div><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><span class="badge badge-indigo">v1.5</span><span style="font-size:11px;color:var(--t3)" class="cl-ts">Feb 25, 2026 &mdash; 3:00 PM EST</span></div>
@@ -1104,8 +1104,8 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
   <div class="stats">
     <div class="stat"><div class="stat-label">MRR</div><div class="stat-val" id="rev-mrr">$0</div></div>
     <div class="stat"><div class="stat-label">ARR</div><div class="stat-val" id="rev-arr">$0</div></div>
-    <div class="stat"><div class="stat-label">Pro ($29/mo)</div><div class="stat-val" id="rev-pro">0</div></div>
-    <div class="stat"><div class="stat-label">Elite ($79/mo)</div><div class="stat-val" id="rev-elite">0</div></div>
+    <div class="stat"><div class="stat-label">Pro ($19/mo)</div><div class="stat-val" id="rev-pro">0</div></div>
+    <div class="stat"><div class="stat-label">Elite ($49/mo)</div><div class="stat-val" id="rev-elite">0</div></div>
   </div>
   <div class="card"><h3>Revenue Milestones</h3>
     <div style="display:grid;gap:12px;margin-top:8px" id="rev-milestones"></div>
@@ -1186,7 +1186,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',6,this.checked)" class="gp1-cb"> Post on Reddit (8 subreddits) <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 16</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',7,this.checked)" class="gp1-cb"> Print &amp; distribute 30 flyers <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 17</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',8,this.checked)" class="gp1-cb"> Get 50 beta users by Thu Mar 19 <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 19</span></label>
-            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',9,this.checked)" class="gp1-cb"> Convert 10 beta users to paid ($290 MRR) <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 25</span></label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',9,this.checked)" class="gp1-cb"> Convert 10 beta users to paid ($190 MRR) <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 25</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',10,this.checked)" class="gp1-cb"> Set up Stripe payments + pricing page <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 20</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',11,this.checked)" class="gp1-cb"> Email welcome sequence live in Mailchimp <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 22</span></label>
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer"><input type="checkbox" onchange="saveGPCheck('gp1',12,this.checked)" class="gp1-cb"> Collect 5 beta user testimonials <span style="font-size:10px;color:var(--t3);margin-left:auto">Mar 28</span></label>
@@ -1312,7 +1312,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2)"><input type="checkbox" onchange="saveBetaPlanCheck(19,this.checked)" class="bp-cb"> DM racing club presidents at 5 nearby universities</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2)"><input type="checkbox" onchange="saveBetaPlanCheck(20,this.checked)" class="bp-cb"> Post in university subreddit / Facebook group</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2)"><input type="checkbox" onchange="saveBetaPlanCheck(21,this.checked)" class="bp-cb"> Ask student friends to share in GroupMe/WhatsApp groups</label>
-        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2)"><input type="checkbox" onchange="saveBetaPlanCheck(22,this.checked)" class="bp-cb"> Email finance/investing professors</label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2)"><input type="checkbox" onchange="saveBetaPlanCheck(22,this.checked)" class="bp-cb"> Email racing studies/equine science professors</label>
         <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--t2)"><input type="checkbox" onchange="saveBetaPlanCheck(23,this.checked)" class="bp-cb"> Post in university Discord servers</label>
       </div>
 
@@ -1330,7 +1330,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
       <div style="background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.2);border-radius:10px;padding:16px;margin-top:12px">
         <div style="font-size:13px;font-weight:700;color:#00e676;margin-bottom:6px">🎁 Beta Incentive Stack</div>
         <div style="font-size:12px;color:var(--t2);line-height:1.7">
-          • Free lifetime Pro access ($29/mo value) — $0 cost<br>
+          • Free lifetime Pro access ($19/mo value) — $0 cost<br>
           • "Founding Member" badge on profile — $0 cost<br>
           • Direct Slack/Discord access to founder — $0 cost<br>
           • Name on "Founding 50" page — $0 cost<br>
@@ -1605,7 +1605,7 @@ tbody tr:hover{background:rgba(99,102,241,.04)}
     <h3>🎁 Beta Incentive Stack</h3>
     <table style="width:100%;margin-top:8px"><thead><tr><th style="text-align:left;padding:8px;color:var(--t3);font-size:11px">Incentive</th><th style="text-align:left;padding:8px;color:var(--t3);font-size:11px">Cost</th><th style="text-align:left;padding:8px;color:var(--t3);font-size:11px">Impact</th></tr></thead>
     <tbody>
-      <tr><td style="padding:8px;font-size:13px">Free lifetime Pro access ($29/mo value)</td><td style="padding:8px;font-size:13px;color:#00e676">$0</td><td style="padding:8px;font-size:13px;color:#00e676">🔥 Highest</td></tr>
+      <tr><td style="padding:8px;font-size:13px">Free lifetime Pro access ($19/mo value)</td><td style="padding:8px;font-size:13px;color:#00e676">$0</td><td style="padding:8px;font-size:13px;color:#00e676">🔥 Highest</td></tr>
       <tr><td style="padding:8px;font-size:13px">"Founding Member" badge</td><td style="padding:8px;font-size:13px;color:#00e676">$0</td><td style="padding:8px;font-size:13px;color:#ffab40">Medium</td></tr>
       <tr><td style="padding:8px;font-size:13px">Direct Slack/Discord access to founder</td><td style="padding:8px;font-size:13px;color:#00e676">$0</td><td style="padding:8px;font-size:13px;color:#ffab40">Medium</td></tr>
       <tr><td style="padding:8px;font-size:13px">Name on "Founding 50" page</td><td style="padding:8px;font-size:13px;color:#00e676">$0</td><td style="padding:8px;font-size:13px;color:#ffab40">Medium</td></tr>
@@ -2254,8 +2254,8 @@ function openUserModal(uid) {
   // Title
   document.getElementById('um-title').textContent = name;
   // Render tabs
-  renderUserHoldings();
-  renderUserWatchlist();
+  renderUserSelections();
+  renderUserTracked();
   renderUserActivity();
   // Reset to details tab
   switchUserTab('details', document.querySelector('.um-tab.active')||document.querySelector('.um-tab'));
@@ -2275,7 +2275,7 @@ function switchUserTab(tab, btn) {
     if(el) el.style.display = t===tab?'block':'none';
   });
 }
-function renderUserHoldings() {
+function renderUserSelections() {
   var el = document.getElementById('um-selections-list');
   var selections = (_modalUser&&_modalUser.selections)||[];
   if(!selections.length){ el.innerHTML='<p style="font-size:12px;color:var(--t3);text-align:center;padding:20px">No selections</p>'; return; }
@@ -2286,10 +2286,10 @@ function renderUserHoldings() {
       '<div style="flex:1"><div style="font-size:11px;color:var(--t2)">'+(h.name||'')+'</div></div>'+
       '<div style="text-align:right"><div style="font-size:13px;font-weight:600">'+h.odds+' odds</div>'+
       '<div style="font-size:11px;color:var(--t3)">@ $'+((h.entry||0).toFixed(2))+' '+(h.currency||'USD')+' · $'+val+'</div></div>'+
-      '<button onclick="removeUserHolding('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:4px" title="Remove">✕</button></div>';
+      '<button onclick="removeUserSelection('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;padding:4px" title="Remove">✕</button></div>';
   }).join('');
 }
-function addUserHolding() {
+function addUserSelection() {
   if(!_modalUser) return;
   var sym = (document.getElementById('um-add-sym').value||'').toUpperCase().trim();
   var odds = parseFloat(document.getElementById('um-add-odds').value)||1;
@@ -2299,45 +2299,45 @@ function addUserHolding() {
   if(!_modalUser.selections) _modalUser.selections = [];
   _modalUser.selections.push({sym:sym, odds:odds, entry:entry, currency:currency, addedAt:Date.now()});
   db.collection('users').doc(_modalUser.id).update({selections:_modalUser.selections})
-    .then(function(){ renderUserHoldings(); document.getElementById('um-stat-selections').textContent=_modalUser.selections.length; document.getElementById('um-add-sym').value=''; document.getElementById('um-add-entry').value=''; toast(sym+' added','grn'); })
+    .then(function(){ renderUserSelections(); document.getElementById('um-stat-selections').textContent=_modalUser.selections.length; document.getElementById('um-add-sym').value=''; document.getElementById('um-add-entry').value=''; toast(sym+' added','grn'); })
     .catch(function(e){ toast('Failed: '+e.message,'red'); });
 }
-function removeUserHolding(idx) {
+function removeUserSelection(idx) {
   if(!_modalUser||!_modalUser.selections) return;
   var sym = _modalUser.selections[idx].sym;
   if(!confirm('Remove '+sym+' from selections?')) return;
   _modalUser.selections.splice(idx,1);
   db.collection('users').doc(_modalUser.id).update({selections:_modalUser.selections})
-    .then(function(){ renderUserHoldings(); document.getElementById('um-stat-selections').textContent=_modalUser.selections.length; toast(sym+' removed','grn'); })
+    .then(function(){ renderUserSelections(); document.getElementById('um-stat-selections').textContent=_modalUser.selections.length; toast(sym+' removed','grn'); })
     .catch(function(e){ toast('Failed: '+e.message,'red'); });
 }
-function renderUserWatchlist() {
+function renderUserTracked() {
   var el = document.getElementById('um-watchlist-list');
-  var wl = (_modalUser&&_modalUser.watchlist)||[];
-  if(!wl.length){ el.innerHTML='<p style="font-size:12px;color:var(--t3);text-align:center;padding:20px">No watchlist items</p>'; return; }
-  el.innerHTML = wl.map(function(sym,i){
+  var wl = (_modalUser&&_modalUser.trackedHorses)||[];
+  if(!wl.length){ el.innerHTML='<p style="font-size:12px;color:var(--t3);text-align:center;padding:20px">No tracked horses</p>'; return; }
+  el.innerHTML = wl.map(function(name,i){
     return '<div style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:var(--bg);border:1px solid var(--brd);border-radius:8px">'+
-      '<span style="font-size:13px;font-weight:600">'+sym+'</span>'+
-      '<button onclick="removeUserWatchlistItem('+i+')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:12px" title="Remove">✕</button></div>';
+      '<span style="font-size:13px;font-weight:600">🐴 '+name+'</span>'+
+      '<button onclick="removeUserTrackedHorse('+i+')" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:12px" title="Remove">✕</button></div>';
   }).join('');
 }
-function addUserWatchlistItem() {
+function addUserTrackedHorse() {
   if(!_modalUser) return;
-  var sym = (document.getElementById('um-add-wl').value||'').toUpperCase().trim();
-  if(!sym){ toast('Enter a symbol','red'); return; }
-  if(!_modalUser.watchlist) _modalUser.watchlist = [];
-  if(_modalUser.watchlist.indexOf(sym)!==-1){ toast(sym+' already in watchlist','red'); return; }
-  _modalUser.watchlist.push(sym);
-  db.collection('users').doc(_modalUser.id).update({watchlist:_modalUser.watchlist})
-    .then(function(){ renderUserWatchlist(); document.getElementById('um-add-wl').value=''; toast(sym+' added to watchlist','grn'); })
+  var name = (document.getElementById('um-add-wl').value||'').trim();
+  if(!name){ toast('Enter a horse name','red'); return; }
+  if(!_modalUser.trackedHorses) _modalUser.trackedHorses = [];
+  if(_modalUser.trackedHorses.indexOf(name)!==-1){ toast(name+' already tracked','red'); return; }
+  _modalUser.trackedHorses.push(name);
+  db.collection('users').doc(_modalUser.id).update({trackedHorses:_modalUser.trackedHorses})
+    .then(function(){ renderUserTracked(); document.getElementById('um-add-wl').value=''; toast(name+' now tracked','grn'); })
     .catch(function(e){ toast('Failed: '+e.message,'red'); });
 }
-function removeUserWatchlistItem(idx) {
-  if(!_modalUser||!_modalUser.watchlist) return;
-  var sym = _modalUser.watchlist[idx];
-  _modalUser.watchlist.splice(idx,1);
-  db.collection('users').doc(_modalUser.id).update({watchlist:_modalUser.watchlist})
-    .then(function(){ renderUserWatchlist(); toast(sym+' removed','grn'); })
+function removeUserTrackedHorse(idx) {
+  if(!_modalUser||!_modalUser.trackedHorses) return;
+  var name = _modalUser.trackedHorses[idx];
+  _modalUser.trackedHorses.splice(idx,1);
+  db.collection('users').doc(_modalUser.id).update({trackedHorses:_modalUser.trackedHorses})
+    .then(function(){ renderUserTracked(); toast(name+' removed','grn'); })
     .catch(function(e){ toast('Failed: '+e.message,'red'); });
 }
 function renderUserActivity() {
@@ -2540,7 +2540,7 @@ async function loadAnalytics() {
     var plans = document.getElementById('a-plans');
     var total = allUsers.length || 1;
     plans.innerHTML = [
-      {l:'Free',n:freeC,c:'var(--ylw)'},{l:'Pro ($29/mo)',n:proC,c:'var(--acc)'},{l:'Elite ($79/mo)',n:eliteC,c:'var(--grn)'}
+      {l:'Free',n:freeC,c:'var(--ylw)'},{l:'Pro ($19/mo)',n:proC,c:'var(--acc)'},{l:'Elite ($49/mo)',n:eliteC,c:'var(--grn)'}
     ].map(function(p){
       var pct = Math.round(p.n/total*100);
       return '<div><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>'+p.l+'</span><span style="color:var(--t3)">'+p.n+' ('+pct+'%)</span></div><div style="height:6px;background:var(--brd);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+p.c+';border-radius:3px"></div></div></div>';
@@ -3364,7 +3364,7 @@ function getCampaignData(id) {
         ]},
         {text:'Comment in r/HorseRacingUK threads with helpful tips + link',resources:[
           {type:'link',label:'Open r/HorseRacingUK',action:"window.open('https://www.reddit.com/r/HorseRacingUK/','_blank')"},
-          {type:'info',label:'Find threads asking for form analysis — add genuine value first, then mention TC Pro'}
+          {type:'info',label:'Find threads asking for form analysis — add genuine value first, then mention TT Pro'}
         ]},
         {text:'Post in r/SideProject (show your build)',resources:[
           {type:'link',label:'Open Subreddit',action:"window.open('https://www.reddit.com/r/SideProject/submit','_blank')"},
@@ -3401,7 +3401,7 @@ function getCampaignData(id) {
           {type:'copy',label:'Copy Link',action:"navigator.clipboard.writeText('https://maxmcdonough.github.io/track-triumph-pro/');toast('Link copied!','grn')"}
         ]},
         {text:'Use hashtags: #horseracing #racinganalysis #bettingtools #horses',resources:[
-          {type:'copy',label:'Copy Hashtags',action:"navigator.clipboard.writeText('#horseracing #racinganalysis #bettingtools #horses #fintech #horses #racingpicks #portfoliotracker #racinganalysis #bettingtools');toast('Hashtags copied!','grn')"}
+          {type:'copy',label:'Copy Hashtags',action:"navigator.clipboard.writeText('#horseracing #racinganalysis #bettingtools #horses #fintech #racingpicks #bankrolltracker #racingdata #punting');toast('Hashtags copied!','grn')"}
         ]},
         {text:'Engage with comments for first 2 hours after posting',resources:[
           {type:'info',label:'Reply to every comment quickly — IG algorithm boosts engagement'}
@@ -3764,7 +3764,7 @@ function getBetaDays() {
     {day:'Day 2',date:'Mon Mar 16',label:'Tomorrow',color:'#448aff',goal:15,theme:'Reddit & Online Communities',tasks:[
       {text:'Post in r/alphaandbetausers (direct recruitment)',resources:[
         {type:'link',label:'Open Subreddit',action:"window.open('https://www.reddit.com/r/alphaandbetausers/submit','_blank')"},
-        {type:'template',label:'Copy Post',action:"navigator.clipboard.writeText('[Beta] Track Triumph Pro — Real-time racing analytics platform with AI signals\\n\\nHey everyone! Looking for 50 beta testers for my racing analytics dashboard. Features: real-time racing picks tracking, AI-powered bet signals, risk management tools.\\n\\nYou get: Free lifetime Pro access ($29/mo value), direct line to me for feature requests, early access to all updates.\\n\\nhttps://maxmcdonough.github.io/track-triumph-pro/');toast('Copied!','grn')"}
+        {type:'template',label:'Copy Post',action:"navigator.clipboard.writeText('[Beta] Track Triumph Pro — Real-time racing analytics platform with AI signals\\n\\nHey everyone! Looking for 50 beta testers for my racing analytics dashboard. Features: real-time racing picks tracking, AI-powered bet signals, risk management tools.\\n\\nYou get: Free lifetime Pro access ($19/mo value), direct line to me for feature requests, early access to all updates.\\n\\nhttps://maxmcdonough.github.io/track-triumph-pro/');toast('Copied!','grn')"}
       ]},
       {text:'Post in r/SideProject (show what you built)',resources:[
         {type:'link',label:'Open Subreddit',action:"window.open('https://www.reddit.com/r/SideProject/submit','_blank')"},
@@ -3775,7 +3775,7 @@ function getBetaDays() {
       ]},
       {text:'Comment in r/horseracing threads with helpful tips + link',resources:[
         {type:'link',label:'Open r/horseracing',action:"window.open('https://www.reddit.com/r/horseracing/','_blank')"},
-        {type:'info',label:'Find 5 threads asking about tools or strategies. Add genuine value first, mention TC Pro naturally at the end.'}
+        {type:'info',label:'Find 5 threads asking about tools or strategies. Add genuine value first, mention TT Pro naturally at the end.'}
       ]},
       {text:'Post in r/horses, r/options — offer free access',resources:[
         {type:'link',label:'Open r/horses',action:"window.open('https://www.reddit.com/r/horses/submit','_blank')"},
@@ -3792,7 +3792,7 @@ function getBetaDays() {
       ]},
       {text:'Comment on 10-15 Twitter/X threads about horse racing tips',resources:[
         {type:'link',label:'Open Twitter',action:"window.open('https://twitter.com/search?q=horse%20racing%20tips&f=live','_blank')"},
-        {type:'template',label:'Copy Reply',action:"navigator.clipboard.writeText('I actually built a free dashboard for this — tracks your racing picks in real-time, calculates position sizes, and sends alerts when signals align. Looking for beta testers if anyone wants to try it: https://maxmcdonough.github.io/track-triumph-pro/');toast('Copied!','grn')"}
+        {type:'template',label:'Copy Reply',action:"navigator.clipboard.writeText('I actually built a free dashboard for this — tracks your racing picks in real-time, calculates stake sizes, and sends alerts when signals align. Looking for beta testers if anyone wants to try it: https://maxmcdonough.github.io/track-triumph-pro/');toast('Copied!','grn')"}
       ]}
     ]},
     {day:'Day 3',date:'Tue Mar 17',label:'',color:'#ffab40',goal:10,theme:'Campus & University Push',tasks:[
@@ -3815,7 +3815,7 @@ function getBetaDays() {
       {text:'Ask student friends to share in GroupMe/WhatsApp',resources:[
         {type:'template',label:'Copy Share Request',action:"navigator.clipboard.writeText('Hey! Quick favor — can you share this in your class group chat? My friend built this sick racing analytics platform and it\\'s free during beta: https://maxmcdonough.github.io/track-triumph-pro/');toast('Copied!','grn')"}
       ]},
-      {text:'Email finance/investing professors',resources:[
+      {text:'Email racing studies/equine science professors',resources:[
         {type:'template',label:'Copy Professor Email',action:"navigator.clipboard.writeText('Subject: Free Racing Analytics Platform for Your Students\\n\\nHi Professor [Name],\\n\\nI\\'m a student who built a racing analytics tool called Track Triumph Pro. Features include real-time racing picks tracking, AI-powered bet signals, and risk management tools. I\\'m offering free Pro access to students during our beta.\\n\\nWould you be open to sharing with your class? I\\'d also love feedback from an academic perspective.\\n\\nBest,\\nMax');toast('Copied!','grn')"}
       ]},
       {text:'Post in university Discord servers',resources:[
@@ -3903,13 +3903,13 @@ function saveBetaDayCheck(di,ti,checked) {
 function renderBetaPlatforms() {
   var platforms = [
     {name:'BetaList',cost:'$129 skip queue',expect:'30-50 signups',color:'#00e676',url:'https://betalist.com/submit',
-      gameplan:'1. Click "Submit your startup" → fill in product name, tagline, URL\n2. Write a compelling 2-sentence description focusing on what makes TC Pro unique\n3. Upload a screenshot of the dashboard (clean, populated with data)\n4. Pay $129 to skip the review queue (worth it — you get featured within days)\n5. Expected: 30-50 signups from BetaList audience within first week'},
+      gameplan:'1. Click "Submit your startup" → fill in product name, tagline, URL\n2. Write a compelling 2-sentence description focusing on what makes TT Pro unique\n3. Upload a screenshot of the dashboard (clean, populated with data)\n4. Pay $129 to skip the review queue (worth it — you get featured within days)\n5. Expected: 30-50 signups from BetaList audience within first week'},
     {name:'BetaTesting.com',cost:'Free',expect:'400K+ tester pool',color:'#448aff',url:'https://betatesting.com',
       gameplan:'1. Create a free account and click "Create Project"\n2. Describe your product: racing analytics platform with AI signals, racing picks tracking\n3. Set tester criteria: ages 18-35, interested in horse racing/betting/racing analysis\n4. Upload 3-5 screenshots of the dashboard\n5. Set testing period: 7 days\n6. Testers will submit structured feedback — respond to all of it'},
     {name:'Indie Hackers',cost:'Free',expect:'Startup community',color:'#ffab40',url:'https://www.indiehackers.com/new-post',
       gameplan:'1. Post in "Show IH" — title: "Track Triumph Pro — Racing Analytics Platform with AI Signals"\n2. Tell your build story: what inspired it, tech stack, how long it took\n3. Include a screenshot and the signup link\n4. Be genuine and transparent about where you are (pre-launch, looking for feedback)\n5. Reply to every comment — IH community values responsiveness'},
     {name:'GetWorm',cost:'Free',expect:'Reward-based testers',color:'#ff5722',url:'https://getworm.com',
-      gameplan:'1. Sign up and create a new product listing\n2. Offer reward: "Free lifetime Pro access ($29/mo value)"\n3. Set task: "Sign up, explore the dashboard for 5 minutes, submit feedback"\n4. Upload screenshots and a short video walkthrough if possible\n5. GetWorm testers are motivated by rewards — keep the ask simple'},
+      gameplan:'1. Sign up and create a new product listing\n2. Offer reward: "Free lifetime Pro access ($19/mo value)"\n3. Set task: "Sign up, explore the dashboard for 5 minutes, submit feedback"\n4. Upload screenshots and a short video walkthrough if possible\n5. GetWorm testers are motivated by rewards — keep the ask simple'},
     {name:'ErliBird',cost:'Free',expect:'5-15 signups',color:'#e91e63',url:'https://erlibird.com',
       gameplan:'1. Submit your product with screenshots and description\n2. ErliBird has a smaller but engaged audience\n3. Focus on the visual appeal of your dashboard in the listing\n4. Expected: 5-15 signups, but quality feedback\n5. Good for getting early testimonials'},
     {name:'Product Hunt',cost:'Free',expect:'Save for v3.0 launch',color:'#9c27b0',url:'https://www.producthunt.com/',
@@ -3931,7 +3931,7 @@ function renderBetaPlatforms() {
         '<div style="font-size:12px;color:var(--t2);line-height:1.7;white-space:pre-wrap;margin-top:8px">'+p.gameplan+'</div>'+
         '<div style="margin-top:8px;display:flex;gap:6px">'+
           '<button class="btn btn-primary" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();window.open(\''+p.url+'\',\'_blank\')">Open '+p.name+' →</button>'+
-          '<button class="btn btn-ghost" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();navigator.clipboard.writeText(\'https://maxmcdonough.github.io/track-triumph-pro/\');toast(\'Link copied!\',\'grn\')">📎 Copy TC Pro Link</button>'+
+          '<button class="btn btn-ghost" style="font-size:11px;padding:4px 12px" onclick="event.stopPropagation();navigator.clipboard.writeText(\'https://maxmcdonough.github.io/track-triumph-pro/\');toast(\'Link copied!\',\'grn\')">📎 Copy TT Pro Link</button>'+
         '</div>'+
       '</div></div>';
   }).join('');
@@ -3952,13 +3952,13 @@ function renderRedditTargets() {
   var subs = [
     {name:'r/alphaandbetausers',size:'~30K',strategy:'Direct beta recruitment — this sub exists for exactly this',url:'https://www.reddit.com/r/alphaandbetausers/submit',
       posts:[
-        '[Beta] Track Triumph Pro — Real-time racing analytics platform with AI signals & risk management\n\nHey everyone! Looking for 50 beta testers for my racing analytics dashboard. Features: real-time racing picks tracking, AI-powered bet signals, risk management tools.\n\nYou get: Free lifetime Pro access ($29/mo value), direct line to me for feature requests.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/',
+        '[Beta] Track Triumph Pro — Real-time racing analytics platform with AI signals & risk management\n\nHey everyone! Looking for 50 beta testers for my racing analytics dashboard. Features: real-time racing picks tracking, AI-powered bet signals, risk management tools.\n\nYou get: Free lifetime Pro access ($19/mo value), direct line to me for feature requests.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/',
         'Looking for beta testers: Built a racing analytics tool\n\nI\'ve been building Track Triumph Pro — a dashboard that tracks your racing picks in real-time and gives you AI-powered bet signals. Free Pro access for beta testers.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/',
         '[Beta Testers Wanted] Racing analytics platform with AI signals, bankroll management, and risk management\n\n50 spots available. Free forever for early testers. Would love your feedback!\n\nhttps://maxmcdonough.github.io/track-triumph-pro/'
       ]},
     {name:'r/SideProject',size:'~120K',strategy:'Show your build, share the journey, ask for feedback',url:'https://www.reddit.com/r/SideProject/submit',
       posts:[
-        'I built a racing analytics platform with AI signals and risk management — here\'s what I learned\n\nBeen working on Track Triumph Pro for a few months. It tracks portfolios in real-time, gives AI-powered bet signals, and has built-in risk management.\n\nTech stack: Firebase, vanilla JS, GitHub Pages. Built solo.\n\nLooking for beta testers — free Pro access: https://maxmcdonough.github.io/track-triumph-pro/',
+        'I built a racing analytics platform with AI signals and risk management — here\'s what I learned\n\nBeen working on Track Triumph Pro for a few months. It tracks your bets and bankroll in real-time, gives AI-powered bet signals, and has built-in risk management.\n\nTech stack: Firebase, vanilla JS, GitHub Pages. Built solo.\n\nLooking for beta testers — free Pro access: https://maxmcdonough.github.io/track-triumph-pro/',
         'My side project: A racing analytics dashboard (looking for feedback)\n\nI built Track Triumph Pro as a solo developer. It started as a simple racing picks tracker and grew into a full racing analytics platform.\n\nWould love honest feedback from this community.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/'
       ]},
     {name:'r/startups',size:'~1.2M',strategy:'Beta testers wanted angle — be humble, ask for help',url:'https://www.reddit.com/r/startups/submit',
@@ -3967,8 +3967,8 @@ function renderRedditTargets() {
       ]},
     {name:'r/horseracing',size:'~2M',strategy:'Lead with value (racing tips), mention tool naturally in comments',url:'https://www.reddit.com/r/horseracing/',
       posts:[
-        'The 2% rule saved my account — how position sizing changed everything\n\n[Write a genuine post about the 2% rule and risk management. At the end:]\n\nI actually built a tool that calculates position sizes automatically based on your account size and stop-loss distance. Happy to share if anyone\'s interested.',
-        'Comment reply template: "I actually built a free dashboard for this — tracks your racing picks in real-time, calculates position sizes, and sends alerts when signals align. Looking for beta testers: https://maxmcdonough.github.io/track-triumph-pro/"'
+        'The 2% rule saved my bankroll — how stake sizing changed everything\n\n[Write a genuine post about the 2% rule and bankroll management. At the end:]\n\nI actually built a tool that calculates stake sizes automatically based on your bankroll and risk tolerance. Happy to share if anyone\'s interested.',
+        'Comment reply template: "I actually built a free dashboard for this — tracks your racing picks in real-time, calculates stake sizes, and sends alerts when signals align. Looking for beta testers: https://maxmcdonough.github.io/track-triumph-pro/"'
       ]},
     {name:'r/horses',size:'~6M',strategy:'Offer free access for honest feedback',url:'https://www.reddit.com/r/horses/submit',
       posts:[
@@ -3982,9 +3982,9 @@ function renderRedditTargets() {
       posts:[
         'Built an 8-criteria scoring system for race analysis — looking for feedback\n\nTrack Triumph Pro scores every runner using form, class, speed, jockey, trainer, distance, going, and track record. Currently in beta — would love feedback from experienced punters on the scoring logic.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/'
       ]},
-    {name:'r/wallstreetbets',size:'~15M',strategy:'Match the energy — meme-friendly, casual, risky but massive reach',url:'https://www.reddit.com/r/wallstreetbets/submit',
+    {name:'r/gambling',size:'~500K',strategy:'Match the energy — meme-friendly, casual, massive reach among bettors',url:'https://www.reddit.com/r/gambling/submit',
       posts:[
-        'Tired of losing money? Me too. So I built a dashboard that tells me when NOT to bet.\n\nTrack Triumph Pro — racing picks tracker with AI signals. It literally tells you to stop betting when you\'re on a losing streak.\n\nFree during beta. Not financial advice. 🚀\n\nhttps://maxmcdonough.github.io/track-triumph-pro/'
+        'Tired of losing money on the horses? Me too. So I built a dashboard that tells me when NOT to bet.\n\nTrack Triumph Pro — racing picks tracker with AI signals. It literally tells you to stop betting when you\'re on a losing streak.\n\nFree during beta. Not financial advice. 🐴\n\nhttps://maxmcdonough.github.io/track-triumph-pro/'
       ]}
   ];
   var saved = JSON.parse(localStorage.getItem('tc_beta_reddit')||'[]');
@@ -4021,23 +4021,23 @@ function renderBetaTemplates() {
   var categories = [
     {icon:'🤝',name:'Close Friend DMs',templates:[
       'Hey [name] — I\'ve been building this racing analytics platform tool and I\'m looking for people to try the beta version before I launch it publicly. Would you be down to check it out and give me honest feedback? It\'s free and takes like 2 min to set up. No pressure if it\'s not your thing — but if you know anyone who bets or invests, I\'d appreciate an intro too 🙏',
-      'Hey! Quick ask — I built a racing analytics platform and I need beta testers. Free Pro access ($29/mo value) if you try it out. Takes 2 min: https://maxmcdonough.github.io/track-triumph-pro/',
+      'Hey! Quick ask — I built a racing analytics platform and I need beta testers. Free Pro access ($19/mo value) if you try it out. Takes 2 min: https://maxmcdonough.github.io/track-triumph-pro/',
       'Yo [name] — remember when we talked about horse racing? I actually built a whole dashboard for it. racing picks tracking, AI signals, risk management — the whole thing. Looking for testers before I launch. Down to try it?',
       '[name]! I need a favor 🙏 I\'m launching a racing analytics tool and need 50 beta testers by Thursday. You don\'t even need to bet — I just need people to poke around and tell me what breaks lol. Free forever if you sign up now.',
       'Hey — I know this is random but I built a racing analytics tool and I\'m finally ready to let people try it. Would mean a lot if you\'d check it out and give me your honest take. Free access: https://maxmcdonough.github.io/track-triumph-pro/'
     ]},
     {icon:'👨‍👩‍👧‍👦',name:'Family Who Invests',templates:[
-      'Hey [name] — you know how you were talking about investing? I actually built a tool that helps track portfolios and get bet signals. I\'m looking for beta testers before I launch — would love for you to try it and tell me what you think. It\'s totally free right now.',
-      'Hey [name]! I\'ve been working on something cool — a racing analytics platform that tracks your racing picks in real-time and gives you AI-powered signals. I\'d love your feedback since you know about investing. Free during beta: https://maxmcdonough.github.io/track-triumph-pro/',
+      'Hey [name] — you know how you were talking about horse racing? I actually built a tool that helps track your bets and get AI signals on runners. I\'m looking for beta testers before I launch — would love for you to try it and tell me what you think. It\'s totally free right now.',
+      'Hey [name]! I\'ve been working on something cool — a racing analytics platform that tracks your racing picks in real-time and gives you AI-powered signals. I\'d love your feedback since you know about horse racing. Free during beta: https://maxmcdonough.github.io/track-triumph-pro/',
       '[name] — I built a racing analytics tool! Real-time racing picks tracking, bet signals, risk management. Since you\'re into horse racing, your feedback would be super valuable. Want to check it out? It\'s free.',
       'Hey, so you know I\'ve been working on a side project? It\'s a racing analytics dashboard. I\'m looking for family and friends to be my first users. Would mean a lot if you\'d try it: https://maxmcdonough.github.io/track-triumph-pro/',
-      'Hi [name]! I know you do some horse racing/betting — I built a dashboard tool that might be useful. It tracks portfolios, gives AI signals, and manages risk. Looking for honest feedback during beta. Totally free, no catch.'
+      'Hi [name]! I know you do some horse racing/betting — I built a dashboard tool that might be useful. It tracks your bets and bankroll, gives AI signals, and manages risk. Looking for honest feedback during beta. Totally free, no catch.'
     ]},
     {icon:'💬',name:'Reddit Posts',templates:[
-      '[Beta] Track Triumph Pro — Real-time racing analytics platform with AI signals & risk management\n\nHey everyone 👋 I\'ve been building Track Triumph Pro — a racing analytics dashboard with real-time racing picks tracking, AI-powered bet signals, and risk management tools.\n\nLooking for 50 beta testers. You\'ll get:\n✅ Free lifetime Pro access ($29/mo value)\n✅ Direct line to me for feature requests\n✅ Early access to all future updates\n\nhttps://maxmcdonough.github.io/track-triumph-pro/',
+      '[Beta] Track Triumph Pro — Real-time racing analytics platform with AI signals & risk management\n\nHey everyone 👋 I\'ve been building Track Triumph Pro — a racing analytics dashboard with real-time racing picks tracking, AI-powered bet signals, and risk management tools.\n\nLooking for 50 beta testers. You\'ll get:\n✅ Free lifetime Pro access ($19/mo value)\n✅ Direct line to me for feature requests\n✅ Early access to all future updates\n\nhttps://maxmcdonough.github.io/track-triumph-pro/',
       'I built a racing analytics platform — looking for honest feedback\n\nBeen building this for months and it\'s finally ready for testing. Track Triumph Pro tracks your racing picks in real-time, generates AI signals, and helps manage risk.\n\nOffering free Pro access to the first 50 testers.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/',
       'Free racing analytics tool — need beta testers\n\nTrack Triumph Pro: racing picks tracker + AI signals + risk management. Built it solo, looking for 50 people to break it before launch.\n\nFree forever for beta testers. Link: https://maxmcdonough.github.io/track-triumph-pro/',
-      'Show: Racing analytics platform I built from scratch\n\nAfter months of building, Track Triumph Pro is ready for beta. Features: real-time racing picks tracking, AI-powered signals, position sizing, risk management.\n\nLooking for honest feedback. Free access: https://maxmcdonough.github.io/track-triumph-pro/',
+      'Show: Racing analytics platform I built from scratch\n\nAfter months of building, Track Triumph Pro is ready for beta. Features: real-time racing picks tracking, AI-powered signals, stake sizing, risk management.\n\nLooking for honest feedback. Free access: https://maxmcdonough.github.io/track-triumph-pro/',
       'Launching my racing analytics tool in beta — 50 free spots\n\nTrack Triumph Pro gives you real-time racing picks tracking, AI bet signals, and built-in risk management. Looking for punters who want free lifetime access in exchange for feedback.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/'
     ]},
     {icon:'🎓',name:'Racing Club / Professor',templates:[
@@ -4048,18 +4048,18 @@ function renderBetaTemplates() {
       'Hi Professor [Name] — I\'m a student who\'s been building a racing analytics tool. It would be great for your students learning about markets. Free during beta, and I\'d love academic feedback. Details: https://maxmcdonough.github.io/track-triumph-pro/'
     ]},
     {icon:'🐦',name:'Twitter/X Replies & Posts',templates:[
-      'I actually built a free dashboard for this — tracks your racing picks in real-time, calculates position sizes, and sends alerts when signals align. Looking for beta testers if anyone wants to try it 🙌 https://maxmcdonough.github.io/track-triumph-pro/',
+      'I actually built a free dashboard for this — tracks your racing picks in real-time, calculates stake sizes, and sends alerts when signals align. Looking for beta testers if anyone wants to try it 🙌 https://maxmcdonough.github.io/track-triumph-pro/',
       'Been building a racing analytics tool and it\'s finally ready for beta 🚀 Real-time racing picks tracking, AI signals, risk management — free for the first 50 testers. https://maxmcdonough.github.io/track-triumph-pro/ #buildinpublic #horseracing',
       'Day [X] of building Track Triumph Pro 📊\n\nJust hit [milestone]. Looking for 50 beta testers to try the dashboard before public launch.\n\nFree lifetime Pro access if you sign up now: https://maxmcdonough.github.io/track-triumph-pro/\n\n#horseracing #bettingtools',
       'Hot take: Most racing analytics tools are overpriced and overcomplicated.\n\nSo I built my own — Track Triumph Pro. Real-time tracking, AI signals, risk management. And it\'s free during beta.\n\nhttps://maxmcdonough.github.io/track-triumph-pro/',
-      'If you bet and you don\'t have a position sizing calculator... you\'re gambling.\n\nI built one into Track Triumph Pro along with AI signals and racing picks tracking. Free during beta: https://maxmcdonough.github.io/track-triumph-pro/'
+      'If you bet and you don\'t have a stake sizing calculator... you\'re just guessing.\n\nI built one into Track Triumph Pro along with AI signals and racing picks tracking. Free during beta: https://maxmcdonough.github.io/track-triumph-pro/'
     ]},
     {icon:'📧',name:'Cold Emails',templates:[
-      'Subject: Free beta access — racing analytics platform with AI signals\n\nHi [Name],\n\nI\'m Max, founder of Track Triumph Pro. We\'re a real-time racing analytics platform with AI-powered signals, racing picks analytics, and risk management tools.\n\nWe\'re running a closed beta and I\'d love to offer you free lifetime Pro access ($29/mo value) in exchange for your honest feedback.\n\nTakes 2 min to set up. Interested?',
+      'Subject: Free beta access — racing analytics platform with AI signals\n\nHi [Name],\n\nI\'m Max, founder of Track Triumph Pro. We\'re a real-time racing analytics platform with AI-powered signals, racing picks analytics, and risk management tools.\n\nWe\'re running a closed beta and I\'d love to offer you free lifetime Pro access ($19/mo value) in exchange for your honest feedback.\n\nTakes 2 min to set up. Interested?',
       'Subject: Built something for punters — would love your feedback\n\nHi [Name],\n\nI\'ve been building a racing analytics platform called Track Triumph Pro. It scores every runner across 50+ tracks using an 8-criteria AI algorithm and helps manage your betting bankroll.\n\nLooking for experienced punters to test it before launch. Free Pro access for life if you\'re interested.\n\nBest,\nMax',
       'Subject: Quick question about racing analytics\n\nHi [Name],\n\nI noticed you\'re involved in [horse racing/betting/racing analysis]. I\'m building a racing analytics platform and looking for feedback from people like you.\n\nWould you be open to a 5-minute look at Track Triumph Pro? Free access, no strings attached.\n\nMax',
       'Subject: Exclusive beta invite — Track Triumph Pro\n\nHi [Name],\n\nYou\'re one of 50 people getting early access to Track Triumph Pro — a racing analytics dashboard with AI signals and risk management.\n\nFree lifetime Pro access for beta testers. Interested?\n\nhttps://maxmcdonough.github.io/track-triumph-pro/\n\nMax',
-      'Subject: Free racing analytics tool for your picks\n\nHi [Name],\n\nI built Track Triumph Pro — real-time racing picks tracking, AI bet signals, and position sizing tools. It\'s free during our beta period.\n\nWould love 5 minutes of your time to try it and share feedback. Here\'s the link: https://maxmcdonough.github.io/track-triumph-pro/\n\nThanks,\nMax'
+      'Subject: Free racing analytics tool for your picks\n\nHi [Name],\n\nI built Track Triumph Pro — real-time racing picks tracking, AI bet signals, and stake sizing tools. It\'s free during our beta period.\n\nWould love 5 minutes of your time to try it and share feedback. Here\'s the link: https://maxmcdonough.github.io/track-triumph-pro/\n\nThanks,\nMax'
     ]}
   ];
   var container = document.getElementById('beta-templates-list');
@@ -4225,7 +4225,7 @@ function aiAdvise(q) {
       '\n\n🎯 Action Items:\n'+
       '1. '+( stats.contacted===0?'START OUTREACH — 0 leads contacted. This is the #1 bottleneck.':'Keep momentum — '+stats.contacted+' leads contacted, aim for 100%.')+'\n'+
       '2. Student discount: Offer 50% off ($14.50/mo) — high elasticity in student segment\n'+
-      '3. Create urgency: "Beta access for first 20 signups — lock in $29/mo forever"\n'+
+      '3. Create urgency: "Beta access for first 20 signups — lock in $19/mo forever"\n'+
       '4. Social proof: Screenshot your dashboard, share to Reddit/Twitter\n'+
       '5. Referral bonus: Give converted users 1 month free for each referral\n'+
       '6. Follow-up cadence: Day 1 → Day 3 → Day 7 → Day 14 (4-touch sequence)\n\n'+
@@ -4258,7 +4258,7 @@ function aiAdvise(q) {
       '• Consider timezone-optimized send times',
 
     'Revenue forecast': '💰 REVENUE FORECAST\n\n'+
-      'Current State:\n'+(totalUsers>0?'• Active users: '+totalUsers+'\n• Pro ($29/mo): '+proUsers+'\n• Elite ($79/mo): '+eliteUsers+'\n• Current MRR: $'+mrr+'\n• Current ARR: $'+(mrr*12):'• No paying users yet — revenue starts with outreach')+
+      'Current State:\n'+(totalUsers>0?'• Active users: '+totalUsers+'\n• Pro ($19/mo): '+proUsers+'\n• Elite ($49/mo): '+eliteUsers+'\n• Current MRR: $'+mrr+'\n• Current ARR: $'+(mrr*12):'• No paying users yet — revenue starts with outreach')+
       '\n\nForecast (Conservative):\n'+
       '• Month 1: Convert 3 leads → $'+(3*29)+'/mo MRR\n'+
       '• Month 2: Convert 5 more + 1 Elite → $'+((8*29)+(1*79))+'/mo MRR\n'+
@@ -4269,7 +4269,7 @@ function aiAdvise(q) {
     'Weekly action plan': '📋 THIS WEEK\'S ACTION PLAN\n\n'+
       (stats.new>0?'Monday:\n• Send 10 DMs to highest-score uncontacted leads\n• Update CRM status for each\n\n':'Monday:\n• Follow up all contacted leads\n• Review interested leads for close opportunities\n\n')+
       'Tuesday:\n• Send 10 more DMs (next batch by score)\n• Follow up Monday non-responders\n\n'+
-      'Wednesday:\n• Send remaining DMs\n• Post in r/wallstreetbets and r/horses about TCP\n• Share dashboard screenshot on Twitter\n\n'+
+      'Wednesday:\n• Send remaining DMs\n• Post in r/gambling and r/horses about TTP\n• Share dashboard screenshot on Twitter\n\n'+
       'Thursday:\n• Follow up all non-responders (2nd touch)\n• Move responding leads to "Interested"\n• Offer trial access to warm leads\n\n'+
       'Friday:\n• Pipeline review — update all lead statuses\n• Export weekly metrics\n• Plan next week\'s targets\n\n'+
       '📊 Weekly KPIs:\n• DMs sent: 50 | Responses: 8-12 | Meetings: 3-5 | Conversions: 1-2',
@@ -4824,7 +4824,7 @@ const SEED_LEADS = [
     "outreachDate": "",
     "reply": "",
     "followUp1": { "day": 3, "text": "Tommy — realised Track Triumph could give you and syndicate members real-time performance dashboards. No more spreadsheet chaos?" },
-    "followUp2": { "day": 7, "text": "Following up. We've built multi-user portfolios into Track Triumph so syndicates can track performance together. Still interested?" },
+    "followUp2": { "day": 7, "text": "Following up. We've built multi-user dashboards into Track Triumph so syndicates can track performance together. Still interested?" },
     "followUp3": { "day": 14, "text": "Tommy — Track Triumph launched. Integrated with live Curragh data. Several syndicates already using it." }
   },
   {
@@ -5417,7 +5417,7 @@ const SEED_LEADS = [
     "status": "new",
     "source": "Referral - Dublin Racing",
     "template": "Racing Club Member",
-    "notes": "Dublin syndicate administrator managing 25-horse portfolio and 60+ members. Perfect for syndicate-focused Track Triumph features. Multi-user tracking, performance dashboards, member communications.",
+    "notes": "Dublin syndicate administrator managing 25-horse syndicate and 60+ members. Perfect for syndicate-focused Track Triumph features. Multi-user tracking, performance dashboards, member communications.",
     "dm": "Siobhan — heard about your Dublin syndicate. Building Track Triumph Pro specifically for syndicates. Multi-user dashboards, real-time performance tracking, member ROI analytics. Would replace all your spreadsheets.\n\nWorth exploring?",
     "outreachDate": "",
     "reply": "",
