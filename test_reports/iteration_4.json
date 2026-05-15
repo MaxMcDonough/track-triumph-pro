@@ -1,0 +1,71 @@
+{
+  "summary": "Tested new /api/best-bets and /api/results endpoints + Results page end-to-end. 19/20 backend tests pass; 1 critical bug found in /api/analyze (KeyError when horse is rejected for insufficient form). Frontend Dashboard Best Bets widget, Results page, and Sidebar nav all working as expected.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "POST /api/analyze (with race_id)",
+        "issue": "Returns 500 'KeyError: confidence_rating' when any horse in the field is REJECTED by calculate_horse_score (e.g. <3 runs or unapproved track). The rejected return dict only contains keys: score, max_score, verdict, criteria_breakdown — but build_recommendations() (server.py line 425 in trifecta builder, and similarly the win/place/safety builders) accesses h['place_score']['confidence_rating'] and h['place_score']['star_rating']. Reproduce: any live race with a young horse / first-time runner triggers this. test_analyze_live_race confirms it on today's racecards.",
+        "priority": "HIGH"
+      }
+    ],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "RaceAnalysis.jsx (header subtitle around line 124)",
+        "issues": [
+          "React hydration warning: <Badge> (renders a <div>) is nested inside a <p> tag. Wrap subtitle in <div> or render Badge as <span>. Functional, but produces console errors."
+        ]
+      }
+    ]
+  },
+  "passed_tests": [
+    "GET /api/best-bets returns 200 with success=true, data_source 'LIVE', picks sorted desc by score, 5 picks visible (52 races scanned, 216 qualifying)",
+    "GET /api/best-bets picks contain all required keys: race_id, course, off_time, horse, score, max_score, confidence, star_rating, recommendation, criteria_breakdown, estimated_odds, recommended_stake, potential_profit",
+    "GET /api/results returns 200 with settled_bets, pending_bets, live_results, live_results_available, live_results_count keys",
+    "GET /api/results handles 401 from The Racing API gracefully — live_results_available=false, live_results=[] (Race Results tab shows 'No results yet today')",
+    "GET /api/results returns user's settled bets from MongoDB even when live results unavailable (8 settled, 3 pending)",
+    "POST /api/bets/{bet_id}/settle bet correctly appears in /api/results settled_bets",
+    "GET /api/racecards/today returns LIVE racecards (52 races today)",
+    "POST /api/analyze with track+race_number mock fallback works",
+    "GET/PUT /api/bankroll persist correctly",
+    "POST /api/bets places bet; settle as WIN gives positive profit_loss; LOSS gives negative; double-settle returns 400; excessive stake returns 400; non-existent bet returns 404",
+    "GET /api/statistics returns overall, by_score, recent_form",
+    "GET /api/scraper/status, /api/tracks, /api/ (health) all 200",
+    "Frontend Dashboard renders 'Today's Best Bets' widget with LIVE badge, 5 live picks with score/stake/profit/star rating",
+    "Frontend Dashboard renders Bankroll widget ($344.32 current, +$60.82 today P/L)",
+    "Frontend Sidebar shows new Results nav link (data-testid=nav-results) and routes to /results",
+    "Frontend Results page renders Pending bets list, Settled bets list, Race Results tab; gracefully shows 'No results yet today' empty state when live_results_available=false",
+    "Frontend Race Analysis page loads with LIVE badge"
+  ],
+  "test_report_links": [
+    "/app/backend/tests/test_racing_api.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Fix /api/analyze KeyError: in calculate_horse_score, ensure the early-return rejection dict ALSO includes confidence_rating, star_rating, recommendation keys (e.g., confidence_rating='REJECTED', star_rating=0, recommendation='REJECTED'). OR in build_recommendations() use .get('confidence_rating', 'N/A') and .get('star_rating', 0) defensively. The trifecta loop (line 423-426) and win/place/safety builders all assume these keys exist.",
+    "Fix React hydration warning in /app/frontend/src/pages/RaceAnalysis.jsx line ~124 — Badge component nested inside <p> tag produces invalid HTML."
+  ],
+  "critical_code_review_comments": [
+    "server.py:153-173 — early-return rejection dicts in calculate_horse_score are missing confidence_rating/star_rating/recommendation keys that downstream code (build_recommendations) expects. Real bug surfaced under live data.",
+    "server.py:91 — Endpoint declared as @api_router.put('/bankroll') but review_request states POST. UI uses PUT correctly, but spec mismatch worth noting.",
+    "server.py:588 — runners.sort uses int(x['position']) but position may be '' or non-numeric (DSQ/PU). Wrapped in isdigit() check so OK, but distance_beaten/sp may also be missing — currently defaulted to '' which is fine.",
+    "Results.jsx — no error state UI; only toast on fetch failure. Consider an inline error message if /api/results fails."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_racing_api.py (added TestBestBetsEndpoint, TestResultsEndpoint classes; switched BASE_URL loader to read frontend/.env so tests run from CLI)"
+  ],
+  "success_rate": {
+    "backend": "95% (19/20 pytest pass; 1 failure due to real bug in /api/analyze)",
+    "frontend": "100% (all flows work; only a console hydration warning)"
+  },
+  "test_credentials": "No authentication required - no-auth mode",
+  "seed_data_creation": "TEST_* prefixed bets created during pytest run (visible as pending/settled in Results page)",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "After main agent fixes the KeyError in /api/analyze, retest by hitting POST /api/analyze with a live race_id that contains horses with <3 runs. The Racing API free tier returns 401 for /results endpoint, so live_results_available will stay false — that is expected and handled correctly by both backend and frontend.",
+  "rca_of_the_issue": "calculate_horse_score has TWO early-return paths (unapproved track at line 152-157, insufficient form at line 165-173) that return a minimal dict {score, max_score, verdict, criteria_breakdown}. The normal return path at line 298-308 returns a richer dict including confidence_rating, star_rating, recommendation. Downstream build_recommendations() unconditionally accesses h['place_score']['confidence_rating'] / ['star_rating']. With live data, races commonly contain young horses with <3 runs of form, triggering the rejection path → KeyError → 500. Fix: either (a) make the rejection dict include the missing keys with default values, or (b) use .get() in build_recommendations()."
+}

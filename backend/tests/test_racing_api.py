@@ -7,9 +7,20 @@ import pytest
 import requests
 import os
 import time
+from pathlib import Path
 
-# Get BASE_URL from environment
-BASE_URL = os.environ.get('REACT_APP_BACKEND_URL', '').rstrip('/')
+# Load REACT_APP_BACKEND_URL from frontend/.env
+def _load_backend_url():
+    env_path = Path(__file__).parent.parent.parent / "frontend" / ".env"
+    if env_path.exists():
+        with open(env_path) as f:
+            for line in f:
+                if line.startswith("REACT_APP_BACKEND_URL="):
+                    return line.split("=", 1)[1].strip()
+    return os.environ.get("REACT_APP_BACKEND_URL", "")
+
+BASE_URL = _load_backend_url().rstrip('/')
+assert BASE_URL, "REACT_APP_BACKEND_URL not found"
 
 class TestHealthAndBasicEndpoints:
     """Test health check and basic API endpoints"""
@@ -130,6 +141,92 @@ class TestLiveRacecardsEndpoint:
         
         print(f"✓ Racecards: {data['total_races']} races across {len(courses)} courses")
         return data
+
+
+class TestBestBetsEndpoint:
+    """Test /api/best-bets endpoint"""
+
+    def test_get_best_bets(self):
+        """Test GET /api/best-bets returns auto-scanned top picks"""
+        response = requests.get(f"{BASE_URL}/api/best-bets")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Required keys per spec
+        assert "success" in data
+        assert "picks" in data
+        assert isinstance(data["picks"], list)
+
+        if data["success"]:
+            assert "data_source" in data
+            assert "total_races_scanned" in data
+            assert "total_qualifying" in data
+            assert isinstance(data["total_races_scanned"], int)
+            assert isinstance(data["total_qualifying"], int)
+            # picks should be capped at 10
+            assert len(data["picks"]) <= 10
+
+            if data["picks"]:
+                p = data["picks"][0]
+                for key in ["race_id", "course", "off_time", "horse",
+                            "score", "max_score", "confidence", "star_rating",
+                            "recommendation", "criteria_breakdown",
+                            "estimated_odds", "recommended_stake", "potential_profit"]:
+                    assert key in p, f"Missing key: {key}"
+                assert p["score"] >= 4
+                # sorted desc by score
+                scores = [pick["score"] for pick in data["picks"]]
+                assert scores == sorted(scores, reverse=True)
+        print(f"✓ Best bets: {len(data.get('picks', []))} picks, scanned {data.get('total_races_scanned', 0)} races")
+
+
+class TestResultsEndpoint:
+    """Test /api/results endpoint"""
+
+    def test_get_results(self):
+        """Test GET /api/results returns settled + pending bets and live results flag"""
+        response = requests.get(f"{BASE_URL}/api/results")
+        assert response.status_code == 200
+        data = response.json()
+
+        # Required keys per spec
+        assert data.get("success") is True
+        assert "settled_bets" in data
+        assert "pending_bets" in data
+        assert "live_results_available" in data
+        assert "live_results" in data
+        assert "live_results_count" in data
+        assert isinstance(data["settled_bets"], list)
+        assert isinstance(data["pending_bets"], list)
+        assert isinstance(data["live_results_available"], bool)
+
+        # If live not available, live_results must be empty list (graceful)
+        if data["live_results_available"] is False:
+            assert data["live_results"] == []
+            assert data["live_results_count"] == 0
+        print(f"✓ Results: live_available={data['live_results_available']}, "
+              f"settled={len(data['settled_bets'])}, pending={len(data['pending_bets'])}")
+
+    def test_results_settled_bet_persistence(self):
+        """Verify a settled bet appears in /api/results settled_bets"""
+        # Place + settle a bet
+        bet_data = {
+            "track": "TEST_results_kempton", "race_number": 55,
+            "horse_name": "TEST_ResultsBet", "draw_number": 4,
+            "bet_type": "PLACE", "stake": 3.00, "odds": 2.50, "score": 5
+        }
+        place = requests.post(f"{BASE_URL}/api/bets", json=bet_data)
+        assert place.status_code == 200
+        bet_id = place.json()["bet_id"]
+        settle = requests.post(f"{BASE_URL}/api/bets/{bet_id}/settle", json={"result": "WIN"})
+        assert settle.status_code == 200
+
+        # Check it appears in /api/results
+        res = requests.get(f"{BASE_URL}/api/results")
+        assert res.status_code == 200
+        ids = [b.get("bet_id") for b in res.json().get("settled_bets", [])]
+        assert bet_id in ids
+        print("✓ Settled bet appears in /api/results")
 
 
 class TestRaceAnalysisEndpoint:
