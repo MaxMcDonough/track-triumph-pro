@@ -54,7 +54,16 @@ Build a comprehensive, professional-grade horse racing betting analysis web appl
 - Bet settlement (WIN/LOSS) with profit tracking
 - Statistics with score-level breakdown
 - Dark theme UI with LIVE data indicators
-- Testing: 100% pass rate (backend 17/17, all frontend flows)
+
+## What's Been Implemented (Feb 11, 2026)
+- `/api/best-bets` endpoint — auto-scans today's live racecards, applies 8-criteria, returns top picks
+- Dashboard "Today's Best Bets" widget with LIVE badge, 5 picks, stake & profit projections
+- `/api/results` endpoint — returns settled/pending bets + live race results (graceful 401 handling for free tier)
+- `/results` page with Pending bets, Settled bets, and Race Results tabs
+- Sidebar nav updated with Results link
+- Bugfix: `/api/analyze` no longer throws KeyError when a horse is REJECTED (insufficient form / unapproved track) — rejection dicts now include confidence_rating, star_rating, recommendation fields
+- Bugfix: React hydration warning fixed in RaceAnalysis (Badge no longer nested inside `<p>`)
+- Testing: backend 20/20 pass, frontend 100% flows working (iteration_4.json)
 
 ## Tech Stack
 - Backend: Python FastAPI, Motor (MongoDB async), httpx
@@ -72,8 +81,12 @@ Build a comprehensive, professional-grade horse racing betting analysis web appl
 - [x] Bet tracking and settlement
 - [x] The Racing API integration (live racecards)
 - [x] API rate limit handling with caching
+- [x] Today's Best Bets auto-scanner (endpoint + Dashboard widget)
+- [x] Results page (settled bets + live race results with graceful 401 fallback)
 
 ### P1 (Next)
+- [ ] Alternative odds integration — The Odds API does NOT support horse racing; explore RapidAPI, Betfair Exchange, or stick with Estimated
+- [ ] Advanced bet types (Trifecta / Parlay recommendations using 8-criteria scores)
 - [ ] Real-time bookmaker odds integration (requires paid API plan)
 - [ ] Expert consensus data (Racing Post, At The Races, Timeform)
 - [ ] Market confidence data (Betfair Exchange)

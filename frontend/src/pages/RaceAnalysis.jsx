@@ -121,7 +121,7 @@ export default function RaceAnalysis({ user }) {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-heading font-bold mb-2">Race Analysis</h1>
-            <p className="text-muted-foreground">
+            <div className="text-muted-foreground text-sm">
               {raceData?.data_source === "LIVE - The Racing API" ? (
                 <span className="flex items-center gap-2">
                   <Radio className="w-4 h-4 text-primary animate-pulse" />
@@ -133,7 +133,7 @@ export default function RaceAnalysis({ user }) {
               ) : (
                 "Select a race to run our 8-criteria scoring algorithm"
               )}
-            </p>
+            </div>
           </div>
           <Button
             variant="outline"

@@ -152,8 +152,14 @@ def calculate_horse_score(horse: Dict, track: str, bet_type: str = "PLACE") -> D
     if not is_approved:
         return {
             "score": 0, "max_score": max_score,
+            "score_percentage": 0,
+            "confidence_rating": "REJECTED",
+            "star_rating": 0,
+            "recommendation": "REJECTED - Unapproved track",
             "verdict": "REJECTED - Not approved track",
-            "criteria_breakdown": {"track_type": "FAIL - Unapproved track: " + track}
+            "criteria_breakdown": {"track_type": "FAIL - Unapproved track: " + track},
+            "horse_name": horse.get("name"),
+            "draw_number": horse.get("draw_number"),
         }
     criteria["track_type"] = "PASS - Approved track"
 
@@ -165,11 +171,17 @@ def calculate_horse_score(horse: Dict, track: str, bet_type: str = "PLACE") -> D
     if not has_form:
         return {
             "score": 0, "max_score": max_score,
+            "score_percentage": 0,
+            "confidence_rating": "REJECTED",
+            "star_rating": 0,
+            "recommendation": "REJECTED - Insufficient form data",
             "verdict": "REJECTED - Insufficient form data",
             "criteria_breakdown": {
                 **criteria,
                 "complete_stats": "FAIL - Fewer than 3 runs on record"
-            }
+            },
+            "horse_name": horse.get("name"),
+            "draw_number": horse.get("draw_number"),
         }
     criteria["complete_stats"] = f"PASS - {form['runs']} runs, OR {horse.get('official_rating', 'N/A')}"
 
